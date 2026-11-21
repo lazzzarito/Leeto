@@ -94,6 +94,7 @@ export interface AppSettings {
   playbackSpeed: number;
   kineticTextEnabled: boolean;
   focusDimIntensity: number; // 0..1
+  imageDurationMs: number; // duración base de imágenes antes de aplicar velocidad
   ttsEnabled: boolean;
   ttsVoiceURI?: string;
   reducedMotion?: 'system' | 'on' | 'off';

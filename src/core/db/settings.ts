@@ -20,6 +20,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   playbackSpeed: 1,
   kineticTextEnabled: true,
   focusDimIntensity: 0.45,
+  imageDurationMs: 6000,
   ttsEnabled: false,
   reducedMotion: 'system',
   syncEnabled: false,

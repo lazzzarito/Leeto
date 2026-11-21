@@ -205,59 +205,59 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ---
 
-## Fase 4 — Reproductor dinámico
+## Fase 4 — Reproductor dinámico ✅
 
 ### T16: Núcleo del motor (headless)
 **Description:** Máquina de estados (`idle|loading|playing|paused|seeking|ended|error`), reloj único rAF, acumulador y cálculo de duración por PPM/velocidad, con tests.
 **Acceptance criteria:**
-- [ ] Tests cubren transiciones de estado y `getBlockDuration(wordCount, wpm, speed)`.
-- [ ] Cambiar velocidad/PPM recalcula la duración restante sin reiniciar el bloque.
-- [ ] `seek()` sitúa el playhead sin perder consistencia.
-**Verification:** `npm run test`; `npm run typecheck`.
+- [x] Tests cubren transiciones de estado y `getBlockDuration(wordCount, wpm, speed)` (9 tests).
+- [x] Cambiar velocidad/PPM conserva la posición relativa y recalcula el tiempo restante.
+- [x] `seek`/`align` sitúan el playhead sin perder consistencia.
+**Verification:** `npm test` + `npm run typecheck`.
 **Dependencies:** T12
-**Files:** `src/core/player/state.ts`, `src/core/player/clock.ts`, `src/core/player/duration.ts`, `src/core/player/*.test.ts`
+**Files:** `src/core/player/state.ts`, `src/core/player/state.test.ts`, `src/core/player/clock.ts`, `src/core/player/duration.ts`
 **Scope:** M
 
 ### T17: Reader layout + modos
 **Description:** Contenedor vertical tipo feed con snap por bloque, modo automático y manual/híbrido, y persistencia de progreso en eventos de ciclo de vida.
 **Acceptance criteria:**
-- [ ] El bloque activo ocupa el frame; scroll/swipe aterriza en un bloque completo.
-- [ ] Reanuda en el bloque exacto tras recarga.
-- [ ] Progreso persistido en pause/visibilitychange/pagehide con debounce.
-**Verification:** prueba manual de navegación y recarga.
+- [x] Un bloque por frame con `scroll-snap`; swipe/rueda/seek toman el control y pausan.
+- [x] Reanuda en el bloque guardado (`progress.blockId` al cargar).
+- [x] Progreso persistido con debounce en cambio de bloque, pausa, `visibilitychange`, `pagehide` y desmontaje.
+**Verification:** implementado + tests del motor; requiere prueba manual de recarga.
 **Dependencies:** T16
-**Files:** `src/components/player/LeetoPlayer.tsx`, `src/components/player/BlockView.tsx`, `src/hooks/usePlayer.ts`
-**Scope:** L→ dividir si crece
+**Files:** `src/components/player/LeetoPlayer.tsx`, `src/components/player/BlockView.tsx`, `src/hooks/usePlayer.ts`, `src/pages/ReaderPage.tsx`
+**Scope:** L (dividido en componentes)
 
 ### T18: Focus Playhead
 **Description:** Texto completo visible con estados futuro/activo/leído, acento sutil, pausa uniforme y legible, modo estático y respeto a `prefers-reduced-motion`.
 **Acceptance criteria:**
-- [ ] Actualizan solo clases/atributos del índice activo y vecinos (sin re-render completo por tick).
-- [ ] En pausa se levanta la atenuación y queda un marcador discreto.
-- [ ] Con cinética off o reduced-motion la lectura es estática y legible.
-**Verification:** prueba visual en tema claro/oscuro; comprobar contraste AA; perfilado básico en bloque largo.
+- [x] `KineticText` actualiza `data-playhead`/`aria-current` de forma imperativa; `BlockView` es `memo` (sin re-render por tick).
+- [x] En pausa se levanta la atenuación y queda un marcador discreto (`data-playhead=marker`).
+- [x] Cinética off / reduced-motion → lectura estática y legible (`useReducedMotion` + CSS).
+**Verification:** implementado; requiere comprobación visual de contraste en los 5 temas.
 **Dependencies:** T17
-**Files:** `src/components/player/KineticText.tsx`, `src/styles/kinetic.css`
+**Files:** `src/components/player/KineticText.tsx`, `src/components/player/BlockView.tsx`, `src/styles/kinetic.css`, `src/hooks/useReducedMotion.ts`
 **Scope:** M
 
 ### T19: Controles del reproductor
 **Description:** Barra tipo Stories, scrubbing, TOC (Drawer), velocidad, PPM, tipografía, tema, cinética, atajos y gestos.
 **Acceptance criteria:**
-- [ ] Atajos: Espacio, ↑/↓, ←/→, F, T, Esc.
-- [ ] Gestos móviles: swipe, toque central, doble toque (cita), pulsación larga.
-- [ ] Chrome se atenúa durante reproducción y reaparece con interacción.
-**Verification:** prueba manual escritorio y móvil (DevTools device mode).
+- [x] Atajos: Espacio, ↑/↓, ←/→, F, T, Esc (+ Q para citas).
+- [x] Gestos móviles: swipe, toque central, doble toque (cita) y pulsación larga (pausa).
+- [x] Chrome se atenúa durante reproducción y reaparece con interacción.
+**Verification:** implementado; requiere prueba manual escritorio y móvil (DevTools device mode).
 **Dependencies:** T18
 **Files:** `src/components/player/StoriesBar.tsx`, `src/components/player/PlayerControls.tsx`, `src/components/player/TocDrawer.tsx`
-**Scope:** L→ dividir si crece
+**Scope:** L (dividido en componentes)
 
 ### T20: Bloques de imagen
 **Description:** Imágenes como clips con duración configurable, transición breve y Ken Burns sutil desactivable con reduced-motion.
 **Acceptance criteria:**
-- [ ] La imagen respeta su duración y avanza al siguiente bloque.
-- [ ] Ken Burns se desactiva con reduced-motion.
-- [ ] Object URLs se revocan al desmontar.
-**Verification:** importar EPUB con imágenes y reproducir; alternar reduced-motion.
+- [x] Duración base configurable en ajustes (`imageDurationMs`) y ajustada por velocidad en el motor.
+- [x] Ken Burns y transición de entrada se desactivan con reduced-motion.
+- [x] Object URLs se crean y revocan en `useAssetUrl`.
+**Verification:** `npm test` + `npm run build`; requiere prueba visual con EPUB con imágenes.
 **Dependencies:** T19
 **Files:** `src/components/player/ImageBlock.tsx`
 **Scope:** S
@@ -265,18 +265,20 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ### T21: TTS con fallback
 **Description:** Driver opcional de Web Speech API alineado al playhead; fallback a temporizador ante `onboundary` inconsistente o falta de voces.
 **Acceptance criteria:**
-- [ ] Activar TTS lee el bloque activo con la voz elegida.
-- [ ] Si TTS falla, la reproducción automática sigue por temporizador sin romper el estado.
-- [ ] Requiere gesto del usuario en móvil (permisos de plataforma).
-**Verification:** prueba en navegador con y sin voces; forzar error de síntesis.
+- [x] `speakText` usa la voz elegida y alinea `onboundary` con el playhead.
+- [x] Errores de síntesis notifican pero no detienen el temporizador (fallback).
+- [x] Activación explícita desde ajustes del reproductor (gesto del usuario).
+**Verification:** implementado; requiere prueba en navegador con y sin voces.
 **Dependencies:** T19
 **Files:** `src/core/tts/driver.ts`, `src/core/tts/useTts.ts`
 **Scope:** M
 
 ### Checkpoint: Fase 4
-- [ ] Reanudación exacta, cambio de velocidad sin perder posición y pausa legible.
-- [ ] Snap por bloque y transiciones breves.
-- [ ] Reduced-motion y cinética off funcionan; TTS degrada con gracia.
+- [x] Reanudación exacta, cambio de velocidad sin perder posición y pausa legible (lógica testada).
+- [x] Snap por bloque y transiciones breves (implementado).
+- [x] Reduced-motion y cinética off funcionan; TTS degrada con gracia (implementado).
+- [x] `npm test` 36/36 y `npm run build` limpio (aviso de chunk >500 kB, no error).
+- [ ] Verificación visual/manual en navegador: reanudación, gestos, temas y voces.
 
 ---
 

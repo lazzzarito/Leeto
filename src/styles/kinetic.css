@@ -1,0 +1,70 @@
+/* Focus Playhead: un único eje de movimiento con significado (progreso/foco). */
+.kinetic-word {
+  border-radius: 0.15em;
+  transition:
+    color 100ms ease,
+    opacity 100ms ease,
+    background-color 100ms ease;
+}
+
+.kinetic-word[data-playhead='future'] {
+  opacity: var(--kinetic-future-opacity, 0.55);
+}
+
+.kinetic-word[data-playhead='read'],
+.kinetic-word[data-playhead='uniform'],
+.kinetic-word[data-playhead='marker'] {
+  opacity: 1;
+}
+
+.kinetic-word[data-playhead='marker'] {
+  outline: 1px solid hsl(var(--reader-highlight));
+}
+
+.kinetic-word[data-playhead='active'] {
+  color: hsl(var(--reader-highlight));
+  font-weight: 600;
+  background-color: hsl(var(--reader-highlight) / 0.12);
+}
+
+@keyframes leeto-clip-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.leeto-clip-enter {
+  animation: leeto-clip-in 220ms ease-out both;
+}
+
+@keyframes leeto-ken-burns {
+  from {
+    transform: scale(1) translateY(0);
+  }
+  to {
+    transform: scale(1.06) translateY(-1%);
+  }
+}
+
+.leeto-ken-burns {
+  animation: leeto-ken-burns 12s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kinetic-word,
+  .leeto-clip-enter,
+  .leeto-ken-burns {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .kinetic-word[data-playhead='active'] {
+    outline: 1px solid hsl(var(--reader-highlight));
+    background-color: transparent;
+  }
+}
