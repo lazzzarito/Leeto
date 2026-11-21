@@ -48,9 +48,11 @@ export default function QuoteList({ quotes, books, query }: QuoteListProps) {
       {quotes.map((quote) => {
         const book = bookById.get(quote.bookId);
         return (
-          <li key={quote.id} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start justify-between gap-2">
-              <blockquote className="font-reading text-sm italic">“{quote.excerpt}”</blockquote>
+          <li key={quote.id} className="min-w-0 rounded-xl border border-border bg-card p-4">
+            <div className="flex min-w-0 items-start justify-between gap-2">
+              <blockquote className="font-reading min-w-0 flex-1 break-words whitespace-normal text-sm italic">
+                “{quote.excerpt}”
+              </blockquote>
               <button
                 type="button"
                 onClick={() => void handleDelete(quote.id)}
