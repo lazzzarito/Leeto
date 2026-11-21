@@ -282,6 +282,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           >
             <BlockView
               block={clip.block}
+              text={clip.text}
               kineticRef={kineticRef}
               fontSize={settings.fontSize}
               lineHeight={settings.lineHeight}

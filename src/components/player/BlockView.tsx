@@ -5,6 +5,7 @@ import KineticText, { type KineticTextHandle } from './KineticText';
 
 interface BlockViewProps {
   block: LeetoBlock;
+  text: string;
   kineticRef: RefObject<KineticTextHandle>;
   fontSize: number;
   lineHeight: number;
@@ -15,6 +16,7 @@ interface BlockViewProps {
 /** Envoltorio estable: los cambios del playhead no pasan por React. */
 const BlockView = memo(function BlockView({
   block,
+  text,
   kineticRef,
   fontSize,
   lineHeight,
@@ -35,7 +37,7 @@ const BlockView = memo(function BlockView({
   return (
     <KineticText
       ref={kineticRef}
-      content={block.content}
+      content={text}
       fontSize={fontSize}
       lineHeight={lineHeight}
       dimIntensity={dimIntensity}

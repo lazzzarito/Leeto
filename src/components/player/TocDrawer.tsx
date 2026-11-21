@@ -53,9 +53,16 @@ export default function TocDrawer({
 
           <nav aria-label="Capítulos" className="mt-5 flex-1 space-y-5 overflow-y-auto">
             {chapters.map((chapter) => {
+              const seenBlocks = new Set<string>();
               const chapterClips = clips
                 .map((clip, index) => ({ clip, index }))
-                .filter(({ clip }) => clip.chapterIndex === chapter.index);
+                .filter(({ clip }) => clip.chapterIndex === chapter.index)
+                .filter(({ clip }) => {
+                  if (seenBlocks.has(clip.block.id)) return false;
+                  seenBlocks.add(clip.block.id);
+                  return true;
+                });
+              const activeBlockId = clips[activeClipIndex]?.block.id;
               return (
                 <section key={chapter.index} className="space-y-1.5">
                   <h3 className="text-sm font-medium">{chapter.title}</h3>
@@ -70,7 +77,9 @@ export default function TocDrawer({
                           }}
                           className={cn(
                             'hover:bg-muted w-full rounded-md px-2 py-1.5 text-left text-xs',
-                            index === activeClipIndex ? 'bg-accent text-accent-foreground' : '',
+                            clip.block.id === activeBlockId
+                              ? 'bg-accent text-accent-foreground'
+                              : '',
                           )}
                         >
                           {index + 1}. {clipLabel(clip)}

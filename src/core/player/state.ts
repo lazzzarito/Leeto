@@ -1,12 +1,18 @@
 import { estimatePercentage } from '@/lib/time';
 import type { LeetoBlock, LeetoChapter, PlaybackState } from '@/types';
 import { getBlockDuration, getImageDuration } from './duration';
+import { splitIntoSegments } from './segment';
 
 export interface PlayerClip {
   key: string;
   chapterIndex: number;
   blockIndex: number;
   block: LeetoBlock;
+  segmentIndex: number;
+  segmentCount: number;
+  /** Texto del subtítulo; vacío en imágenes. */
+  text: string;
+  wordCount: number;
 }
 
 export interface PlayerState {
@@ -59,12 +65,35 @@ export function createInitialState(): PlayerState {
 
 export function buildClips(chapters: LeetoChapter[]): PlayerClip[] {
   return chapters.flatMap((chapter) =>
-    chapter.blocks.map((block, blockIndex) => ({
-      key: `${chapter.index}:${block.id}`,
-      chapterIndex: chapter.index,
-      blockIndex,
-      block,
-    })),
+    chapter.blocks.flatMap((block, blockIndex) => {
+      const base = {
+        chapterIndex: chapter.index,
+        blockIndex,
+        block,
+      };
+      if (block.type === 'image') {
+        return [
+          {
+            ...base,
+            key: `${chapter.index}:${block.id}:s0`,
+            segmentIndex: 0,
+            segmentCount: 1,
+            text: '',
+            wordCount: 0,
+          },
+        ];
+      }
+
+      const segments = splitIntoSegments(block.content);
+      return segments.map((text, segmentIndex) => ({
+        ...base,
+        key: `${chapter.index}:${block.id}:s${segmentIndex}`,
+        segmentIndex,
+        segmentCount: segments.length,
+        text,
+        wordCount: text.split(/\s+/).filter(Boolean).length,
+      }));
+    }),
   );
 }
 
@@ -76,14 +105,14 @@ export function getClipDuration(state: PlayerState, clipIndex = state.clipIndex)
   const clip = state.clips[clipIndex];
   if (!clip) return 0;
   if (clip.block.type === 'image') return getImageDuration(state.imageDurationMs, state.speed);
-  return getBlockDuration(clip.block.wordCount, state.wpm, state.speed);
+  return getBlockDuration(clip.wordCount, state.wpm, state.speed);
 }
 
 /** Índice de palabra activo (0-based) dentro del clip actual; -1 si no hay texto. */
 export function getActiveWordIndex(state: PlayerState): number {
   const clip = state.clips[state.clipIndex];
   if (!clip || clip.block.type !== 'text') return -1;
-  const wordCount = clip.block.wordCount;
+  const wordCount = clip.wordCount;
   if (wordCount <= 0) return 0;
   const duration = getClipDuration(state);
   if (duration <= 0) return 0;
@@ -96,10 +125,10 @@ export function getProgressPercentage(state: PlayerState, totalWordCount: number
   if (!clip) return 0;
   const wordsBefore = state.clips
     .slice(0, state.clipIndex)
-    .reduce((sum, item) => sum + (item.block.type === 'text' ? item.block.wordCount : 0), 0);
+    .reduce((sum, item) => sum + item.wordCount, 0);
   const duration = getClipDuration(state);
   const fraction = duration > 0 ? clamp(state.elapsedMs / duration, 0, 1) : 0;
-  const currentWords = clip.block.type === 'text' ? clip.block.wordCount * fraction : 0;
+  const currentWords = clip.wordCount * fraction;
   return estimatePercentage(totalWordCount, wordsBefore + currentWords);
 }
 

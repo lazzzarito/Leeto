@@ -40,9 +40,9 @@ export function useTts({
   useEffect(() => {
     if (!enabled || !clip || clip.block.type !== 'text' || status !== 'playing') return;
 
-    const wordMs = getWordDuration(clip.block.wordCount, wpm, speed);
+    const wordMs = getWordDuration(clip.wordCount, wpm, speed);
     const session = speakText({
-      text: clip.block.content,
+      text: clip.text,
       voiceURI,
       rate: speed,
       onBoundary: ({ wordIndex }) => onBoundary(wordIndex * wordMs),

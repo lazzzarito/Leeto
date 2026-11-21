@@ -11,6 +11,7 @@ import {
   getProgressPercentage,
   playerReducer,
 } from '@/core/player/state';
+import { findClipIndex } from '@/core/player/resolve';
 import { useBookProgress } from '@/hooks/useLibrary';
 import type { LeetoBook } from '@/types';
 
@@ -29,7 +30,7 @@ export function usePlayer(book: LeetoBook) {
   settingsRef.current = settings;
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const skipSaveRef = useRef(false);
-  const lastSavedBlockRef = useRef<string>();
+  const lastSavedRef = useRef<string>();
 
   const flush = useCallback(() => {
     if (saveTimerRef.current) {
@@ -39,11 +40,12 @@ export function usePlayer(book: LeetoBook) {
     const current = stateRef.current;
     const clip = current.clips[current.clipIndex];
     if (!clip) return;
-    lastSavedBlockRef.current = clip.block.id;
+    lastSavedRef.current = `${clip.block.id}:${clip.segmentIndex}`;
     void progressRepo.put({
       bookId: book.id,
       chapterIndex: clip.chapterIndex,
       blockId: clip.block.id,
+      segmentIndex: clip.segmentIndex,
       percentage: getProgressPercentage(current, book.totalWordCount),
       updatedAt: Date.now(),
       deviceId: settings.deviceId,
@@ -63,12 +65,11 @@ export function usePlayer(book: LeetoBook) {
     }, SAVE_DEBOUNCE_MS);
   }, [flush]);
 
-  // Restaura el bloque guardado. Ignoramos escrituras propias para no reiniciar la reproducción.
+  // Restaura el subtítulo guardado. Ignoramos escrituras propias para no reiniciar la reproducción.
   useEffect(() => {
-    if (progress?.blockId === lastSavedBlockRef.current) return;
-    const clipIndex = progress
-      ? Math.max(0, clips.findIndex((clip) => clip.block.id === progress.blockId))
-      : 0;
+    const savedKey = progress ? `${progress.blockId}:${progress.segmentIndex ?? 0}` : 'new';
+    if (progress && lastSavedRef.current === savedKey) return;
+    const clipIndex = progress ? findClipIndex(clips, progress) : 0;
     skipSaveRef.current = true;
     const currentSettings = settingsRef.current;
     dispatch({
@@ -80,7 +81,7 @@ export function usePlayer(book: LeetoBook) {
       clipIndex,
       elapsedMs: 0,
     });
-  }, [clips, progress?.blockId]);
+  }, [clips, progress?.blockId, progress?.segmentIndex]);
 
   useEffect(() => {
     dispatch({ type: 'setWpm', wpm: settings.wpm });

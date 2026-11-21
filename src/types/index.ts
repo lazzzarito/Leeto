@@ -67,6 +67,7 @@ export interface ReadingProgress {
   bookId: string;
   chapterIndex: number;
   blockId: string;
+  segmentIndex?: number; // subtítulo dentro del bloque; ausente en progresos antiguos
   percentage: number; // 0..100
   updatedAt: number; // epoch ms UTC
   deviceId: string;

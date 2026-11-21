@@ -48,6 +48,20 @@ describe('citas del reproductor', () => {
     expect(quote.id).toMatch(/^quote_/);
   });
 
+  it('cita el párrafo completo aunque el clip sea un subtítulo', () => {
+    const content = Array.from({ length: 25 }, (_, index) => `palabra${index}`).join(' ');
+    const clips = buildClips([
+      {
+        index: 0,
+        title: 'Capítulo 1',
+        blocks: [{ id: 'paragraph', type: 'text', content, wordCount: 25 }],
+      },
+    ]);
+    const secondSegment = clips[1]!;
+
+    expect(buildQuoteForClip(book, secondSegment).excerpt).toBe(content);
+  });
+
   it('recorta fragmentos largos y usa el texto alternativo de imágenes', () => {
     const clips = buildClips(book.chapters);
     const longClip: PlayerClip = {
