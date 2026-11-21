@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta
+      name="description"
+      content="Leeto — lectura dinámica local-first. Tus libros, en tu dispositivo."
+    />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <script>
+      // Aplica el tema antes del primer pintado para evitar destello (T5).
+      (function () {
+        try {
+          var saved = localStorage.getItem('leeto.theme');
+          var valid = ['paper', 'amber', 'sepia', 'eink', 'oled'];
+          var theme =
+            valid.indexOf(saved) !== -1
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'oled'
+                : 'paper';
+          document.documentElement.dataset.readingTheme = theme;
+        } catch (e) {
+          document.documentElement.dataset.readingTheme = 'paper';
+        }
+      })();
+    </script>
+    <title>Leeto</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

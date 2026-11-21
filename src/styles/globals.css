@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-reading-theme='paper'] {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 38 92% 50%;
+    --radius: 0.75rem;
+    --reader-bg: 0 0% 100%;
+    --reader-fg: 240 10% 10%;
+    --reader-highlight: 38 92% 50%;
+  }
+
+  [data-reading-theme='amber'] {
+    --background: 42 33% 97%;
+    --foreground: 30 15% 12%;
+    --card: 42 30% 99%;
+    --card-foreground: 30 15% 12%;
+    --popover: 42 30% 99%;
+    --popover-foreground: 30 15% 12%;
+    --primary: 32 95% 44%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 38 30% 92%;
+    --secondary-foreground: 30 15% 15%;
+    --muted: 38 25% 92%;
+    --muted-foreground: 30 10% 40%;
+    --accent: 38 40% 90%;
+    --accent-foreground: 30 15% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 35 20% 84%;
+    --input: 35 20% 84%;
+    --ring: 32 95% 44%;
+    --radius: 0.75rem;
+    --reader-bg: 42 33% 97%;
+    --reader-fg: 30 18% 14%;
+    --reader-highlight: 32 95% 44%;
+  }
+
+  [data-reading-theme='sepia'] {
+    --background: 37 38% 92%;
+    --foreground: 25 20% 20%;
+    --card: 37 35% 89%;
+    --card-foreground: 25 20% 20%;
+    --popover: 37 35% 89%;
+    --popover-foreground: 25 20% 20%;
+    --primary: 24 70% 40%;
+    --primary-foreground: 40 30% 96%;
+    --secondary: 35 25% 84%;
+    --secondary-foreground: 25 20% 20%;
+    --muted: 35 22% 85%;
+    --muted-foreground: 25 15% 38%;
+    --accent: 35 28% 82%;
+    --accent-foreground: 25 20% 20%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 20% 80%;
+    --input: 30 20% 80%;
+    --ring: 24 70% 40%;
+    --radius: 0.75rem;
+    --reader-bg: 37 38% 92%;
+    --reader-fg: 25 22% 18%;
+    --reader-highlight: 24 70% 40%;
+  }
+
+  [data-reading-theme='eink'] {
+    --background: 0 0% 94%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 97%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 97%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 18%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 88%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 0 0% 88%;
+    --muted-foreground: 0 0% 32%;
+    --accent: 0 0% 86%;
+    --accent-foreground: 0 0% 12%;
+    --destructive: 0 65% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 75%;
+    --input: 0 0% 75%;
+    --ring: 0 0% 18%;
+    --radius: 0.75rem;
+    --reader-bg: 0 0% 94%;
+    --reader-fg: 0 0% 8%;
+    --reader-highlight: 0 0% 20%;
+  }
+
+  [data-reading-theme='oled'] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 96%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 37 91% 55%;
+    --primary-foreground: 0 0% 6%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 12%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 37 91% 55%;
+    --radius: 0.75rem;
+    --reader-bg: 0 0% 0%;
+    --reader-fg: 0 0% 94%;
+    --reader-highlight: 37 91% 55%;
+  }
+
+  :root {
+    /* Fuentes: se usan stack locales para no hacer peticiones de red (local-first). */
+    --font-ui: 'Inter', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-reading: 'Newsreader', 'Merriweather', 'Lora', Georgia, 'Times New Roman', serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    margin: 0;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .text-reader {
+    color: hsl(var(--reader-fg));
+  }
+
+  .bg-reader {
+    background-color: hsl(var(--reader-bg));
+  }
+}
+
+/* Respeto al sistema: se eliminan movimientos continuos. La cinética del lector
+   sustituye el movimiento por un marcador estático (ver KineticText, Fase 4). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
