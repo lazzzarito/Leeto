@@ -13,7 +13,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 - **UI:** Tailwind CSS v3 + componentes estilo shadcn/ui (Radix) + lucide-react. Tokens HSL por tema.
 - **Persistencia:** Dexie (IndexedDB), esquematipado; singleton de `settings` con `deviceId`.
 - **Identidad:** `contentHash` SHA-256 (WebCrypto) como clave de libro.
-- **Parseo:** Web Workers (EPUB: jszip + fast-xml-parser; PDF: pdfjs-dist con worker propio).
+- **Parseo:** Web Worker de app para EPUB (jszip + fast-xml-parser, empaquetado con `?worker`). PDF usa pdfjs-dist desde el hilo principal con **su propio worker** (D5: evitar workers anidados); se carga con `import()` diferido para no engordar el bundle inicial.
 - **Temas:** 5 presets autocontenidos aplicados vía `data-reading-theme` en `<html>`.
 - **Motor:** máquina de estados + único reloj `requestAnimationFrame`; TTS como driver opcional con fallback a temporizador.
 - **Sync v1:** WebDAV + carpeta local, merge por registro con `updatedAt`/`deviceId` y tombstones. Sin backend propio.

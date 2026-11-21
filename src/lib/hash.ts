@@ -5,10 +5,15 @@ function toSha256Hex(buffer: ArrayBuffer): string {
   return hex;
 }
 
-/** SHA-256 del archivo fuente. Es la identidad de contenido de Leeto (D6). */
-export async function hashFile(blob: Blob): Promise<string> {
-  const digest = await globalThis.crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+/** SHA-256 de bytes ya cargados. Es la identidad de contenido de Leeto (D6). */
+export async function hashBytes(bytes: Uint8Array): Promise<string> {
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', new Uint8Array(bytes));
   return `sha256:${toSha256Hex(digest)}`;
+}
+
+/** SHA-256 del archivo fuente. */
+export async function hashFile(blob: Blob): Promise<string> {
+  return hashBytes(new Uint8Array(await blob.arrayBuffer()));
 }
 
 /** SHA-256 de texto UTF-8; útil para huellas de sobre de sincronización. */

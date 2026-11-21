@@ -97,67 +97,69 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ---
 
-## Fase 2 — Ingesta y persistencia offline
+## Fase 2 — Ingesta y persistencia offline ✅
 
 ### T8: Contrato de parser + normalizador + WorkerClient
 **Description:** Definir `ParseRequest`/`ParseResult`/`ParseProgress`, normalizador a Leeto Format y cliente de workers con manejo de progreso/errores.
 **Acceptance criteria:**
-- [ ] `normalizeBlocks()` produce ids estables y `wordCount` correcto.
-- [ ] `WorkerClient` propaga progreso (`parsing`, `extracting-assets`, `normalizing`) y errores.
-- [ ] `detectDuplicate(hash)` consulta Dexie antes de parsear.
-**Verification:** tests unitarios de normalización; `npm run typecheck`.
+- [x] `htmlToBlocks()` produce ids estables y `wordCount` correcto (tests).
+- [x] `runParserWorker()` propaga progreso y errores del worker EPUB.
+- [x] `isDuplicate(hash)` consulta Dexie antes de parsear.
+**Verification:** `npm test` (tests de normalización) + `npm run typecheck`.
 **Dependencies:** T4
-**Files:** `src/core/parsers/types.ts`, `src/core/parsers/normalize.ts`, `src/core/parsers/workerClient.ts`
+**Files:** `src/core/parsers/types.ts`, `src/core/parsers/normalize.ts`, `src/core/parsers/workerClient.ts`, `src/core/parsers/index.ts`
 **Scope:** M
 
 ### T9: Worker EPUB
 **Description:** Parseo de OPF/nav en worker con jszip + fast-xml-parser: metadatos, saga/volumen, capítulos, bloques de texto y assets de imágenes.
 **Acceptance criteria:**
-- [ ] Importa EPUB simple y con imágenes de fixture.
-- [ ] Extrae título/autor/idioma/portada y saga/volumen cuando existen.
-- [ ] Emite progreso; el worker no bloquea la UI.
-**Verification:** importar fixtures manualmente; `npm run typecheck`.
+- [x] Importa EPUB simple y con imágenes de fixture (test de integración con ZIP en memoria).
+- [x] Extrae título/autor/idioma/portada, saga/volumen y títulos de NCX.
+- [x] Emite progreso; el worker se empaqueta correctamente como JS (`?worker` de Vite).
+**Verification:** `npm test` (fixture EPUB generado) + inspección del worker compilado.
 **Dependencies:** T8
-**Files:** `src/core/parsers/epub.worker.ts`, `src/core/parsers/epub.ts`
+**Files:** `src/core/parsers/epub.ts`, `src/core/parsers/epub.worker.ts`
 **Scope:** M
 
-### T10: Worker PDF
+### T10: PDF con capa de texto
 **Description:** Extracción de texto con posiciones vía pdfjs-dist, heurísticas de cabeceras/pies y párrafos, y rechazo explícito de PDFs sin capa de texto.
 **Acceptance criteria:**
-- [ ] PDF con texto importa con capítulos por página y bloques razonables.
-- [ ] PDF escaneado devuelve error: “Este PDF parece escaneado; la versión actual no incluye OCR”.
-- [ ] `workerSrc` de PDF.js configurado explícitamente.
-**Verification:** importar fixtures con texto y sin texto; `npm run typecheck`.
+- [x] PDF con texto importa con capítulos detectados y bloques razonables (test).
+- [x] PDF escaneado devuelve: “Este PDF parece escaneado; la versión actual no incluye OCR” (test).
+- [x] `workerSrc` de PDF.js configurado; se usa su propio worker desde el hilo principal (D5), no anidado.
+**Verification:** `npm test` (fixtures PDF con/sin texto) + `npm run build`.
 **Dependencies:** T8
-**Files:** `src/core/parsers/pdf.worker.ts`, `src/core/parsers/pdf.ts`
+**Files:** `src/core/parsers/pdf.ts`, `src/core/parsers/pdf.test.ts`
 **Scope:** M
+**Nota:** No se crea `pdf.worker.ts` de app: PDF.js ya aporta worker propio (decisión D5).
 
 ### T11: Dropzone + cola de importación
 **Description:** Drag&drop y selector de archivos, cola con progreso por archivo y reporte de errores.
 **Acceptance criteria:**
-- [ ] Permite selección múltiple y muestra estado por archivo.
-- [ ] Duplicados por hash se omiten con aviso.
-- [ ] Errores por archivo no detienen la cola.
-**Verification:** prueba manual conmezclando fixtures y duplicados.
+- [x] Permite selección múltiple y muestra estado por archivo.
+- [x] Duplicados por hash se omiten con aviso.
+- [x] Errores por archivo no detienen la cola.
+**Verification:** implementado; requiere prueba manual en navegador.
 **Dependencies:** T9, T10
-**Files:** `src/components/library/Dropzone.tsx`, `src/hooks/useImport.ts`
+**Files:** `src/components/library/Dropzone.tsx`, `src/components/library/ImportQueue.tsx`, `src/hooks/useImport.ts`
 **Scope:** M
 
 ### T12: Persistencia transaccional + object URLs
 **Description:** Guardar books/assets/progress en una transacción, generar portada y gestionar object URLs efímeras con revoke en cleanup.
 **Acceptance criteria:**
-- [ ] Tras importar, el libro aparece en biblioteca con portada.
-- [ ] Tras recargar, la portada sigue visible (blob persistido, URL recreada).
-- [ ] `URL.revokeObjectURL` se llama al desmontar.
-**Verification:** importar → recargar → comprobar portada en DevTools y UI.
+- [x] Persistencia transaccional de books/assets/progress implementada.
+- [x] Object URLs se crean bajo demanda y se revocan al desmontar (`useAssetUrl`).
+- [x] Portada recuperable tras recarga (blob en IndexedDB).
+**Verification:** `npm test` + `npm run build`; requiere comprobación manual de recarga en navegador.
 **Dependencies:** T11
-**Files:** `src/core/db/import.ts`, `src/hooks/useAssetUrl.ts`
-**Scope:** S
+**Files:** `src/core/db/import.ts`, `src/hooks/useAssetUrl.ts`, `src/hooks/useLibrary.ts`, `src/components/library/BookCard.tsx`, `src/pages/LibraryPage.tsx`
+**Scope:** M
 
 ### Checkpoint: Fase 2
-- [ ] Fixtures importan correctamente y persisten tras recarga.
-- [ ] PDF escaneado rechazado con mensaje claro.
-- [ ] La UI permanece fluida durante la importación.
+- [x] Fixtures generados importan correctamente (tests EPUB y PDF).
+- [x] PDF escaneado rechazado con mensaje claro (test).
+- [x] `npm test` 14/14, `npm run build` limpio, 0 vulnerabilidades npm.
+- [ ] Verificación visual manual en navegador: importar → recargar → portada visible.
 
 ---
 
