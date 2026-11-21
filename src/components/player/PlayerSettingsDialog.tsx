@@ -24,6 +24,7 @@ export default function PlayerSettingsDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      height="content"
       title="Ajustes de lectura"
       description="Ritmo, tipografía y apariencia del reproductor."
     >

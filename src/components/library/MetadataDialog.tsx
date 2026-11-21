@@ -78,6 +78,7 @@ export default function MetadataDialog({ book, open, onOpenChange }: MetadataDia
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      height="content"
       title="Editar libro"
       description="Los cambios se guardan solo en este dispositivo."
       footer={

@@ -10,11 +10,13 @@ interface ResponsiveDialogProps {
   description: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** `full` para ajustes/índice; `content` para formularios cortos. */
+  height?: 'full' | 'content';
 }
 
 /**
- * Modal compartido: hoja inferior en móvil (90dvh) y panel lateral
- * de 50% de ancho en tablet horizontal y escritorio.
+ * Modal compartido: hoja inferior en móvil y panel lateral en pantallas anchas.
+ * La altura puede fijarse al viewport o ajustarse al contenido con tope seguro.
  */
 export default function ResponsiveDialog({
   open,
@@ -23,6 +25,7 @@ export default function ResponsiveDialog({
   description,
   children,
   footer,
+  height = 'full',
 }: ResponsiveDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -30,9 +33,12 @@ export default function ResponsiveDialog({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
         <Dialog.Content
           className={cn(
-            'bg-background fixed inset-x-0 bottom-0 z-50 flex h-[90dvh] w-full flex-col overflow-hidden',
+            'bg-background fixed inset-x-0 bottom-0 z-50 flex w-full flex-col overflow-hidden',
             'rounded-t-2xl border border-border shadow-2xl outline-none',
-            'md:inset-x-auto md:inset-y-0 md:right-0 md:h-dvh md:w-1/2 md:rounded-none md:border-r-0 md:border-y-0',
+            'md:inset-x-auto md:inset-y-0 md:right-0 md:w-1/2',
+            height === 'full'
+              ? 'h-[90dvh] md:h-dvh md:rounded-none md:border-r-0 md:border-y-0'
+              : 'max-h-[90dvh] md:my-auto md:h-auto md:max-h-dvh md:rounded-xl',
           )}
         >
           <header className="pt-safe border-b border-border/70 bg-background/95 shrink-0 backdrop-blur">
