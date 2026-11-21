@@ -163,42 +163,45 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ---
 
-## Fase 3 — Biblioteca inteligente
+## Fase 3 — Biblioteca inteligente ✅
 
 ### T13: Tabs y tarjetas
 **Description:** Vistas Todos/Autores/Sagas/Citas con tarjetas responsivas, progreso y tiempo restante estimado.
 **Acceptance criteria:**
-- [ ] Las 4 vistas muestran datos correctos.
-- [ ] Sagas ordenadas por `volumeNumber` (nulos al final).
-- [ ] Progreso y tiempo restante derivados de `totalWordCount` y PPM.
-**Verification:** dataset mixto manual; `npm run typecheck`.
+- [x] Las 4 vistas muestran datos correctos (Tabs de Radix; agrupaciones puras testadas).
+- [x] Sagas ordenadas por `volumeNumber` (nulos al final), test incluido.
+- [x] Progreso y tiempo restante derivados de `totalWordCount` y PPM en `BookCard`.
+**Verification:** `npm test` (6 tests de vistas) + `npm run typecheck`.
 **Dependencies:** T12
-**Files:** `src/components/library/LibraryTabs.tsx`, `src/components/library/BookCard.tsx`, `src/components/library/QuoteList.tsx`
+**Files:** `src/core/library/views.ts`, `src/core/library/views.test.ts`, `src/components/library/LibraryTabs.tsx`, `src/components/library/BookCard.tsx`, `src/components/library/QuoteList.tsx`
 **Scope:** M
 
 ### T14: Búsqueda instantánea
 **Description:** Barra tipo Command que filtra por título, autor, saga y citas en tiempo real.
 **Acceptance criteria:**
-- [ ] El filtrado responde a cada pulsación sin latencia perceptible.
-- [ ] Busca en título, autor, saga y excerpt de citas.
-**Verification:** prueba manual con dataset mixto.
+- [x] El filtrado responde a cada pulsación sin latencia perceptible (estado controlado, filtros puros).
+- [x] Busca en título, autor, saga y excerpt/nota de citas, con normalización de acentos.
+**Verification:** `npm test` (tests de `filterBooks`/`filterQuotes`); requiere prueba manual con dataset mixto.
 **Dependencies:** T13
-**Files:** `src/components/library/SearchBar.tsx`, `src/hooks/useLibrary.ts`
+**Files:** `src/components/library/SearchBar.tsx`, `src/core/library/views.ts`, `src/hooks/useLibrary.ts`
 **Scope:** S
 
 ### T15: Edición y borrado seguros
 **Description:** Editar metadatos/portada, reubicar en saga y eliminar con cascada de progreso, citas y assets huérfanos en transacción.
 **Acceptance criteria:**
-- [ ] Editar título/autor/saga/volumen se refleja en la biblioteca y en sync (`updatedAt`).
-- [ ] Eliminar un libro borra su progreso, citas y assets huérfanos.
-**Verification:** editar y eliminar un libro; inspeccionar IndexedDB.
+- [x] Editar título/autor/saga/volumen actualiza `updatedAt` y se refleja en la biblioteca (tests con Dexie + fake-indexeddb).
+- [x] Eliminar un libro borra su progreso, citas y assets en una transacción (test de cascada).
+- [x] Reemplazar portada elimina la anterior huérfana o la conserva como imagen si sigue referenciada (test).
+**Verification:** `npm test` (5 tests de DB) + `npm run build`.
 **Dependencies:** T14
-**Files:** `src/components/library/MetadataDialog.tsx`, `src/core/db/delete.ts`
+**Files:** `src/components/library/MetadataDialog.tsx`, `src/core/db/delete.ts`, `src/core/db/delete.test.ts`, `src/pages/LibraryPage.tsx`
 **Scope:** M
 
 ### Checkpoint: Fase 3
-- [ ] Búsqueda, agrupaciones y orden de sagas correctos.
-- [ ] Borrado limpia todos los datos asociados.
+- [x] Búsqueda, agrupaciones y orden de sagas correctos (tests puros).
+- [x] Borrado limpia todos los datos asociados (test Dexie).
+- [x] `npm test` 25/25, `npm run build` limpio (aviso de chunk >500 kB por Radix, no error).
+- [ ] Verificación visual manual en navegador: tabs, búsqueda, editar y eliminar.
 
 ---
 

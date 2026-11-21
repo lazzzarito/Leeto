@@ -1,13 +1,37 @@
+import * as Dialog from '@radix-ui/react-dialog';
 import { Library, ShieldCheck } from 'lucide-react';
-import BookCard from '@/components/library/BookCard';
+import { useState } from 'react';
 import Dropzone from '@/components/library/Dropzone';
 import ImportQueue from '@/components/library/ImportQueue';
+import LibraryTabs from '@/components/library/LibraryTabs';
+import MetadataDialog from '@/components/library/MetadataDialog';
+import SearchBar from '@/components/library/SearchBar';
+import { deleteBookCascade } from '@/core/db/delete';
 import { useImport } from '@/hooks/useImport';
-import { useBooks } from '@/hooks/useLibrary';
+import { useBooks, useQuotes } from '@/hooks/useLibrary';
+import type { LeetoBook } from '@/types';
 
 export default function LibraryPage() {
   const books = useBooks();
+  const quotes = useQuotes();
   const { jobs, importFiles, clearFinished } = useImport();
+  const [query, setQuery] = useState('');
+  const [editingBookId, setEditingBookId] = useState<string>();
+  const [deletingBook, setDeletingBook] = useState<LeetoBook>();
+  const [error, setError] = useState<string>();
+
+  const editingBook = books.find((book) => book.id === editingBookId);
+
+  const handleDelete = async () => {
+    if (!deletingBook) return;
+    try {
+      await deleteBookCascade(deletingBook.id);
+      setDeletingBook(undefined);
+      setError(undefined);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo eliminar el libro');
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -35,15 +59,60 @@ export default function LibraryPage() {
           </p>
         </section>
       ) : (
-        <section aria-label="Libros" className="space-y-3">
-          <h2 className="text-sm font-medium">Mis libros ({books.length})</h2>
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {books.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </ul>
+        <section aria-label="Libros" className="space-y-4">
+          <SearchBar value={query} onChange={setQuery} />
+          <LibraryTabs
+            books={books}
+            quotes={quotes}
+            query={query}
+            onEdit={(book) => setEditingBookId(book.id)}
+            onDelete={setDeletingBook}
+          />
         </section>
       )}
+
+      {error && (
+        <p role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      )}
+
+      <MetadataDialog
+        book={editingBook}
+        open={Boolean(editingBook)}
+        onOpenChange={(open) => {
+          if (!open) setEditingBookId(undefined);
+        }}
+      />
+
+      <Dialog.Root open={Boolean(deletingBook)} onOpenChange={(open) => !open && setDeletingBook(undefined)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
+          <Dialog.Content className="bg-card text-card-foreground fixed top-1/2 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border p-5 shadow-xl">
+            <Dialog.Title className="text-lg font-semibold">Eliminar libro</Dialog.Title>
+            <Dialog.Description className="text-muted-foreground mt-2 text-sm">
+              Se borrarán también su progreso, citas e imágenes. Esta acción no se puede deshacer.
+            </Dialog.Description>
+            <div className="mt-5 flex justify-end gap-2">
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="border-border hover:bg-muted rounded-lg border px-3 py-1.5 text-sm"
+                >
+                  Cancelar
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                onClick={() => void handleDelete()}
+                className="bg-destructive text-destructive-foreground rounded-lg px-3 py-1.5 text-sm font-medium"
+              >
+                Eliminar
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       <section className="flex items-start gap-3 rounded-xl bg-muted/60 p-4">
         <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />

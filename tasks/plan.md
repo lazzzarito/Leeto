@@ -10,7 +10,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 - **Stack base:** Vite + React 18 + TypeScript (strict) + react-router-dom. SPA/PWA, build estático.
 - **Gestor de paquetes:** npm (es el único disponible en el entorno: Node 26.7 / npm 12).
-- **UI:** Tailwind CSS v3 + componentes estilo shadcn/ui (Radix) + lucide-react. Tokens HSL por tema.
+- **UI:** Tailwind CSS v3 + estilo shadcn/ui sobre primitivas Radix (`dialog`, `dropdown-menu`, `tabs`, instaladas en Fase 3) + lucide-react. Tokens HSL por tema.
 - **Persistencia:** Dexie (IndexedDB), esquematipado; singleton de `settings` con `deviceId`.
 - **Identidad:** `contentHash` SHA-256 (WebCrypto) como clave de libro.
 - **Parseo:** Web Worker de app para EPUB (jszip + fast-xml-parser, empaquetado con `?worker`). PDF usa pdfjs-dist desde el hilo principal con **su propio worker** (D5: evitar workers anidados); se carga con `import()` diferido para no engordar el bundle inicial.
