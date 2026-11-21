@@ -1,15 +1,18 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MoreHorizontal, Play, SkipBack, SkipForward } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent, type WheelEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { useSettings } from '@/core/db/settings';
+import { Link, useNavigate } from 'react-router-dom';
+import { updateSettings, useSettings } from '@/core/db/settings';
 import { getClipDuration } from '@/core/player/state';
 import { useTts } from '@/core/tts/useTts';
 import { usePlayer } from '@/hooks/usePlayer';
+import { useQuotes } from '@/hooks/useLibrary';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
+import { shareText } from '@/lib/share';
 import type { LeetoBook } from '@/types';
 import BlockView from './BlockView';
-import PlayerControls from './PlayerControls';
+import PlayerSettingsDialog from './PlayerSettingsDialog';
+import ReelActionRail from './ReelActionRail';
 import StoriesBar from './StoriesBar';
 import TocDrawer from './TocDrawer';
 import type { KineticTextHandle } from './KineticText';
@@ -41,6 +44,8 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     saveQuote,
   } = usePlayer(book);
   const settings = useSettings();
+  const quotes = useQuotes();
+  const navigate = useNavigate();
   const reducedMotion = useReducedMotion(settings.reducedMotion);
 
   const kineticRef = useRef<KineticTextHandle>(null);
@@ -51,10 +56,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const longPressFiredRef = useRef(false);
+  const heartTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [tocOpen, setTocOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [notice, setNotice] = useState<string>();
   const [chromeVisible, setChromeVisible] = useState(true);
+  const [heartPop, setHeartPop] = useState(false);
 
   const showNotice = useCallback((message: string) => {
     setNotice(message);
@@ -81,10 +89,36 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     onError: handleTtsError,
   });
 
+  const pulseHeart = useCallback(() => {
+    if (reducedMotion) return;
+    setHeartPop(false);
+    if (heartTimerRef.current) clearTimeout(heartTimerRef.current);
+    heartTimerRef.current = setTimeout(() => {
+      setHeartPop(true);
+      heartTimerRef.current = setTimeout(() => setHeartPop(false), 700);
+    }, 0);
+  }, [reducedMotion]);
+
   const handleQuote = useCallback(async () => {
     const quote = await saveQuote();
+    if (quote) pulseHeart();
     showNotice(quote ? 'Cita guardada' : 'Este bloque no tiene texto para citar');
-  }, [saveQuote, showNotice]);
+  }, [pulseHeart, saveQuote, showNotice]);
+
+  const handleShare = useCallback(async () => {
+    if (!clip) return;
+    const caption = clip.block.type === 'image' ? (clip.block.caption ?? '') : '';
+    const text = `${book.title} — ${book.author}\n\n“${clip.text || caption}”`;
+    const result = await shareText(text, book.title);
+    if (result === 'cancelled') return;
+    showNotice(
+      result === 'copied'
+        ? 'Fragmento copiado'
+        : result === 'shared'
+          ? 'Fragmento compartido'
+          : 'No se pudo compartir',
+    );
+  }, [book.author, book.title, clip, showNotice]);
 
   // El playhead se actualiza de forma imperativa: React no re-renderiza cada palabra.
   useEffect(() => {
@@ -114,6 +148,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     () => () => {
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      if (heartTimerRef.current) clearTimeout(heartTimerRef.current);
     },
     [],
   );
@@ -123,10 +158,12 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       const target = event.target;
       if (
         target instanceof HTMLElement &&
-        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+        (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName) ||
+          target.isContentEditable)
       ) {
         return;
       }
+      if (tocOpen || settingsOpen) return;
       wakeChrome();
       switch (event.key) {
         case ' ':
@@ -149,21 +186,23 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           break;
         case 'f':
         case 'F':
-          void containerRef.current?.requestFullscreen?.().catch(() => showNotice('Pantalla completa no disponible'));
+          void containerRef.current
+            ?.requestFullscreen?.()
+            .catch(() => showNotice('Pantalla completa no disponible'));
           break;
         case 'q':
         case 'Q':
           void handleQuote();
           break;
         case 'Escape':
-          if (tocOpen) setTocOpen(false);
-          else pause();
+          if (state.status === 'playing') pause();
+          else navigate('/');
           break;
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleQuote, next, pause, previous, showNotice, tocOpen, toggle, wakeChrome]);
+  }, [handleQuote, navigate, next, pause, previous, settingsOpen, showNotice, state.status, tocOpen, toggle, wakeChrome]);
 
   const cancelLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -247,8 +286,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
 
   const chromeClass = cn(
     'transition-opacity duration-200',
-    chromeVisible || state.status !== 'playing' ? 'opacity-100' : 'opacity-0',
+    chromeVisible || state.status !== 'playing'
+      ? 'opacity-100'
+      : 'pointer-events-none opacity-0',
   );
+  const quoteCount = quotes.filter((quote) => quote.bookId === book.id).length;
+  const subtitleFontSize = Math.min(26, Math.max(18, settings.fontSize + 2));
+  const subtitleLineHeight = Math.min(1.6, settings.lineHeight);
 
   return (
     <div
@@ -258,66 +302,153 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       onTouchMove={cancelLongPress}
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
-      className="bg-reader text-reader relative flex min-h-[70dvh] flex-col overflow-hidden rounded-xl border border-border"
+      className="reel-surface bg-reader text-reader fixed inset-0 z-40 flex h-[100dvh] w-full flex-col overflow-hidden"
     >
-      <div className={cn('space-y-2 px-3 pt-3', chromeClass)}>
-        <div className="flex items-center justify-between gap-3">
+      <span className="reel-top-scrim pointer-events-none absolute inset-x-0 top-0 z-20 h-32" aria-hidden="true" />
+      <p aria-live="polite" className="sr-only">
+        {chapter ? `Capítulo ${chapter.index + 1}: ${chapter.title}. ` : ''}
+        {clip ? `Fragmento ${clip.segmentIndex + 1} de ${clip.segmentCount}.` : ''}
+      </p>
+
+      <div
+        className={cn('pt-safe relative z-30 px-4', chromeClass)}
+        onTouchStart={(event) => event.stopPropagation()}
+        onTouchEnd={(event) => event.stopPropagation()}
+        onWheel={(event) => event.stopPropagation()}
+      >
+        <div className="flex h-12 items-center justify-between gap-3">
           <Link
             to="/"
-            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs"
+            className="text-reel hover:text-reel-muted inline-flex items-center gap-1.5 text-sm"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Biblioteca
           </Link>
-          <span className="text-muted-foreground truncate text-xs">{chapter?.title}</span>
+          <span className="text-reel min-w-0 flex-1 truncate text-center text-sm font-medium">
+            {chapter?.title}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Ajustes de lectura"
+            className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+          >
+            <MoreHorizontal className="size-5" aria-hidden="true" />
+          </button>
         </div>
+      </div>
+
+      <div className="relative z-30 px-4 pb-2">
         <StoriesBar segments={segments} percentage={percentage} />
       </div>
 
-      <div className="flex flex-1 snap-y snap-mandatory items-center justify-center overflow-hidden px-4 py-8">
-        {clip ? (
-          <div
-            key={clip.key}
-            className={cn('snap-start w-full', !reducedMotion && 'leeto-clip-enter')}
-          >
+      <div className="relative mx-auto flex h-full w-full max-w-md flex-1">
+        {clip?.block.type === 'image' && (
+          <div key={clip.key} className={cn('absolute inset-0', !reducedMotion && 'leeto-clip-enter')}>
             <BlockView
               block={clip.block}
               text={clip.text}
               kineticRef={kineticRef}
-              fontSize={settings.fontSize}
-              lineHeight={settings.lineHeight}
+              fontSize={subtitleFontSize}
+              lineHeight={subtitleLineHeight}
               dimIntensity={settings.focusDimIntensity}
               kenBurns={!reducedMotion}
+              fill
             />
           </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">Este libro no tiene bloques legibles.</p>
         )}
+
+        {(state.status === 'paused' || state.status === 'ended') && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <div className="bg-black/35 flex size-16 items-center justify-center rounded-full backdrop-blur-sm">
+              <Play className="text-reel size-8 fill-current" aria-hidden="true" />
+            </div>
+          </div>
+        )}
+
+        {clip && (
+          <div
+            className={cn(
+              'reel-scrim pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pt-24 pb-[calc(env(safe-area-inset-bottom)+5.5rem)]',
+              chromeClass,
+            )}
+          >
+            <p className="text-reel-muted mb-2 text-center text-[11px]">
+              {book.author} · {book.title}
+            </p>
+            {clip.block.type === 'text' ? (
+              <BlockView
+                block={clip.block}
+                text={clip.text}
+                kineticRef={kineticRef}
+                fontSize={subtitleFontSize}
+                lineHeight={subtitleLineHeight}
+                dimIntensity={settings.focusDimIntensity}
+                kenBurns={!reducedMotion}
+                variant="subtitle"
+              />
+            ) : (
+              <p className="text-reel text-center text-sm">{clip.block.caption ?? 'Imagen'}</p>
+            )}
+            <p className="text-reel-muted mt-3 text-center text-[11px]">
+              Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
+              {clip.block.type === 'text'
+                ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
+                : 'Imagen'}
+            </p>
+            <div className="pointer-events-auto mt-3 hidden items-center justify-center gap-4 md:flex">
+              <button
+                type="button"
+                onClick={previous}
+                aria-label="Fragmento anterior"
+                className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+              >
+                <SkipBack className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={next}
+                aria-label="Fragmento siguiente"
+                className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+              >
+                <SkipForward className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className={chromeClass}>
+          <ReelActionRail
+            coverAssetId={book.coverAssetId}
+            title={book.title}
+            quoteCount={quoteCount}
+            ttsEnabled={settings.ttsEnabled}
+            playing={state.status === 'playing'}
+            reducedMotion={reducedMotion}
+            heartPop={heartPop}
+            onQuote={() => void handleQuote()}
+            onToc={() => setTocOpen(true)}
+            onShare={() => void handleShare()}
+            onSettings={() => setSettingsOpen(true)}
+            onToggleTts={() => void updateSettings({ ttsEnabled: !settings.ttsEnabled })}
+          />
+        </div>
       </div>
 
       {notice && (
         <p
           role="status"
-          className="bg-background/90 border-border absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-full border px-3 py-1 text-xs shadow"
+          className="text-reel bg-black/60 absolute bottom-[calc(env(safe-area-inset-bottom)+11rem)] left-1/2 z-30 -translate-x-1/2 rounded-full px-3 py-1 text-xs backdrop-blur"
         >
           {notice}
         </p>
       )}
 
-      <div className={chromeClass}>
-        <PlayerControls
-          status={state.status}
-          settings={settings}
-          clips={state.clips}
-          clipIndex={state.clipIndex}
-          onToggle={toggle}
-          onNext={next}
-          onPrevious={previous}
-          onSeek={(index) => seekTo(index)}
-          onQuote={() => void handleQuote()}
-          onToc={() => setTocOpen(true)}
-        />
-      </div>
+      <PlayerSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={settings}
+      />
 
       <TocDrawer
         open={tocOpen}

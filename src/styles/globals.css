@@ -28,6 +28,8 @@
     --reader-bg: 0 0% 100%;
     --reader-fg: 240 10% 10%;
     --reader-highlight: 38 92% 50%;
+    --reel-fg: 0 0% 100%;
+    --reel-scrim: 0 0% 0%;
   }
 
   [data-reading-theme='amber'] {
@@ -222,6 +224,32 @@
 
   .scroll-touch {
     -webkit-overflow-scrolling: touch;
+  }
+
+  .text-reel {
+    color: hsl(var(--reel-fg));
+  }
+
+  .text-reel-muted {
+    color: hsl(var(--reel-fg) / 0.72);
+  }
+
+  .reel-scrim {
+    background: linear-gradient(
+      to top,
+      hsl(var(--reel-scrim) / 0.9),
+      hsl(var(--reel-scrim) / 0.45) 45%,
+      transparent 78%
+    );
+  }
+
+  .reel-top-scrim {
+    background: linear-gradient(to bottom, hsl(var(--reel-scrim) / 0.6), transparent);
+  }
+
+  .reel-surface {
+    touch-action: pan-y;
+    overscroll-behavior: none;
   }
 }
 

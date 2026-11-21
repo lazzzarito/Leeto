@@ -7,19 +7,28 @@ interface ImageBlockProps {
   alt?: string;
   caption?: string;
   kenBurns: boolean;
+  fill?: boolean;
 }
 
-export default function ImageBlock({ assetId, alt, caption, kenBurns }: ImageBlockProps) {
+export default function ImageBlock({
+  assetId,
+  alt,
+  caption,
+  kenBurns,
+  fill = false,
+}: ImageBlockProps) {
   const url = useAssetUrl(assetId);
 
   return (
-    <figure className="mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-3">
+    <figure className={cn(fill ? 'relative h-full w-full' : 'mx-auto flex w-full max-w-3xl flex-col items-center justify-center gap-3')}>
       {url ? (
         <img
           src={url}
           alt={alt ?? ''}
           className={cn(
-            'max-h-[65dvh] max-w-full rounded-lg object-contain shadow-sm',
+            fill
+              ? 'absolute inset-0 size-full object-cover'
+              : 'max-h-[65dvh] max-w-full rounded-lg object-contain shadow-sm',
             kenBurns && 'leeto-ken-burns',
           )}
         />
@@ -31,7 +40,8 @@ export default function ImageBlock({ assetId, alt, caption, kenBurns }: ImageBlo
           </span>
         </div>
       )}
-      {caption && (
+      {fill && <span className="reel-top-scrim pointer-events-none absolute inset-x-0 top-0 h-32" aria-hidden="true" />}
+      {caption && !fill && (
         <figcaption className="text-muted-foreground text-center text-sm">{caption}</figcaption>
       )}
     </figure>

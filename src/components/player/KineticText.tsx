@@ -1,4 +1,5 @@
 import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useRef, type CSSProperties } from 'react';
+import { cn } from '@/lib/cn';
 
 export interface KineticTextHandle {
   setWordIndex(index: number): void;
@@ -11,6 +12,7 @@ interface KineticTextProps {
   fontSize: number;
   lineHeight: number;
   dimIntensity: number;
+  variant?: 'body' | 'subtitle';
 }
 
 /**
@@ -19,7 +21,7 @@ interface KineticTextProps {
  */
 const KineticText = memo(
   forwardRef<KineticTextHandle, KineticTextProps>(function KineticText(
-    { content, fontSize, lineHeight, dimIntensity },
+    { content, fontSize, lineHeight, dimIntensity, variant = 'body' },
     ref,
   ) {
     const words = useMemo(() => content.split(/\s+/).filter(Boolean), [content]);
@@ -87,7 +89,15 @@ const KineticText = memo(
     } as CSSProperties;
 
     return (
-      <p className="font-reading mx-auto max-w-[68ch] text-left" style={style}>
+      <p
+        className={cn(
+          'font-reading',
+          variant === 'subtitle'
+            ? 'text-reel max-w-none text-balance text-center'
+            : 'mx-auto max-w-[68ch] text-left',
+        )}
+        style={style}
+      >
         {words.map((word, index) => (
           <span
             key={index}

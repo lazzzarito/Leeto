@@ -11,6 +11,8 @@ interface BlockViewProps {
   lineHeight: number;
   dimIntensity: number;
   kenBurns: boolean;
+  variant?: 'body' | 'subtitle';
+  fill?: boolean;
 }
 
 /** Envoltorio estable: los cambios del playhead no pasan por React. */
@@ -22,6 +24,8 @@ const BlockView = memo(function BlockView({
   lineHeight,
   dimIntensity,
   kenBurns,
+  variant = 'body',
+  fill = false,
 }: BlockViewProps) {
   if (block.type === 'image') {
     return (
@@ -30,6 +34,7 @@ const BlockView = memo(function BlockView({
         alt={block.alt}
         caption={block.caption}
         kenBurns={kenBurns}
+        fill={fill}
       />
     );
   }
@@ -38,6 +43,7 @@ const BlockView = memo(function BlockView({
     <KineticText
       ref={kineticRef}
       content={text}
+      variant={variant}
       fontSize={fontSize}
       lineHeight={lineHeight}
       dimIntensity={dimIntensity}
