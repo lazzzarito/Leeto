@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { Library, ShieldCheck } from 'lucide-react';
+import { Library } from 'lucide-react';
 import { useState } from 'react';
 import Dropzone from '@/components/library/Dropzone';
 import ImportQueue from '@/components/library/ImportQueue';
@@ -113,17 +113,6 @@ export default function LibraryPage() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
-      <section className="flex items-start gap-3 rounded-xl bg-muted/60 p-4">
-        <ShieldCheck className="text-primary mt-0.5 size-5 shrink-0" aria-hidden="true" />
-        <div>
-          <h2 className="text-sm font-medium">Privacidad por defecto</h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            El progreso y las citas solo se guardan localmente, salvo que actives la
-            sincronización con tu propia infraestructura.
-          </p>
-        </div>
-      </section>
     </div>
   );
 }

@@ -191,6 +191,10 @@
   .bg-reader {
     background-color: hsl(var(--reader-bg));
   }
+
+  .scroll-touch {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Respeto al sistema: se eliminan movimientos continuos. La cinética del lector

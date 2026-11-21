@@ -1,9 +1,19 @@
 import { BookOpen, Settings2 } from 'lucide-react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, Outlet, useSearchParams } from 'react-router-dom';
+import SettingsDialog from '@/components/settings/SettingsDialog';
 import { SyncProvider } from '@/hooks/useSyncContext';
-import { cn } from '@/lib/cn';
 
 export default function AppShell() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const settingsOpen = searchParams.get('settings') === '1';
+
+  const setSettingsOpen = (open: boolean) => {
+    const next = new URLSearchParams(searchParams);
+    if (open) next.set('settings', '1');
+    else next.delete('settings');
+    setSearchParams(next, { replace: !open });
+  };
+
   return (
     <SyncProvider>
       <div className="flex min-h-dvh flex-col bg-background text-foreground">
@@ -14,28 +24,25 @@ export default function AppShell() {
               <span className="font-semibold tracking-tight">Leeto</span>
             </Link>
 
-            <nav aria-label="Navegación principal">
-              <NavLink
-                to="/settings"
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
-                    isActive
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )
-                }
-              >
-                <Settings2 className="size-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Ajustes</span>
-              </NavLink>
-            </nav>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+              className="text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
+            >
+              <Settings2 className="size-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Ajustes</span>
+              <span className="sr-only sm:hidden">Ajustes</span>
+            </button>
           </div>
         </header>
 
         <main className="pb-safe mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">
           <Outlet />
         </main>
+
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     </SyncProvider>
   );
