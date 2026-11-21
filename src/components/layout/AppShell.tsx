@@ -1,11 +1,23 @@
 import { BookOpen, Settings2 } from 'lucide-react';
-import { Link, Outlet, useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import { SyncProvider } from '@/hooks/useSyncContext';
 
 export default function AppShell() {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const settingsOpen = searchParams.get('settings') === '1';
+  const reading = location.pathname.startsWith('/read/');
+
+  useEffect(() => {
+    if (!reading) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [reading]);
 
   const setSettingsOpen = (open: boolean) => {
     const next = new URLSearchParams(searchParams);
@@ -13,6 +25,14 @@ export default function AppShell() {
     else next.delete('settings');
     setSearchParams(next, { replace: !open });
   };
+
+  if (reading) {
+    return (
+      <SyncProvider>
+        <Outlet />
+      </SyncProvider>
+    );
+  }
 
   return (
     <SyncProvider>

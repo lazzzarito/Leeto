@@ -9,12 +9,17 @@ export default function ReaderPage() {
   const book = useLiveQuery(() => (id ? db.books.get(id) : undefined), [id], null);
 
   if (book === null) {
-    return <p className="text-muted-foreground text-sm">Cargando libro…</p>;
+    return (
+      <main className="bg-reader text-reader flex h-[100dvh] w-full items-center justify-center">
+        <p className="text-muted-foreground text-sm">Cargando libro…</p>
+      </main>
+    );
   }
 
   if (!book) {
     return (
-      <div className="rounded-xl border border-border bg-card px-6 py-14 text-center">
+      <main className="bg-reader text-reader flex h-[100dvh] w-full items-center justify-center px-6">
+        <div className="w-full max-w-sm text-center">
         <BookOpenText className="text-muted-foreground mx-auto size-7" aria-hidden="true" />
         <h1 className="mt-3 text-lg font-medium">Libro no encontrado</h1>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -27,7 +32,8 @@ export default function ReaderPage() {
           <ArrowLeft className="size-4" aria-hidden="true" />
           Volver a la biblioteca
         </Link>
-      </div>
+        </div>
+      </main>
     );
   }
 
