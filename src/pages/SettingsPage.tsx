@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import SyncSettings from '@/components/settings/SyncSettings';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/cn';
 
@@ -64,15 +65,16 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <SyncSettings />
+
       <section aria-labelledby="upcoming-heading" className="space-y-2 border-t border-border pt-6">
         <h2 id="upcoming-heading" className="text-base font-medium">
           Próximamente
         </h2>
         <ul className="text-muted-foreground list-inside list-disc text-sm">
-          <li>Tipografía, interlineado y PPM por defecto.</li>
-          <li>Cinética Focus Playhead y lectura estática.</li>
-          <li>Voz local (TTS) con fallback a temporizador.</li>
-          <li>Sincronización WebDAV y carpeta local.</li>
+          <li>Replicación opcional de archivos fuente (<code>books/</code>).</li>
+          <li>Conectores de Google Drive y OneDrive.</li>
+          <li>Bloqueo remoto fuerte y resolución visual de conflictos.</li>
         </ul>
       </section>
     </div>

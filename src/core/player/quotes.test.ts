@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import 'fake-indexeddb/auto';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { db } from '@/core/db/db';
 import type { LeetoBook } from '@/types';
-import { buildQuoteForClip } from './quotes';
+import { buildQuoteForClip, softDeleteQuote } from './quotes';
 import { buildClips, type PlayerClip } from './state';
 
 const book: LeetoBook = {
@@ -27,6 +29,10 @@ const book: LeetoBook = {
 };
 
 describe('citas del reproductor', () => {
+  beforeEach(async () => {
+    await db.quotes.clear();
+  });
+
   it('guarda la referencia exacta al bloque de texto', () => {
     const clip = buildClips(book.chapters)[0]!;
     const quote = buildQuoteForClip(book, clip, 1234);
@@ -50,5 +56,15 @@ describe('citas del reproductor', () => {
     };
     expect(buildQuoteForClip(book, longClip).excerpt).toHaveLength(500);
     expect(buildQuoteForClip(book, clips[1]!).excerpt).toBe('Ilustración');
+  });
+
+  it('el borrado local crea un tombstone que la vista ignora', async () => {
+    const quote = buildQuoteForClip(book, buildClips(book.chapters)[0]!);
+    await db.quotes.put(quote);
+
+    await softDeleteQuote(quote.id, 5000);
+
+    expect(await db.quotes.get(quote.id)).toMatchObject({ deletedAt: 5000, updatedAt: 5000 });
+    expect(await db.quotes.filter((item) => !item.deletedAt).count()).toBe(0);
   });
 });

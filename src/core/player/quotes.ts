@@ -25,3 +25,10 @@ export async function saveQuoteForClip(book: LeetoBook, clip: PlayerClip): Promi
   await quotesRepo.put(quote);
   return quote;
 }
+
+/** Marca la cita como eliminada sin borrar el registro: el tombstone se propaga por sync. */
+export async function softDeleteQuote(id: string, now = Date.now()): Promise<void> {
+  const quote = await quotesRepo.get(id);
+  if (!quote || quote.deletedAt) return;
+  await quotesRepo.put({ ...quote, deletedAt: now, updatedAt: now });
+}

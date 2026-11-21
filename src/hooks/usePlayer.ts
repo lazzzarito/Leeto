@@ -3,6 +3,7 @@ import { progressRepo } from '@/core/db/repositories';
 import { useSettings } from '@/core/db/settings';
 import { createPlayerClock } from '@/core/player/clock';
 import { saveQuoteForClip } from '@/core/player/quotes';
+import { notifyLocalSyncChange } from '@/core/sync/scheduler';
 import {
   buildClips,
   createInitialState,
@@ -47,6 +48,7 @@ export function usePlayer(book: LeetoBook) {
       updatedAt: Date.now(),
       deviceId: settings.deviceId,
     });
+    notifyLocalSyncChange();
   }, [book.id, book.totalWordCount, settings.deviceId]);
 
   const scheduleSave = useCallback(() => {
@@ -136,7 +138,9 @@ export function usePlayer(book: LeetoBook) {
   }, []);
   const saveQuote = useCallback(async () => {
     const clip = stateRef.current.clips[stateRef.current.clipIndex];
-    return clip ? saveQuoteForClip(book, clip) : undefined;
+    const quote = clip ? await saveQuoteForClip(book, clip) : undefined;
+    if (quote) notifyLocalSyncChange();
+    return quote;
   }, [book]);
 
   const clip = state.clips[state.clipIndex];

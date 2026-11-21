@@ -24,6 +24,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ttsEnabled: false,
   reducedMotion: 'system',
   syncEnabled: false,
+  syncProvider: 'webdav',
+  syncWebDavUrl: '',
+  syncWebDavUsername: '',
 };
 
 /** Devuelve los ajustes persistidos o, si no existen, los valores por defecto. */

@@ -100,6 +100,8 @@ export interface AppSettings {
   reducedMotion?: 'system' | 'on' | 'off';
   syncEnabled: boolean;
   syncProvider?: 'webdav' | 'local-folder' | 'gdrive' | 'onedrive';
+  syncWebDavUrl?: string;
+  syncWebDavUsername?: string;
 }
 
 export interface SyncEnvelope {

@@ -282,43 +282,46 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ---
 
-## Fase 5 — Sincronización local-first
+## Fase 5 — Sincronización local-first ✅
 
 ### T22: Sobre de sync + merge + backup
 **Description:** Serialización de `SyncEnvelope`, merge por registro (progress/quotes/libraryRefs/devices), tombstones, backup rotativo y export/import manual, como funciones puras con tests.
 **Acceptance criteria:**
-- [ ] Tests del escenario A/B: cada dispositivo conserva su progreso y la cita sobrevive.
-- [ ] Tombstone de cita propagado.
-- [ ] Empate de `updatedAt` desempata por `deviceId` lexicográfico.
-- [ ] Export/import round-trip sin pérdida.
-**Verification:** `npm run test`.
+- [x] Test del escenario A/B: cada dispositivo conserva su progreso y la cita sobrevive (conmutativo).
+- [x] Tombstone de cita propagado y borrado local (`softDeleteQuote`) crea tombstone.
+- [x] Empate de `updatedAt` desempata por `deviceId` lexicográfico.
+- [x] Export/import round-trip sin pérdida; JSON inválido/versión no soportada rechazado.
+**Verification:** `npm test` (11 tests de sobre/merge/backup).
 **Dependencies:** T4
-**Files:** `src/core/sync/envelope.ts`, `src/core/sync/merge.ts`, `src/core/sync/backup.ts`, `src/core/sync/*.test.ts`
+**Files:** `src/core/sync/envelope.ts`, `src/core/sync/merge.ts`, `src/core/sync/backup.ts`, `src/core/sync/apply.ts`, `src/core/sync/sync.test.ts`
 **Scope:** M
 
 ### T23: SyncProvider + WebDAV
-**Description:** Interfaz `SyncProvider` (read/write/exists) y conector WebDAV con cabeceras y manejo de errores; feature detection de HTTPS.
+**Description:** Interfaz `SyncProvider` (read/write/exists/backupRemote) y conector WebDAV con PUT temporal + MOVE atómico, `If-Match`, fallback verificado y feature detection de HTTPS.
 **Acceptance criteria:**
-- [ ] Lee/escribe `leeto_sync.json` en un servidor WebDAV de prueba.
-- [ ] Backup previo antes de sobrescribir.
-- [ ] Errores de red no corrompen el estado local.
-**Verification:** servidor WebDAV local o mock HTTP; tests del provider.
+- [x] Lee/escribe `leeto_sync.json` con mock HTTP (7 tests); 404 → null; HEAD con fallback a GET.
+- [x] `COPY` de backup remoto antes de sobrescribir; `If-Match` con ETag.
+- [x] HTTPS obligatorio salvo localhost; errores de red traducidos sin corromper el estado local.
+**Verification:** `npm test` + `npm run typecheck`.
 **Dependencies:** T22
-**Files:** `src/core/sync/provider.ts`, `src/core/sync/webdav.ts`
+**Files:** `src/core/sync/provider.ts`, `src/core/sync/webdav.ts`, `src/core/sync/webdav.test.ts`
 **Scope:** M
 
 ### T24: Carpeta local + UI + triggers
-**Description:** Conector de carpeta local (File System Access API / plugins Capacitor), configuración en ajustes y disparadores con debounce/backoff.
+**Description:** Conector de carpeta local (File System Access API), configuración en ajustes y disparadores con debounce/backoff y protección contra bucles.
 **Acceptance criteria:**
-- [ ] En Chromium se puede elegir carpeta y sincronizar; en otros navegadores se oculta la opción con mensaje claro.
-- [ ] Triggers: manual, al abrir, al pausar/guardar cita (debounce).
-- [ ] Sin loops: se ignoran escrituras propias por `deviceId`/hash reciente.
-**Verification:** prueba manual en Chromium; simular fallo de red.
+- [x] Carpeta local con verificación y backup (tests con handle simulado); se oculta si el navegador no la soporta.
+- [x] Triggers: manual, al abrir la app y al guardar progreso/cita o borrar cita (debounce 800 ms, backoff exponencial, single-flight).
+- [x] Sin loops: `LoopGuard` compara `originDeviceId` + huella de registros (ignora el sello de escritura).
+- [x] Export/import manual y restauración de backup desde ajustes, con contraseña WebDAV solo en la sesión.
+**Verification:** `npm test` (7 tests de scheduler/carpeta local) + `npm run build`; requiere prueba manual en Chromium/servidor WebDAV real.
 **Dependencies:** T23
-**Files:** `src/core/sync/localFolder.ts`, `src/core/sync/scheduler.ts`, `src/components/settings/SyncSettings.tsx`
+**Files:** `src/core/sync/localFolder.ts`, `src/core/sync/scheduler.ts`, `src/core/sync/credentials.ts`, `src/hooks/useSync.ts`, `src/hooks/useSyncContext.tsx`, `src/components/settings/SyncSettings.tsx`
 **Scope:** M
 
 ### Checkpoint: Fase 5
-- [ ] Escenario multi-dispositivo simulado sin pérdidas.
-- [ ] Tombstones y backups funcionan.
-- [ ] Export/import manual disponible como red de seguridad.
+- [x] Escenario multi-dispositivo simulado sin pérdidas (tests de merge).
+- [x] Tombstones y backups funcionan (rotación local + `COPY` remoto).
+- [x] Export/import manual disponible como red de seguridad.
+- [x] `npm test` 62/62 y `npm run build` limpio (aviso de chunk >500 kB, no error).
+- [ ] Verificación manual con servidor WebDAV real y File System Access API en Chromium.
