@@ -23,7 +23,7 @@
 
 .kinetic-word[data-playhead='active'] {
   color: hsl(var(--reader-highlight));
-  font-weight: 600;
+  /* Sin cambio de font-weight: engordar la palabra activa refluye las líneas. */
   background-color: hsl(var(--reader-highlight) / 0.12);
 }
 

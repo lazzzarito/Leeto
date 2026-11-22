@@ -1,4 +1,13 @@
-import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useRef, type CSSProperties } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  type CSSProperties,
+} from 'react';
 import { cn } from '@/lib/cn';
 
 export interface KineticTextHandle {
@@ -75,6 +84,12 @@ const KineticText = memo(
       },
       [setWordState, words.length],
     );
+
+    // Un nuevo fragmento reutiliza los mismos spans: limpiamos su estado anterior.
+    useEffect(() => {
+      previous.current = -1;
+      wordRefs.current.forEach((_, index) => setWordState(index, 'uniform'));
+    }, [content, setWordState]);
 
     useImperativeHandle(
       ref,

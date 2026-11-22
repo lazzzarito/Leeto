@@ -420,9 +420,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
               clip.block.type === 'image' ? 'top-[52dvh]' : 'top-24',
             )}
           >
-            <div className="w-full max-w-md px-1 py-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+            <div className="flex min-h-[9rem] w-full max-w-md flex-col justify-center px-1 py-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
               {clip.block.type === 'text' ? (
                 <BlockView
+                  key={clip.key}
                   block={clip.block}
                   text={clip.text}
                   kineticRef={kineticRef}
