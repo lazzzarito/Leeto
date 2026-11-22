@@ -65,6 +65,16 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 **Checkpoint F5:** escenario A/B conserva progreso y citas; tombstone propaga; fallo de red no corrompe estado local.
 
+### Fase 6 — Índice fiel, biblioteca e importación ampliada (en curso)
+- T26: Modelo `TocEntry` jerárquico + `ensureToc`/resolución a clips (puro, con tests).
+- T27: EPUB: NCX/nav anidados con anclas mapeadas a bloques (tests de fixture).
+- T28: PDF: `getOutline()` + páginas de inicio de sección → TOC jerárquico (tests).
+- T29: Índice jerárquico colapsable + ruta activa (breadcrumb) en el reproductor.
+- T30: Biblioteca siempre visible: búsqueda/tabs en URL, dropzone solo en vacío, menú “Añadir”.
+- T31: Carpetas y raíces guardadas: escaneo de EPUB/PDF e importación selectiva.
+
+**Checkpoint F6:** `npm run typecheck`, `npm test`, `npm run build` en verde; TOC y biblioteca verificados.
+
 ## Riesgos y mitigaciones
 
 | Riesgo | Impacto | Mitigación |

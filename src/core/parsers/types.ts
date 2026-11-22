@@ -1,4 +1,4 @@
-import type { LeetoChapter } from '@/types';
+import type { LeetoChapter, TocEntry } from '@/types';
 
 /** Bytes respaldados por ArrayBuffer (no SharedArrayBuffer): compatibles con Blob y WebCrypto. */
 export type ByteArray = Uint8Array<ArrayBuffer>;
@@ -40,6 +40,7 @@ export interface ParseResult {
   mimeType: string;
   coverAssetId?: string;
   chapters: LeetoChapter[];
+  toc?: TocEntry[];
   assets: RawAsset[];
   totalWordCount: number;
 }

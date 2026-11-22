@@ -27,6 +27,7 @@ export async function persistParseResult(result: ParseResult): Promise<LeetoBook
     ...(result.saga ? { saga: result.saga } : {}),
     ...(typeof volumeNumber === 'number' && Number.isFinite(volumeNumber) ? { volumeNumber } : {}),
     chapters: result.chapters,
+    ...(result.toc ? { toc: result.toc } : {}),
     totalWordCount: result.totalWordCount,
     importedAt: now,
     updatedAt: now,

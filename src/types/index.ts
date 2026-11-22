@@ -32,6 +32,16 @@ export interface LeetoChapter {
   index: number; // 0-based
   title: string;
   blocks: LeetoBlock[];
+  startPage?: number; // PDF: primera página (1-based) de la sección
+}
+
+/** Entrada del índice; apunta siempre a una sección real del libro. */
+export interface TocEntry {
+  id: string;
+  title: string;
+  chapterIndex: number;
+  blockId?: string;
+  children: TocEntry[];
 }
 
 export interface LeetoBook {
@@ -47,6 +57,7 @@ export interface LeetoBook {
   saga?: string;
   volumeNumber?: number;
   chapters: LeetoChapter[];
+  toc?: TocEntry[];
   totalWordCount: number;
   importedAt: number;
   updatedAt: number;
