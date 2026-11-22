@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/leeto-hero.png" alt="Leeto — lee a tu ritmo" width="880">
+<img src="docs/leeto-hero.png" alt="Leeto — lee a tu ritmo" width="100%">
 
 # Leeto
 
@@ -28,7 +28,7 @@ que siempre está contigo. Todo se queda en tu dispositivo. 🏠
 <br>
 
 <div align="center">
-<img src="docs/screens/06-biblioteca-escritorio.png" alt="Leeto en escritorio con barra lateral" width="760">
+<img src="docs/screens/06-biblioteca-escritorio.png" alt="Leeto en escritorio con barra lateral" width="100%">
 <br><sub>Una misma app: móvil, tablet y escritorio. 🖥️📱</sub>
 </div>
 
@@ -57,7 +57,7 @@ Desde entonces, arriba de todo verás un saludo que cambia con el día:
 - **🌙 Se adapta a ti.** Sigue automáticamente el tema claro u oscuro de tu dispositivo, o elige uno de los cinco estilos disponibles.
 
 <div align="center">
-<img src="docs/screens/07-ajustes-escritorio.png" alt="Ajustes de Leeto" width="620">
+<img src="docs/screens/07-ajustes-escritorio.png" alt="Ajustes de Leeto" width="100%">
 </div>
 
 ---
@@ -84,8 +84,6 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 <div align="center">
 
-Hecho con 📖, ☕ y cariño por las historias bien contadas.
-
-**Leeto** — lee a tu ritmo.
+Hecho con ❤️‍🔥 por [1azarito](https://1azarito.vercel.app)
 
 </div>
