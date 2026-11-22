@@ -41,10 +41,16 @@ export default function ReelActionRail({
   return (
     <aside
       aria-label="Acciones del lector"
-      className="absolute right-2 bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-20 flex flex-col items-center gap-4"
+      className={cn(
+        'reel-rail-enter absolute right-2 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-20 flex flex-col items-center gap-3',
+        reducedMotion && 'reel-rail-static',
+      )}
+      onPointerDown={(event) => event.stopPropagation()}
+      onPointerUp={(event) => event.stopPropagation()}
       onTouchStart={(event) => event.stopPropagation()}
       onTouchEnd={(event) => event.stopPropagation()}
       onWheel={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
     >
       <Link
         to="/"

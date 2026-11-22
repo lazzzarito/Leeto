@@ -1,5 +1,14 @@
-import { ArrowLeft, MoreHorizontal, Play, SkipBack, SkipForward } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState, type TouchEvent, type WheelEvent } from 'react';
+import { ArrowLeft, Play, SkipBack, SkipForward } from 'lucide-react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type TouchEvent,
+  type WheelEvent,
+} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { updateSettings, useSettings } from '@/core/db/settings';
 import { getClipDuration } from '@/core/player/state';
@@ -13,6 +22,7 @@ import type { LeetoBook } from '@/types';
 import BlockView from './BlockView';
 import PlayerSettingsDialog from './PlayerSettingsDialog';
 import ReelActionRail from './ReelActionRail';
+import ReelBackdrop from './ReelBackdrop';
 import StoriesBar from './StoriesBar';
 import TocDrawer from './TocDrawer';
 import type { KineticTextHandle } from './KineticText';
@@ -52,6 +62,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<TouchStart>();
   const lastTapRef = useRef(0);
+  const lastGestureRef = useRef(0);
   const lastWheelRef = useRef(0);
   const noticeTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -253,7 +264,21 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     } else {
       toggle();
       lastTapRef.current = now;
+      lastGestureRef.current = now;
     }
+  };
+
+  // Un clic (ratón/trackpad) también reproduce: el gesto táctil ya se gestiona arriba.
+  const handleSurfaceClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (Date.now() - lastGestureRef.current < 700) return;
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('button, a, input, select, textarea, [role="dialog"]')
+    ) {
+      return;
+    }
+    toggle();
+    wakeChrome();
   };
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
@@ -302,8 +327,12 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       onTouchMove={cancelLongPress}
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
-      className="reel-surface bg-reader text-reader fixed inset-0 z-40 flex h-[100dvh] w-full flex-col overflow-hidden"
+      onClick={handleSurfaceClick}
+      className="reel-surface bg-reader text-reader fixed inset-0 z-40 flex h-[100dvh] w-full cursor-pointer flex-col overflow-hidden"
     >
+      {clip?.block.type === 'text' && (
+        <ReelBackdrop coverAssetId={book.coverAssetId} animate={!reducedMotion} />
+      )}
       <span className="reel-top-scrim pointer-events-none absolute inset-x-0 top-0 z-20 h-32" aria-hidden="true" />
       <p aria-live="polite" className="sr-only">
         {chapter ? `Capítulo ${chapter.index + 1}: ${chapter.title}. ` : ''}
@@ -312,6 +341,8 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
 
       <div
         className={cn('pt-safe relative z-30 px-4', chromeClass)}
+        onPointerDown={(event) => event.stopPropagation()}
+        onPointerUp={(event) => event.stopPropagation()}
         onTouchStart={(event) => event.stopPropagation()}
         onTouchEnd={(event) => event.stopPropagation()}
         onWheel={(event) => event.stopPropagation()}
@@ -327,14 +358,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           <span className="text-reel min-w-0 flex-1 truncate text-center text-sm font-medium">
             {chapter?.title}
           </span>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Ajustes de lectura"
-            className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-          >
-            <MoreHorizontal className="size-5" aria-hidden="true" />
-          </button>
+          <span className="size-9 shrink-0" aria-hidden="true" />
         </div>
       </div>
 
@@ -344,7 +368,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
 
       <div className="relative mx-auto flex h-full w-full max-w-md flex-1">
         {clip?.block.type === 'image' && (
-          <div key={clip.key} className={cn('absolute inset-0', !reducedMotion && 'leeto-clip-enter')}>
+          <div
+            key={clip.key}
+            className={cn(
+              'absolute inset-0 z-10 flex items-center justify-center px-5',
+              !reducedMotion && 'leeto-clip-enter',
+            )}
+          >
             <BlockView
               block={clip.block}
               text={clip.text}
@@ -353,23 +383,35 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
               lineHeight={subtitleLineHeight}
               dimIntensity={settings.focusDimIntensity}
               kenBurns={!reducedMotion}
-              fill
             />
           </div>
         )}
 
         {(state.status === 'paused' || state.status === 'ended') && (
-          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-            <div className="bg-black/35 flex size-16 items-center justify-center rounded-full backdrop-blur-sm">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggle();
+              wakeChrome();
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            onPointerUp={(event) => event.stopPropagation()}
+            onTouchStart={(event) => event.stopPropagation()}
+            onTouchEnd={(event) => event.stopPropagation()}
+            aria-label="Reproducir"
+            className="absolute inset-0 z-10 flex items-center justify-center"
+          >
+            <span className="bg-black/35 border-white/25 flex size-16 items-center justify-center rounded-full border backdrop-blur-sm">
               <Play className="text-reel size-8 fill-current" aria-hidden="true" />
-            </div>
-          </div>
+            </span>
+          </button>
         )}
 
         {clip && (
           <div
             className={cn(
-              'reel-scrim pointer-events-none absolute inset-x-0 bottom-0 z-10 px-5 pt-24 pb-[calc(env(safe-area-inset-bottom)+5.5rem)]',
+              'reel-scrim pointer-events-none absolute inset-x-0 bottom-0 z-[15] pt-24 pr-20 pl-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] md:pr-5',
               chromeClass,
             )}
           >
