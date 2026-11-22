@@ -8,6 +8,8 @@ interface LibraryTabsProps {
   books: LeetoBook[];
   quotes: SavedQuote[];
   query: string;
+  value: string;
+  onValueChange: (value: string) => void;
   onEdit: (book: LeetoBook) => void;
   onDelete: (book: LeetoBook) => void;
 }
@@ -43,6 +45,8 @@ export default function LibraryTabs({
   books,
   quotes,
   query,
+  value,
+  onValueChange,
   onEdit,
   onDelete,
 }: LibraryTabsProps) {
@@ -50,7 +54,7 @@ export default function LibraryTabs({
   const visibleQuotes = filterQuotes(quotes, query);
 
   return (
-    <Tabs.Root defaultValue="all" className="space-y-4">
+    <Tabs.Root value={value} onValueChange={onValueChange} className="space-y-4">
       <Tabs.List
         aria-label="Vistas de la biblioteca"
         className="border-border flex gap-1 overflow-x-auto border-b"

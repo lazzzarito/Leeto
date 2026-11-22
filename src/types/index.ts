@@ -96,6 +96,14 @@ export interface SavedQuote {
   deletedAt?: number; // tombstone para sync
 }
 
+/** Raíz de escaneo recordada; el handle solo existe en navegadores con File System Access. */
+export interface ScanRoot {
+  id: string;
+  name: string;
+  addedAt: number;
+  handle?: FileSystemDirectoryHandle;
+}
+
 export interface AppSettings {
   id: 'singleton';
   deviceId: string;
@@ -110,6 +118,7 @@ export interface AppSettings {
   ttsEnabled: boolean;
   ttsVoiceURI?: string;
   reducedMotion?: 'system' | 'on' | 'off';
+  scanRoots?: ScanRoot[];
   syncEnabled: boolean;
   syncProvider?: 'webdav' | 'local-folder' | 'gdrive' | 'onedrive';
   syncWebDavUrl?: string;

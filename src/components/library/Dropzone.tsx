@@ -12,6 +12,7 @@ export default function Dropzone({ onFiles }: DropzoneProps) {
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    event.stopPropagation();
     setDragging(false);
     const files = Array.from(event.dataTransfer.files);
     if (files.length > 0) onFiles(files);

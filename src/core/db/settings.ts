@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getOrCreateDeviceId } from '@/lib/ids';
-import type { AppSettings, ReadingTheme } from '@/types';
+import type { AppSettings, ReadingTheme, ScanRoot } from '@/types';
 import { db } from './db';
 
 export function getInitialTheme(): ReadingTheme {
@@ -46,6 +46,19 @@ export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSe
   const next: AppSettings = { ...current, ...patch, id: 'singleton' };
   await db.settings.put(next);
   return next;
+}
+
+export async function addScanRoot(root: ScanRoot): Promise<AppSettings> {
+  const current = await getSettings();
+  const roots = (current.scanRoots ?? []).filter((item) => item.id !== root.id);
+  return updateSettings({ scanRoots: [...roots, root] });
+}
+
+export async function removeScanRoot(id: string): Promise<AppSettings> {
+  const current = await getSettings();
+  return updateSettings({
+    scanRoots: (current.scanRoots ?? []).filter((root) => root.id !== id),
+  });
 }
 
 /** Hook reactivo: devuelve defaults mientras Dexie carga el registro. */
