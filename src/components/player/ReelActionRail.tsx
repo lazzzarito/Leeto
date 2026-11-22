@@ -1,4 +1,4 @@
-import { List, Music2, Quote, Send, SlidersHorizontal } from 'lucide-react';
+import { List, Quote, Send, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface ReelActionRailProps {
@@ -30,6 +30,8 @@ export default function ReelActionRail({
   onSettings,
   onToggleTts,
 }: ReelActionRailProps) {
+  const listening = ttsEnabled && playing;
+
   return (
     <aside
       aria-label="Acciones del lector"
@@ -79,10 +81,29 @@ export default function ReelActionRail({
         className="flex flex-col items-center gap-1"
       >
         <span className={BUTTON_CLASS}>
-          <Music2
-            className={cn('size-5', ttsEnabled && playing && !reducedMotion && 'animate-spin')}
-            aria-hidden="true"
-          />
+          {listening ? (
+            reducedMotion ? (
+              <Volume2 className="size-5" aria-hidden="true" />
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                className="size-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M11 5 6 9H2v6h4l5 4z" />
+                <path className="reel-speaker-wave reel-speaker-wave-1" d="M15 9.5a3.5 3.5 0 0 1 0 5" />
+                <path className="reel-speaker-wave reel-speaker-wave-2" d="M18 7a7 7 0 0 1 0 10" />
+                <path className="reel-speaker-wave reel-speaker-wave-3" d="M21 4.5a10.5 10.5 0 0 1 0 15" />
+              </svg>
+            )
+          ) : (
+            <VolumeX className="size-5" aria-hidden="true" />
+          )}
         </span>
         <span className={LABEL_CLASS} aria-hidden="true">Voz</span>
       </button>

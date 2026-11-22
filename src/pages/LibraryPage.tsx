@@ -126,7 +126,6 @@ export default function LibraryPage() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="library-doodle-bg pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
       <h1 className="sr-only">Biblioteca</h1>
 
       <ImportQueue jobs={jobs} onClear={clearFinished} />
@@ -229,6 +228,7 @@ export default function LibraryPage() {
             onPickFolder={() => void handlePickFolder()}
             onOpenScan={() => setScanOpen(true)}
             nativeFolderPicker={isDirectoryPickerSupported()}
+            fullWidth={isDesktop}
           />,
           actionSlot,
         )}

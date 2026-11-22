@@ -137,6 +137,33 @@
   transform: none;
 }
 
+/* Ondas de la bocina: se encienden en secuencia, como las barras del wifi. */
+@keyframes reel-speaker-wave {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reel-speaker-wave {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: reel-speaker-wave 900ms ease-in-out infinite;
+}
+
+.reel-speaker-wave-2 {
+  animation-delay: 150ms;
+}
+
+.reel-speaker-wave-3 {
+  animation-delay: 300ms;
+}
+
 @keyframes leeto-marquee {
   from {
     transform: translateX(0);
@@ -293,6 +320,7 @@
   .leeto-ken-burns,
   .reel-backdrop-drift,
   .reel-rail-enter,
+  .reel-speaker-wave,
   .reel-heading-zoom,
   .leeto-marquee,
   .skeleton-shimmer,

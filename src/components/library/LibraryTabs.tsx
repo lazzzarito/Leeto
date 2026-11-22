@@ -17,7 +17,7 @@ interface LibraryTabsProps {
 const TRIGGER_CLASS =
   'bg-muted/60 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex h-9 w-full items-center justify-center rounded-full px-2 text-xs font-medium transition-colors sm:text-sm';
 
-const GRID_CLASS = 'grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
+const GRID_CLASS = 'grid auto-rows-[8px] grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
 
 function NoResults() {
   return (

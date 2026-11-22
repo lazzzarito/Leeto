@@ -1,7 +1,9 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { BookOpenText, Clock3, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Marquee from '@/components/ui/Marquee';
+import { cn } from '@/lib/cn';
 import { useSettings } from '@/core/db/settings';
 import { useAssetUrl } from '@/hooks/useAssetUrl';
 import { useBookProgress } from '@/hooks/useLibrary';
@@ -17,24 +19,58 @@ interface BookCardProps {
 const MENU_ITEM_CLASS =
   'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none focus:bg-accent data-[highlighted]:bg-accent';
 
+const ROW_HEIGHT_PX = 8;
+const ROW_GAP_PX = 8;
+
+/** Masonry con grid: cada tarjeta ocupa las filas que necesita su altura real. */
+function useRowSpan<T extends HTMLElement>(dependency: unknown) {
+  const ref = useRef<T>(null);
+  const [span, setSpan] = useState(18);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const update = () => {
+      const height = element.getBoundingClientRect().height;
+      setSpan(Math.max(1, Math.ceil((height + ROW_GAP_PX) / (ROW_HEIGHT_PX + ROW_GAP_PX))));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [dependency]);
+
+  return { ref, span };
+}
+
 export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
   const coverUrl = useAssetUrl(book.coverAssetId);
   const progress = useBookProgress(book.id);
   const { wpm } = useSettings();
+  const { ref, span } = useRowSpan<HTMLLIElement>(coverUrl);
 
   const percentage = progress?.percentage ?? 0;
   const consumedWords = (book.totalWordCount * percentage) / 100;
   const remaining = estimateRemainingTime(book.totalWordCount, consumedWords, wpm);
 
   return (
-    <li className="group relative rounded-xl border border-border bg-card p-3 transition-colors hover:border-foreground/20">
+    <li
+      ref={ref}
+      style={{ gridRowEnd: `span ${span}` }}
+      className="group relative self-start rounded-xl border border-border bg-card p-3 transition-colors hover:border-foreground/20"
+    >
       <Link to={`/read/${book.id}`} className="block focus-visible:ring-2">
-        <div className="bg-muted flex aspect-[2/3] items-center justify-center overflow-hidden rounded-lg">
+        <div
+          className={cn(
+            'bg-muted flex w-full items-center justify-center overflow-hidden rounded-lg',
+            !coverUrl && 'aspect-[2/3]',
+          )}
+        >
           {coverUrl ? (
             <img
               src={coverUrl}
               alt={`Portada de ${book.title}`}
-              className="size-full object-cover"
+              className="h-auto max-h-96 w-full object-contain"
               loading="lazy"
             />
           ) : (

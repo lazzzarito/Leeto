@@ -2,12 +2,14 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { FolderOpen, FolderSearch, Plus, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { fromFileList } from '@/core/import/folder';
+import { cn } from '@/lib/cn';
 
 interface AddMenuProps {
   onFiles: (files: File[]) => void;
   onPickFolder: () => void;
   onOpenScan: () => void;
   nativeFolderPicker: boolean;
+  fullWidth?: boolean;
 }
 
 const ITEM_CLASS =
@@ -18,6 +20,7 @@ export default function AddMenu({
   onPickFolder,
   onOpenScan,
   nativeFolderPicker,
+  fullWidth = false,
 }: AddMenuProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +31,10 @@ export default function AddMenu({
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium"
+            className={cn(
+              'border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
+              fullWidth && 'flex w-full justify-start px-2',
+            )}
           >
             <Plus className="size-4" aria-hidden="true" />
             Añadir

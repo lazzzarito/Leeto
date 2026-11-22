@@ -264,12 +264,12 @@
     background-repeat: repeat;
     background-size: 620px 620px;
     background-position: -40px -30px;
-    opacity: 0.1;
+    opacity: 0.16;
   }
 
   [data-reading-theme='oled'] .library-doodle-bg {
     filter: invert(1);
-    opacity: 0.12;
+    opacity: 0.16;
   }
 }
 

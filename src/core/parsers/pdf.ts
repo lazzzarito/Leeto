@@ -2,8 +2,16 @@ import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-d
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { LeetoChapter, TocEntry } from '@/types';
+import { newId } from '@/lib/ids';
 import { countWords, makeBlockIdFactory } from './normalize';
-import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
+import {
+  ParseError,
+  type ByteArray,
+  type ParseProgress,
+  type ParseRequest,
+  type ParseResult,
+  type RawAsset,
+} from './types';
 
 GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -204,6 +212,38 @@ async function resolvePdfPage(
   return toPage(dest);
 }
 
+/** Miniatura de la primera página para que los PDF tengan portada en la biblioteca. */
+async function renderPdfCover(pdf: PDFDocumentProxy): Promise<RawAsset | undefined> {
+  try {
+    const page = await pdf.getPage(1);
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: Math.min(1, 480 / Math.max(1, base.width)) });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.floor(viewport.width));
+    canvas.height = Math.max(1, Math.floor(viewport.height));
+    const context = canvas.getContext('2d');
+    if (!context) {
+      page.cleanup();
+      return undefined;
+    }
+    await page.render({ canvasContext: context, viewport }).promise;
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    page.cleanup();
+    if (!blob) return undefined;
+    return {
+      id: newId('asset'),
+      kind: 'cover',
+      mimeType: 'image/png',
+      bytes: new Uint8Array(await blob.arrayBuffer()) as ByteArray,
+      width: canvas.width,
+      height: canvas.height,
+    };
+  } catch {
+    // Sin canvas (tests) o con una página no renderizable: el PDF sigue siendo legible.
+    return undefined;
+  }
+}
+
 export async function parsePdf(
   request: ParseRequest,
   onProgress: (progress: ParseProgress) => void,
@@ -300,6 +340,9 @@ export async function parsePdf(
       0,
     );
 
+    onProgress({ stage: 'extracting-assets', percent: 95, message: 'Creando la portada' });
+    const cover = await renderPdfCover(pdf);
+
     onProgress({ stage: 'done', percent: 100, message: 'Listo' });
 
     return {
@@ -309,9 +352,10 @@ export async function parsePdf(
       fileName: request.fileName,
       fileSize: request.fileSize,
       mimeType: request.mimeType,
+      ...(cover ? { coverAssetId: cover.id } : {}),
       chapters,
       ...(toc.length > 0 ? { toc } : {}),
-      assets: [],
+      ...(cover ? { assets: [cover] } : { assets: [] }),
       totalWordCount,
     };
   } finally {

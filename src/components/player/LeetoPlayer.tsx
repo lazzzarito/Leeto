@@ -226,6 +226,8 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     const touch = event.changedTouches[0];
     touchStartRef.current = undefined;
     if (!start || !touch) return;
+    // El click sintético que sigue a cualquier gesto no debe volver a alternar el estado.
+    lastGestureRef.current = Date.now();
     if (longPressFiredRef.current) {
       longPressFiredRef.current = false;
       return;
@@ -247,7 +249,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     } else {
       toggle();
       lastTapRef.current = now;
-      lastGestureRef.current = now;
     }
   };
 
@@ -255,7 +256,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const handleSurfaceClick = (event: MouseEvent<HTMLDivElement>) => {
     if (Date.now() - lastGestureRef.current < 700) return;
     if (
-      event.target instanceof HTMLElement &&
+      event.target instanceof Element &&
       event.target.closest('button, a, input, select, textarea, [role="dialog"]')
     ) {
       return;
@@ -392,14 +393,19 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             type="button"
             onClick={(event) => {
               event.stopPropagation();
+              // El click sintético posterior al gesto que pausó no debe reanudar.
+              if (Date.now() - lastGestureRef.current < 700) return;
               toggle();
             }}
-            onPointerDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              lastGestureRef.current = 0;
+            }}
             onPointerUp={(event) => event.stopPropagation()}
             onTouchStart={(event) => event.stopPropagation()}
             onTouchEnd={(event) => event.stopPropagation()}
             aria-label="Reproducir"
-            className="absolute inset-0 z-10 flex items-center justify-center"
+            className="absolute inset-0 z-[25] flex items-center justify-center"
           >
             <span className="bg-black/35 border-white/25 flex size-16 items-center justify-center rounded-full border backdrop-blur-sm">
               <Play className="text-reel size-8 fill-current" aria-hidden="true" />
@@ -436,7 +442,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
               >
                 <button
                   type="button"
-                  onClick={previous}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    previous();
+                  }}
                   aria-label="Fragmento anterior"
                   className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
                 >
@@ -444,7 +453,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
                 </button>
                 <button
                   type="button"
-                  onClick={next}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    next();
+                  }}
                   aria-label="Fragmento siguiente"
                   className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
                 >

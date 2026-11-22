@@ -75,9 +75,10 @@ export default function AppShell() {
 
   return (
     <SyncProvider>
-      <div className="flex min-h-dvh bg-background text-foreground">
-        <aside className="pl-safe sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/40 px-6 py-6 lg:flex">
-          <Link to="/" className="flex items-center gap-2 rounded-md px-3 focus-visible:ring-2">
+      <div className="relative flex min-h-dvh text-foreground">
+        <div className="library-doodle-bg pointer-events-none fixed inset-0 -z-10" aria-hidden="true" />
+        <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/40 py-6 pr-6 pl-[calc(env(safe-area-inset-left,0px)+1rem)] lg:flex">
+          <Link to="/" className="flex items-center gap-2 rounded-md px-2 focus-visible:ring-2">
             <BookOpen className="size-5 text-primary" aria-hidden="true" />
             <span className="flex flex-col leading-tight">
               <span className="font-semibold tracking-tight">Leeto</span>
@@ -112,7 +113,7 @@ export default function AppShell() {
               onClick={() => setSettingsOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={settingsOpen}
-              className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm transition-colors"
             >
               <Settings2 className="size-4" aria-hidden="true" />
               Ajustes
@@ -160,7 +161,7 @@ export default function AppShell() {
             </div>
           </header>
 
-          <main className="pb-safe w-full flex-1 px-4 pt-1 pb-28 sm:px-6 lg:pt-2">
+          <main className="w-full flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] sm:px-6 lg:pt-2">
             <Outlet />
           </main>
         </div>

@@ -85,7 +85,7 @@ export async function pickBookDirectory(): Promise<FileSystemDirectoryHandle | u
   ).showDirectoryPicker;
   if (!picker) return undefined;
   try {
-    return await picker();
+    return await picker.call(window);
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return undefined;
     throw new Error(
