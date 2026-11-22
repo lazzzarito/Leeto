@@ -27,7 +27,7 @@ const FEATURES = [
   {
     Icon: Quote,
     title: 'Captura citas',
-    detail: 'Un toque guarda el fragmento exacto que estás leyendo.',
+    detail: 'Doble toque, o el botón Cita, guarda el fragmento exacto que estás leyendo.',
     className: 'onboard-gesture-pop',
   },
   {
@@ -134,11 +134,11 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
                 />
               </span>
             </div>
-            <h1 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Tu biblioteca, a tu ritmo
-            </h1>
+            </h2>
             <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm leading-relaxed sm:text-base">
-              Leeto lee tus EPUB y PDF con texto a pantalla completa. Tus libros y tu progreso se
+              Leeto lee tus libros con texto a pantalla completa. Tus libros y tu progreso se
               quedan en este dispositivo.
             </p>
             <button
@@ -153,11 +153,11 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
 
         {step === 1 && (
           <div className="mx-auto w-full max-w-lg">
-            <h1 id="onboarding-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <h2 id="onboarding-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Así de fácil se lee
-            </h1>
+            </h2>
             <p className="text-muted-foreground mt-2 text-sm">
-              Tres gestos y ya estás dentro de tu libro.
+              Tres gestos y atajos para sentirte en casa.
             </p>
 
             <div className="mt-7 space-y-3">
@@ -214,9 +214,9 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
             <div className="bg-primary/10 text-primary mx-auto mb-7 flex size-16 items-center justify-center rounded-2xl">
               <Sparkles className="size-7" aria-hidden="true" />
             </div>
-            <h1 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
               ¿Cómo te llamas?
-            </h1>
+            </h2>
             <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm">
               Te daremos la bienvenida cada vez que abras Leeto. Solo se guarda en este dispositivo.
             </p>

@@ -78,14 +78,23 @@ export function isDirectoryPickerSupported(): boolean {
   return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 }
 
+/** Safari/Firefox y algunos móviles no tienen el selector nativo, pero sí `<input webkitdirectory>`. */
+export function isDirectoryInputSupported(): boolean {
+  if (typeof document === 'undefined') return false;
+  const input = document.createElement('input');
+  return 'webkitdirectory' in input || 'directory' in input;
+}
+
 /** Devuelve `undefined` cuando la persona cancela el selector nativo. */
 export async function pickBookDirectory(): Promise<FileSystemDirectoryHandle | undefined> {
   const picker = (
-    window as Window & { showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle> }
+    window as Window & {
+      showDirectoryPicker?: (options?: { mode?: 'read' }) => Promise<FileSystemDirectoryHandle>;
+    }
   ).showDirectoryPicker;
   if (!picker) return undefined;
   try {
-    return await picker.call(window);
+    return await picker.call(window, { mode: 'read' });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return undefined;
     throw new Error(

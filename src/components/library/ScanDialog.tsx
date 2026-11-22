@@ -13,6 +13,7 @@ interface ScanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   roots: ScanRoot[];
+  canAddRoot: boolean;
   onAddRoot: () => void;
   onRemoveRoot: (id: string) => void;
   onImport: (files: File[]) => void;
@@ -27,6 +28,7 @@ export default function ScanDialog({
   open,
   onOpenChange,
   roots,
+  canAddRoot,
   onAddRoot,
   onRemoveRoot,
   onImport,
@@ -111,19 +113,23 @@ export default function ScanDialog({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">Raíces guardadas</h3>
-            <button
-              type="button"
-              onClick={onAddRoot}
-              className="text-primary inline-flex items-center gap-1.5 text-xs font-medium"
-            >
-              <FolderPlus className="size-3.5" aria-hidden="true" />
-              Añadir carpeta
-            </button>
+            {canAddRoot && (
+              <button
+                type="button"
+                onClick={onAddRoot}
+                className="text-primary inline-flex items-center gap-1.5 text-xs font-medium"
+              >
+                <FolderPlus className="size-3.5" aria-hidden="true" />
+                Añadir carpeta
+              </button>
+            )}
           </div>
 
           {roots.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs">
-              Todavía no hay carpetas guardadas.
+              {canAddRoot
+                ? 'Todavía no hay carpetas guardadas.'
+                : 'Este navegador no permite guardar carpetas. Usa «Carpeta completa» o selecciona varios libros a la vez.'}
             </p>
           ) : (
             <ul className="space-y-2">

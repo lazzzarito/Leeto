@@ -1,7 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { FolderOpen, FolderSearch, Plus, Upload } from 'lucide-react';
 import { useRef } from 'react';
-import { fromFileList } from '@/core/import/folder';
+import { fromFileList, isDirectoryInputSupported } from '@/core/import/folder';
 import { cn } from '@/lib/cn';
 
 interface AddMenuProps {
@@ -24,6 +24,8 @@ export default function AddMenu({
 }: AddMenuProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const canUseDirectoryInput = isDirectoryInputSupported();
+  const canUseFolder = nativeFolderPicker || canUseDirectoryInput;
 
   return (
     <>
@@ -54,11 +56,12 @@ export default function AddMenu({
               className={ITEM_CLASS}
               onSelect={() => {
                 if (nativeFolderPicker) onPickFolder();
-                else folderInputRef.current?.click();
+                else if (canUseDirectoryInput) folderInputRef.current?.click();
+                else fileInputRef.current?.click();
               }}
             >
               <FolderOpen className="size-4" aria-hidden="true" />
-              Carpeta completa
+              {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
             </DropdownMenu.Item>
             <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
               <FolderSearch className="size-4" aria-hidden="true" />
@@ -83,7 +86,10 @@ export default function AddMenu({
         }}
       />
       <input
-        ref={(element) => element?.setAttribute('webkitdirectory', '')}
+        ref={(element) => {
+          element?.setAttribute('webkitdirectory', '');
+          element?.setAttribute('directory', '');
+        }}
         type="file"
         multiple
         hidden

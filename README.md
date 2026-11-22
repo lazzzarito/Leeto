@@ -78,7 +78,7 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 ## 🚀 Empieza en tres pasos
 
 1. **Abre Leeto** y dinos cómo te llamas. 👋
-2. **Añade un libro** con el botón «Añadir» o arrástralo a la pantalla. 📥
+2. **Añade libros** con «Añadir» (archivos sueltos, una carpeta completa o raíces guardadas) o arrástralos a la pantalla. 📥
 3. **Pulsa portada y lee.** El resto lo haces deslizando. 🎬
 
 <br>

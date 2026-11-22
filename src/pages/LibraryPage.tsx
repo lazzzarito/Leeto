@@ -189,6 +189,7 @@ export default function LibraryPage() {
         open={scanOpen}
         onOpenChange={setScanOpen}
         roots={roots}
+        canAddRoot={isDirectoryPickerSupported()}
         onAddRoot={() => void handlePickFolder()}
         onRemoveRoot={(id) => void removeScanRoot(id)}
         onImport={(files) => void importFiles(files)}
