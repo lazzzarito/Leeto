@@ -15,3 +15,12 @@ ReactDOM.createRoot(container).render(
     <App />
   </React.StrictMode>,
 );
+
+// Solo en producción: en dev el SW cachearía módulos calientes y rompería HMR.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => {
+      // La app sigue funcionando online; el SW es una mejora progresiva.
+    });
+  });
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Leeto — lector dinámico",
+  "short_name": "Leeto",
+  "description": "Lee tus EPUB y PDF a ritmo propio, guardados en tu dispositivo.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0b0b",
+  "theme_color": "#0b0b0b",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
