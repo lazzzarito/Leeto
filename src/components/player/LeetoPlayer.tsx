@@ -416,7 +416,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         {clip && (
           <div
             className={cn(
-              'pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[15] flex items-center justify-center pl-4 pr-20 md:bottom-[calc(env(safe-area-inset-bottom)+4rem)] md:px-4',
+              'pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+8rem)] z-[15] flex items-center justify-center px-4',
               clip.block.type === 'image' ? 'top-[52dvh]' : 'top-24',
             )}
           >
@@ -464,7 +464,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
 
         <div className={optionalChromeClass}>
           <ReelActionRail
-            coverAssetId={book.coverAssetId}
             title={book.title}
             quoteCount={quoteCount}
             ttsEnabled={settings.ttsEnabled}
@@ -481,7 +480,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       </div>
 
       {clip && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex justify-center pl-4 pr-20 md:px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-20 flex justify-center px-4">
           <div className="w-full max-w-md text-center">
             <Marquee
               text={book.title}
