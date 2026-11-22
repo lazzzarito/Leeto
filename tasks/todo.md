@@ -159,7 +159,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Fixtures generados importan correctamente (tests EPUB y PDF).
 - [x] PDF escaneado rechazado con mensaje claro (test).
 - [x] `npm test` 14/14, `npm run build` limpio, 0 vulnerabilidades npm.
-- [ ] Verificación visual manual en navegador: importar → recargar → portada visible.
+- [x] Verificación visual en navegador: importar → recargar → portada visible (QA F7).
 
 ---
 
@@ -201,7 +201,8 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Búsqueda, agrupaciones y orden de sagas correctos (tests puros).
 - [x] Borrado limpia todos los datos asociados (test Dexie).
 - [x] `npm test` 25/25, `npm run build` limpio (aviso de chunk >500 kB por Radix, no error).
-- [ ] Verificación visual manual en navegador: tabs, búsqueda, editar y eliminar.
+- [x] Verificación visual en navegador: tabs y búsqueda (QA F7).
+- [ ] Verificación visual de editar y eliminar libros en navegador (diálogos implementados).
 
 ---
 
@@ -278,7 +279,8 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Snap por bloque y transiciones breves (implementado).
 - [x] Reduced-motion y cinética off funcionan; TTS degrada con gracia (implementado).
 - [x] `npm test` 36/36 y `npm run build` limpio (aviso de chunk >500 kB, no error).
-- [ ] Verificación visual/manual en navegador: reanudación, gestos, temas y voces.
+- [x] Verificación visual en navegador: reanudación, gestos y temas (QA F7).
+- [ ] Verificación de voces TTS en un dispositivo real con voces del sistema.
 
 ---
 
