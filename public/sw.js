@@ -1,6 +1,14 @@
 /* Service worker del shell de Leeto: cache-first para assets, network-first para navegación. */
 const CACHE = 'leeto-shell-v1';
-const SHELL = ['/', '/index.html', '/icons/icon.svg', '/manifest.webmanifest'];
+const SHELL = [
+  '/',
+  '/index.html',
+  '/icons/icon.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-512.png',
+  '/manifest.webmanifest',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

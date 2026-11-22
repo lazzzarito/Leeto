@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import AddMenu from '@/components/library/AddMenu';
 import Dropzone from '@/components/library/Dropzone';
 import ImportQueue from '@/components/library/ImportQueue';
+import ImportToasts from '@/components/library/ImportToasts';
 import LibraryTabs from '@/components/library/LibraryTabs';
 import MetadataDialog from '@/components/library/MetadataDialog';
 import ScanDialog from '@/components/library/ScanDialog';
@@ -38,7 +39,7 @@ export default function LibraryPage() {
   const settings = useSettings();
   const savedSettings = useLiveQuery(() => getSettings(), [], settings);
   const roots = savedSettings.scanRoots ?? [];
-  const { jobs, importFiles, clearFinished } = useImport();
+  const { jobs, toasts, importFiles, dismissToast } = useImport();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get('q') ?? '';
@@ -128,7 +129,7 @@ export default function LibraryPage() {
     >
       <h1 className="sr-only">Biblioteca</h1>
 
-      <ImportQueue jobs={jobs} onClear={clearFinished} />
+      <ImportQueue jobs={jobs} />
 
       {booksLoading ? (
         <LibrarySkeleton />
@@ -220,6 +221,8 @@ export default function LibraryPage() {
       >
         <p className="text-muted-foreground pb-6 text-sm">Esta acción no se puede deshacer.</p>
       </ResponsiveDialog>
+
+      <ImportToasts toasts={toasts} onDismiss={dismissToast} />
 
       {actionSlot &&
         createPortal(

@@ -23,6 +23,13 @@ export interface ImportJob {
   error?: string;
 }
 
+export interface ImportToast {
+  id: string;
+  kind: 'success' | 'info' | 'error';
+  title: string;
+  detail?: string;
+}
+
 const STAGE_LABELS: Record<ParseStage, string> = {
   parsing: 'Analizando',
   'extracting-assets': 'Extrayendo imágenes',
@@ -52,10 +59,25 @@ export function describeJob(job: ImportJob): string {
 
 export function useImport() {
   const [jobs, setJobs] = useState<ImportJob[]>([]);
+  const [toasts, setToasts] = useState<ImportToast[]>([]);
 
   const patchJob = useCallback((id: string, patch: Partial<ImportJob>) => {
     setJobs((previous) => previous.map((job) => (job.id === id ? { ...job, ...patch } : job)));
   }, []);
+
+  const dismissToast = useCallback((toastId: string) => {
+    setToasts((previous) => previous.filter((toast) => toast.id !== toastId));
+  }, []);
+
+  /** Un trabajo terminado sale de la cola y pasa a ser una notificación efímera. */
+  const finishJob = useCallback(
+    (id: string, patch: Partial<ImportJob>, toast: Omit<ImportToast, 'id'>) => {
+      patchJob(id, patch);
+      setJobs((previous) => previous.filter((job) => job.id !== id));
+      setToasts((previous) => [...previous, { ...toast, id: newId('toast') }]);
+    },
+    [patchJob],
+  );
 
   const importFiles = useCallback(
     async (files: File[]) => {
@@ -70,7 +92,15 @@ export function useImport() {
           patchJob(id, { status: 'hashing', progress: 2 });
           const contentHash = await hashFile(file);
           if (await isDuplicate(contentHash)) {
-            patchJob(id, { status: 'duplicate', progress: 100 });
+            finishJob(
+              id,
+              { status: 'duplicate', progress: 100 },
+              {
+                kind: 'info',
+                title: 'Ya estaba en la biblioteca',
+                detail: file.name,
+              },
+            );
             continue;
           }
 
@@ -85,23 +115,23 @@ export function useImport() {
 
           patchJob(id, { status: 'saving', progress: 97 });
           await persistParseResult(result);
-          patchJob(id, { status: 'imported', progress: 100, stage: 'done' });
+          finishJob(
+            id,
+            { status: 'imported', progress: 100, stage: 'done' },
+            { kind: 'success', title: 'Libro importado', detail: result.title || file.name },
+          );
         } catch (error) {
-          patchJob(id, {
-            status: 'error',
-            error: error instanceof Error ? error.message : 'Error desconocido',
-          });
+          const message = error instanceof Error ? error.message : 'Error desconocido';
+          finishJob(
+            id,
+            { status: 'error', error: message },
+            { kind: 'error', title: 'No se pudo importar', detail: message },
+          );
         }
       }
     },
-    [patchJob],
+    [finishJob, patchJob],
   );
 
-  const clearFinished = useCallback(() => {
-    setJobs((previous) =>
-      previous.filter((job) => !['imported', 'duplicate', 'error'].includes(job.status)),
-    );
-  }, []);
-
-  return { jobs, importFiles, clearFinished };
+  return { jobs, toasts, importFiles, dismissToast };
 }

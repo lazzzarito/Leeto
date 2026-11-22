@@ -1,4 +1,3 @@
-import { BookOpen } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 import { cn } from '@/lib/cn';
 
@@ -39,7 +38,14 @@ export default function Preloader({ visible }: PreloaderProps) {
         />
         <span className="bg-primary/10 absolute inset-7 rounded-full blur-xl" aria-hidden="true" />
         <span className="preloader-book bg-primary text-primary-foreground flex size-14 items-center justify-center rounded-2xl shadow-lg shadow-black/20">
-          <BookOpen className="size-7" aria-hidden="true" />
+          <img
+            src="/icons/icon-192.webp"
+            alt=""
+            aria-hidden="true"
+            width={36}
+            height={36}
+            className="size-9 rounded-lg object-contain"
+          />
         </span>
         {[0, 1, 2, 3, 4, 5].map((index) => (
           <span

@@ -1,4 +1,4 @@
-import { BookOpen, Layers, Library, Quote, Settings2, Users } from 'lucide-react';
+import { Layers, Library, Quote, Settings2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
@@ -79,7 +79,14 @@ export default function AppShell() {
         <div className="library-doodle-bg pointer-events-none fixed inset-0 -z-10" aria-hidden="true" />
         <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/40 py-6 pr-6 pl-[calc(env(safe-area-inset-left,0px)+1rem)] lg:flex">
           <Link to="/" className="flex items-center gap-2 rounded-md px-2 focus-visible:ring-2">
-            <BookOpen className="size-5 text-primary" aria-hidden="true" />
+            <img
+              src="/icons/icon-192.webp"
+              alt=""
+              aria-hidden="true"
+              width={20}
+              height={20}
+              className="size-5 rounded-md object-contain"
+            />
             <span className="flex flex-col leading-tight">
               <span className="font-semibold tracking-tight">Leeto</span>
               <span className="text-muted-foreground text-[11px]">{greeting}</span>
@@ -133,7 +140,14 @@ export default function AppShell() {
               )}
             >
               <Link to="/" className="flex items-center gap-2 rounded-md focus-visible:ring-2">
-                <BookOpen className="size-5 text-primary" aria-hidden="true" />
+                <img
+                  src="/icons/icon-192.webp"
+                  alt=""
+                  aria-hidden="true"
+                  width={20}
+                  height={20}
+                  className="size-5 rounded-md object-contain"
+                />
                 <span className="flex flex-col leading-tight">
                   <span className="font-semibold tracking-tight">Leeto</span>
                   <span

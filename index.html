@@ -10,6 +10,8 @@
     />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Leeto" />
@@ -31,7 +33,15 @@
         }
       })();
     </script>
-    <title>Leeto</title>
+    <meta property="og:title" content="Leeto — tus libros, a tu ritmo" />
+    <meta
+      property="og:description"
+      content="Lector local-first de EPUB y PDF: sin nube, funciona offline y tus libros se quedan en tu dispositivo."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Leeto — lector local-first de EPUB y PDF</title>
   </head>
   <body>
     <div id="root"></div>

@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="docs/leeto-hero.png" alt="Leeto — lee a tu ritmo" width="100%">
+<picture>
+  <source srcset="docs/logo.webp" type="image/webp">
+  <img src="docs/logo.png" alt="Leeto — lee a tu ritmo" width="100%">
+</picture>
 
 # Leeto
 

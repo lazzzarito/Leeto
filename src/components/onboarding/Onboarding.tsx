@@ -1,7 +1,6 @@
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpenText,
   Check,
   ChevronDown,
   ChevronUp,
@@ -75,9 +74,13 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         className="text-primary/20 onboard-gesture-float absolute top-24 right-10 size-16"
         aria-hidden="true"
       />
-      <BookOpenText
-        className="text-primary/15 onboard-gesture-pop absolute bottom-28 left-8 size-12"
+      <img
+        src="/icons/icon-192.webp"
+        alt=""
         aria-hidden="true"
+        width={48}
+        height={48}
+        className="onboard-gesture-pop absolute bottom-28 left-8 size-12 rounded-xl object-contain opacity-20"
       />
 
       <div className="relative flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
@@ -121,7 +124,14 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
             <div className="relative mx-auto mb-8 flex size-28 items-center justify-center">
               <span className="preloader-ring border-primary/25 border-t-primary absolute inset-0 rounded-full border-2" />
               <span className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl shadow-xl shadow-black/20">
-                <BookOpenText className="size-8" aria-hidden="true" />
+                <img
+                  src="/icons/icon-192.webp"
+                  alt=""
+                  aria-hidden="true"
+                  width={32}
+                  height={32}
+                  className="size-8 rounded-lg object-contain"
+                />
               </span>
             </div>
             <h1 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
