@@ -157,15 +157,15 @@ describe('máquina de estados del reproductor', () => {
     expect(getClipDuration(slowerWpm)).toBe(5000);
   });
 
-  it('seek y navegación manual pausan y sitúan el playhead', () => {
-    const state = loaded();
+  it('seek y navegación manual sitúan el playhead sin detener la reproducción', () => {
+    const state = playerReducer(loaded(), { type: 'play' });
     const seeked = playerReducer(state, { type: 'seek', clipIndex: 2, elapsedMs: 2000 });
-    expect(seeked).toMatchObject({ status: 'paused', clipIndex: 2, elapsedMs: 2000 });
+    expect(seeked).toMatchObject({ status: 'playing', clipIndex: 2, elapsedMs: 2000 });
 
     const next = playerReducer(seeked, { type: 'next' });
-    expect(next).toMatchObject({ clipIndex: 2, elapsedMs: 0 });
+    expect(next).toMatchObject({ status: 'playing', clipIndex: 2, elapsedMs: 0 });
     const previous = playerReducer(next, { type: 'previous' });
-    expect(previous).toMatchObject({ clipIndex: 1, elapsedMs: 0 });
+    expect(previous).toMatchObject({ status: 'playing', clipIndex: 1, elapsedMs: 0 });
   });
 
   it('align conserva el estado y calcula el porcentaje global', () => {

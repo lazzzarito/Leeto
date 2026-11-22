@@ -2,8 +2,9 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { GlobalWorkerOptions } from 'pdfjs-dist';
 import { describe, expect, it } from 'vitest';
-import { parsePdf } from './pdf';
+import { buildPdfToc, parsePdf } from './pdf';
 import type { ParseRequest } from './types';
+import type { LeetoChapter } from '@/types';
 
 // En Node, PDF.js no puede resolver la URL `?url` de Vite: usar la ruta real del worker.
 GlobalWorkerOptions.workerSrc = pathToFileURL(
@@ -76,6 +77,45 @@ describe('parsePdf', () => {
     const bytes = buildPdfFixture([]);
     await expect(parsePdf(requestFor(bytes), () => {})).rejects.toMatchObject({
       code: 'SCANNED_PDF',
+    });
+  });
+});
+
+describe('buildPdfToc', () => {
+  it('resuelve un outline anidado a las secciones por página de inicio', async () => {
+    const chapters: LeetoChapter[] = [
+      {
+        index: 0,
+        title: 'Capítulo 1',
+        startPage: 1,
+        blocks: [{ id: 'b_001', type: 'text', content: 'Inicio', wordCount: 1 }],
+      },
+      {
+        index: 1,
+        title: 'Capítulo 2',
+        startPage: 10,
+        blocks: [{ id: 'b_002', type: 'text', content: 'Seguimiento', wordCount: 1 }],
+      },
+    ];
+
+    const toc = await buildPdfToc(
+      [
+        {
+          title: 'Parte I',
+          dest: 'parte',
+          items: [{ title: 'Sección', dest: 'seccion' }],
+        },
+      ],
+      async (dest) => (dest === 'parte' ? 2 : 12),
+      chapters,
+    );
+
+    expect(toc).toHaveLength(1);
+    expect(toc[0]).toMatchObject({ title: 'Parte I', chapterIndex: 0, blockId: 'b_001' });
+    expect(toc[0]?.children[0]).toMatchObject({
+      title: 'Sección',
+      chapterIndex: 1,
+      blockId: 'b_002',
     });
   });
 });

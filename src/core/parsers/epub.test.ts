@@ -85,6 +85,59 @@ describe('parseEpub', () => {
     expect(progress.at(-1)?.stage).toBe('normalizing');
   });
 
+  it('construye un TOC anidado y resuelve anclas a bloques reales', async () => {
+    const zip = new JSZip();
+    zip.file(
+      'META-INF/container.xml',
+      `<?xml version="1.0"?><container><rootfiles><rootfile full-path="OEBPS/content.opf"/></rootfiles></container>`,
+    );
+    zip.file(
+      'OEBPS/content.opf',
+      `<?xml version="1.0"?><package><metadata><dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">Anclas</dc:title></metadata>
+       <manifest><item id="c1" href="chapter1.xhtml" media-type="application/xhtml+xml"/><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/></manifest>
+       <spine toc="ncx"><itemref idref="c1"/></spine></package>`,
+    );
+    zip.file(
+      'OEBPS/toc.ncx',
+      `<?xml version="1.0"?><ncx><navMap>
+        <navPoint><navLabel><text>Parte I</text></navLabel><content src="chapter1.xhtml"/></navPoint>
+        <navPoint><navLabel><text>Sección</text></navLabel><content src="chapter1.xhtml#seccion"/>
+          <navPoint><navLabel><text>Subsección</text></navLabel><content src="chapter1.xhtml#seccion"/></navPoint>
+        </navPoint>
+      </navMap></ncx>`,
+    );
+    zip.file(
+      'OEBPS/chapter1.xhtml',
+      `<?xml version="1.0"?><html><body>
+        <h1 id="inicio">Capítulo Uno</h1>
+        <p>Hola mundo, esto es una prueba.</p>
+        <h2 id="seccion">Una sección</h2>
+        <p>Texto de la sección con palabras suficientes.</p>
+      </body></html>`,
+    );
+    const bytes = new Uint8Array(await zip.generateAsync({ type: 'uint8array' }));
+
+    const result = await parseEpub(
+      {
+        contentHash: 'sha256:anclas',
+        fileName: 'anclas.epub',
+        fileSize: bytes.byteLength,
+        mimeType: 'application/epub+zip',
+        bytes,
+      },
+      () => {},
+    );
+
+    expect(result.toc).toHaveLength(2);
+    expect(result.toc?.[0]).toMatchObject({ title: 'Parte I', chapterIndex: 0, blockId: 'b_001' });
+    expect(result.toc?.[1]).toMatchObject({ title: 'Sección', chapterIndex: 0, blockId: 'b_003' });
+    expect(result.toc?.[1]?.children[0]).toMatchObject({
+      title: 'Subsección',
+      chapterIndex: 0,
+      blockId: 'b_003',
+    });
+  });
+
   it('rechaza un ZIP sin contenedor EPUB', async () => {
     const zip = new JSZip();
     zip.file('otro.txt', 'nada');

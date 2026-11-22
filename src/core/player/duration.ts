@@ -4,6 +4,17 @@ export function getBlockDuration(wordCount: number, wpm: number, speed: number):
   return (Math.max(0, wordCount) / effectiveWpm) * 60_000;
 }
 
+/** Los títulos se saborean un poco más que un subtítulo normal. */
+export function getTextDuration(
+  wordCount: number,
+  wpm: number,
+  speed: number,
+  heading = false,
+): number {
+  const base = getBlockDuration(wordCount, wpm, speed);
+  return heading ? base + 1_800 : base;
+}
+
 /** Duración de una imagen (clip) ajustada por velocidad. */
 export function getImageDuration(baseMs: number, speed: number): number {
   return Math.max(500, baseMs / Math.max(0.1, speed));

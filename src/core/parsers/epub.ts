@@ -1,7 +1,9 @@
 import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
 import { newId } from '@/lib/ids';
+import type { LeetoBlock, TocEntry } from '@/types';
 import {
+  decodeEntities,
   extractImageReferences,
   guessMimeType,
   htmlToBlocks,
@@ -66,21 +68,125 @@ function extractHeading(html: string): string {
   return title?.[1]?.replace(/<[^>]*>/g, ' ').trim() ?? '';
 }
 
-function collectNavPoints(
-  value: unknown,
-  ncxPath: string,
-  output: Map<string, string> = new Map(),
-): Map<string, string> {
-  for (const point of nodeArray(value)) {
-    const label = textOf(asNode(point.navLabel).text);
-    const src = attributeOf(point.content, 'src');
-    if (label && src) {
-      const clean = src.split('#')[0] ?? src;
-      output.set(resolveRelativePath(ncxPath, clean), label);
+interface RawNavPoint {
+  title: string;
+  path: string;
+  fragment?: string;
+  children: RawNavPoint[];
+}
+
+function splitTarget(href: string, basePath: string): Pick<RawNavPoint, 'path' | 'fragment'> | undefined {
+  const [rawPath, rawFragment] = href.split('#');
+  if (!rawPath) return undefined;
+  let fragment: string | undefined;
+  if (rawFragment) {
+    try {
+      fragment = decodeURIComponent(rawFragment);
+    } catch {
+      fragment = rawFragment;
     }
-    collectNavPoints(point.navPoint, ncxPath, output);
   }
-  return output;
+  return {
+    path: resolveRelativePath(basePath, rawPath),
+    ...(fragment ? { fragment } : {}),
+  };
+}
+
+/** navMap NCX: respeta el anidamiento de navPoint. */
+function collectNcxPoints(value: unknown, ncxPath: string): RawNavPoint[] {
+  return nodeArray(value).flatMap((point) => {
+    const title = textOf(asNode(point.navLabel).text);
+    const target = splitTarget(attributeOf(point.content, 'src'), ncxPath);
+    const children = collectNcxPoints(point.navPoint, ncxPath);
+    if (!title || !target) return children;
+    return [{ title, ...target, children }];
+  });
+}
+
+/** EPUB3 nav: recorre `<ol><li><a href>` y sus listas anidadas. */
+function collectNavLists(value: unknown, navPath: string): RawNavPoint[] {
+  return nodeArray(value).flatMap((list) =>
+    nodeArray(list.li).flatMap((item) => {
+      const anchor = nodeArray(item.a)[0];
+      const title = textOf(anchor ?? item);
+      const target = splitTarget(attributeOf(anchor, 'href'), navPath);
+      const children = collectNavLists(item.ol, navPath);
+      if (!title || !target) return children;
+      return [{ title, ...target, children }];
+    }),
+  );
+}
+
+function findTocNavigation(value: unknown): XmlNode | undefined {
+  const nodes = nodeArray(value);
+  return (
+    nodes.find(
+      (node) => attributeOf(node, 'type') === 'toc' || attributeOf(node, 'role') === 'doc-toc',
+    ) ?? nodes[0]
+  );
+}
+
+function textInsideElement(html: string, id: string): string {
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = new RegExp(
+    `<[^>]*\\bid\\s*=\\s*(["'])${escaped}\\1[^>]*>([\\s\\S]*?)<\\/\\s*[a-z][\\w:-]*\\s*>`,
+    'i',
+  );
+  const match = pattern.exec(html);
+  if (!match?.[2]) return '';
+  return decodeEntities(match[2].replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+
+function comparable(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '')
+    .slice(0, 80);
+}
+
+/** Une el fragmento del TOC con el bloque real generado a partir del XHTML. */
+function findAnchorBlockId(
+  html: string,
+  fragment: string,
+  blocks: LeetoBlock[],
+): string | undefined {
+  const heading = comparable(textInsideElement(html, fragment));
+  const first = blocks[0]?.id;
+  if (!heading) return first;
+  const match = blocks.find(
+    (block) => block.type === 'text' && comparable(block.content).includes(heading),
+  );
+  return match?.id ?? first;
+}
+
+function buildTocEntries(
+  raw: RawNavPoint[],
+  chapterIndexByPath: Map<string, number>,
+  chapterHtmlByPath: Map<string, string>,
+  chapters: ParseResult['chapters'],
+): TocEntry[] {
+  let counter = 0;
+  const walk = (nodes: RawNavPoint[]): TocEntry[] =>
+    nodes.flatMap((node) => {
+      const chapterIndex = chapterIndexByPath.get(node.path);
+      if (chapterIndex === undefined) return walk(node.children);
+
+      const blocks = chapters[chapterIndex]?.blocks ?? [];
+      const blockId = node.fragment
+        ? findAnchorBlockId(chapterHtmlByPath.get(node.path) ?? '', node.fragment, blocks)
+        : blocks[0]?.id;
+      counter += 1;
+      return [
+        {
+          id: `toc_${counter}`,
+          title: node.title,
+          chapterIndex,
+          ...(blockId ? { blockId } : {}),
+          children: walk(node.children),
+        },
+      ];
+    });
+  return walk(raw);
 }
 
 export async function parseEpub(
@@ -199,15 +305,37 @@ export async function parseEpub(
   const spine = asNode(packageNode.spine);
   const ncxId = attributeOf(spine, 'toc');
   const ncxItem = ncxId ? manifest.get(ncxId) : undefined;
-  let chapterTitles = new Map<string, string>();
+  let rawToc: RawNavPoint[] = [];
   if (ncxItem) {
     const ncxPath = resolveRelativePath(opfPath, ncxItem.href);
     const ncxFile = zip.file(ncxPath);
     if (ncxFile) {
       const ncx = parser.parse(decodeZipText(await ncxFile.async('uint8array')));
-      chapterTitles = collectNavPoints(asNode(ncx.ncx).navMap, ncxPath);
+      rawToc = collectNcxPoints(asNode(ncx.ncx).navMap, ncxPath);
     }
   }
+  if (rawToc.length === 0) {
+    const navItem = [...manifest.values()].find((item) =>
+      item.properties.split(/\s+/).includes('nav'),
+    );
+    const navPath = navItem ? resolveRelativePath(opfPath, navItem.href) : undefined;
+    const navFile = navPath ? zip.file(navPath) : undefined;
+    if (navFile) {
+      const navDoc = parser.parse(decodeZipText(await navFile.async('uint8array')));
+      const body = asNode(asNode(navDoc.html).body);
+      const tocNav = findTocNavigation(body);
+      rawToc = collectNavLists(asNode(tocNav?.ol), navPath as string);
+    }
+  }
+
+  const chapterTitles = new Map<string, string>();
+  const registerTitles = (nodes: RawNavPoint[]): void => {
+    for (const node of nodes) {
+      if (!chapterTitles.has(node.path)) chapterTitles.set(node.path, node.title);
+      registerTitles(node.children);
+    }
+  };
+  registerTitles(rawToc);
 
   const spineItems = nodeArray(spine.itemref)
     .map((ref) => manifest.get(attributeOf(ref, 'idref')))
@@ -218,6 +346,8 @@ export async function parseEpub(
 
   const nextBlockId = makeBlockIdFactory(1);
   const chapters: ParseResult['chapters'] = [];
+  const chapterIndexByPath = new Map<string, number>();
+  const chapterHtmlByPath = new Map<string, string>();
   let totalWordCount = 0;
   const total = Math.max(1, spineItems.length);
 
@@ -250,6 +380,8 @@ export async function parseEpub(
     );
 
     const navTitle = chapterTitles.get(documentPath);
+    chapterIndexByPath.set(documentPath, chapters.length);
+    chapterHtmlByPath.set(documentPath, html);
     chapters.push({
       index: chapters.length,
       title: navTitle || extractHeading(html) || `Capítulo ${chapters.length + 1}`,
@@ -262,6 +394,7 @@ export async function parseEpub(
   }
 
   onProgress({ stage: 'normalizing', percent: 92, message: 'Normalizando bloques' });
+  const toc = buildTocEntries(rawToc, chapterIndexByPath, chapterHtmlByPath, chapters);
 
   return {
     contentHash: request.contentHash,
@@ -275,6 +408,7 @@ export async function parseEpub(
     mimeType: request.mimeType,
     ...(coverAssetId ? { coverAssetId } : {}),
     chapters,
+    ...(toc.length > 0 ? { toc } : {}),
     assets,
     totalWordCount,
   };

@@ -29,7 +29,6 @@ export function usePlayer(book: LeetoBook) {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const skipSaveRef = useRef(false);
   const lastSavedRef = useRef<string>();
 
   const flush = useCallback(() => {
@@ -54,10 +53,12 @@ export function usePlayer(book: LeetoBook) {
   }, [book.id, book.totalWordCount, settings.deviceId]);
 
   const scheduleSave = useCallback(() => {
-    if (skipSaveRef.current) {
-      skipSaveRef.current = false;
-      return;
-    }
+    const current = stateRef.current;
+    const clip = current.clips[current.clipIndex];
+    if (!clip) return;
+    const key = `${clip.block.id}:${clip.segmentIndex}`;
+    // Una rehidratación del mismo clip no debe provocar otra escritura.
+    if (lastSavedRef.current === key) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = undefined;
@@ -65,12 +66,14 @@ export function usePlayer(book: LeetoBook) {
     }, SAVE_DEBOUNCE_MS);
   }, [flush]);
 
-  // Restaura el subtítulo guardado. Ignoramos escrituras propias para no reiniciar la reproducción.
+  // Restaura el subtítulo guardado. Es idempotente: una escritura propia nunca
+  // debe recargar el clip (eso reiniciaba el playhead y cortaba la voz).
   useEffect(() => {
     const savedKey = progress ? `${progress.blockId}:${progress.segmentIndex ?? 0}` : 'new';
     if (progress && lastSavedRef.current === savedKey) return;
     const clipIndex = progress ? findClipIndex(clips, progress) : 0;
-    skipSaveRef.current = true;
+    const current = stateRef.current;
+    if (current.clips.length > 0 && current.clipIndex === clipIndex) return;
     const currentSettings = settingsRef.current;
     dispatch({
       type: 'load',
@@ -80,6 +83,7 @@ export function usePlayer(book: LeetoBook) {
       imageDurationMs: currentSettings.imageDurationMs ?? 6000,
       clipIndex,
       elapsedMs: 0,
+      status: current.status === 'playing' ? 'playing' : 'paused',
     });
   }, [clips, progress?.blockId, progress?.segmentIndex]);
 
@@ -112,9 +116,19 @@ export function usePlayer(book: LeetoBook) {
 
   useEffect(() => {
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') flush();
+      if (document.visibilityState !== 'hidden') return;
+      // Solo sigue en segundo plano si la persona activó la voz explícitamente.
+      if (stateRef.current.status === 'playing' && !settingsRef.current.ttsEnabled) {
+        dispatch({ type: 'pause' });
+      }
+      flush();
     };
-    const onPageHide = () => flush();
+    const onPageHide = () => {
+      if (stateRef.current.status === 'playing' && !settingsRef.current.ttsEnabled) {
+        dispatch({ type: 'pause' });
+      }
+      flush();
+    };
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pagehide', onPageHide);
     return () => {

@@ -1,6 +1,6 @@
 import { estimatePercentage } from '@/lib/time';
 import type { LeetoBlock, LeetoChapter, PlaybackState } from '@/types';
-import { getBlockDuration, getImageDuration } from './duration';
+import { getImageDuration, getTextDuration } from './duration';
 import { splitIntoSegments } from './segment';
 
 export interface PlayerClip {
@@ -35,6 +35,7 @@ export type PlayerAction =
       imageDurationMs: number;
       clipIndex?: number;
       elapsedMs?: number;
+      status?: PlaybackState;
     }
   | { type: 'ready' }
   | { type: 'play' }
@@ -105,7 +106,12 @@ export function getClipDuration(state: PlayerState, clipIndex = state.clipIndex)
   const clip = state.clips[clipIndex];
   if (!clip) return 0;
   if (clip.block.type === 'image') return getImageDuration(state.imageDurationMs, state.speed);
-  return getBlockDuration(clip.wordCount, state.wpm, state.speed);
+  return getTextDuration(
+    clip.wordCount,
+    state.wpm,
+    state.speed,
+    clip.block.type === 'text' && clip.block.heading === true,
+  );
 }
 
 /** Índice de palabra activo (0-based) dentro del clip actual; -1 si no hay texto. */
@@ -158,7 +164,9 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
       return {
         ...next,
         elapsedMs: clamp(next.elapsedMs, 0, getClipDuration(next)),
-        status: action.clips.length > 0 ? 'paused' : 'idle',
+        status:
+          action.status ??
+          (action.clips.length > 0 ? 'paused' : 'idle'),
       };
     }
     case 'ready':
@@ -199,7 +207,7 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
     case 'seek':
       return {
         ...state,
-        status: 'paused',
+        status: state.status === 'ended' ? 'paused' : state.status,
         clipIndex: clamp(action.clipIndex, 0, Math.max(0, state.clips.length - 1)),
         elapsedMs: Math.max(0, action.elapsedMs ?? 0),
       };
@@ -213,14 +221,14 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
         ...state,
         clipIndex: Math.min(state.clipIndex + 1, Math.max(0, state.clips.length - 1)),
         elapsedMs: 0,
-        status: 'paused',
+        status: state.status === 'ended' ? 'paused' : state.status,
       };
     case 'previous':
       return {
         ...state,
         clipIndex: Math.max(state.clipIndex - 1, 0),
         elapsedMs: 0,
-        status: 'paused',
+        status: state.status === 'ended' ? 'paused' : state.status,
       };
     case 'setSpeed':
       return rescale(state, { speed: Math.max(0.1, action.speed) });

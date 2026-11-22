@@ -16,6 +16,7 @@ export interface TextBlock {
   type: 'text';
   content: string;
   wordCount: number;
+  heading?: boolean;
 }
 
 export interface ImageBlock {

@@ -65,7 +65,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 **Checkpoint F5:** escenario A/B conserva progreso y citas; tombstone propaga; fallo de red no corrompe estado local.
 
-### Fase 6 — Índice fiel, biblioteca e importación ampliada (en curso)
+### Fase 6 — Índice fiel, biblioteca e importación ampliada (completada)
 - T26: Modelo `TocEntry` jerárquico + `ensureToc`/resolución a clips (puro, con tests).
 - T27: EPUB: NCX/nav anidados con anclas mapeadas a bloques (tests de fixture).
 - T28: PDF: `getOutline()` + páginas de inicio de sección → TOC jerárquico (tests).

@@ -328,14 +328,14 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ---
 
-## Fase 6 — Índice fiel, biblioteca e importación ampliada 🚧
+## Fase 6 — Índice fiel, biblioteca e importación ampliada ✅
 
 ### T26: Modelo de TOC jerárquico y resolución
 **Description:** `TocEntry` con jerarquía y destino (`chapterIndex` + `blockId`) compartido por book, parser y clips; utilidades puras para normalizar y resolver.
 **Acceptance criteria:**
-- [ ] `ensureToc` preserva la jerarquía válida y genera un índice plano desde capítulos en libros antiguos.
-- [ ] Las entradas con referencias rotas se descartan sin perder sus hijos válidos.
-- [ ] `findClipIndexForTocEntry` y `findActiveTocPath` mapean índice ↔ reproductor sin duplicar fuente de verdad.
+- [x] `ensureToc` preserva la jerarquía válida y genera un índice plano desde capítulos en libros antiguos.
+- [x] Las entradas con referencias rotas se descartan sin perder sus hijos válidos.
+- [x] `findClipIndexForTocEntry` y `findActiveTocPath` mapean índice ↔ reproductor sin duplicar fuente de verdad.
 **Verification:** `npx vitest run src/core/player/toc.test.ts`; `npm run typecheck`.
 **Dependencies:** ninguna (T16/T19 previos)
 **Files:** `src/types/index.ts`, `src/core/player/toc.ts`, `src/core/player/toc.test.ts`
@@ -344,9 +344,9 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ### T27: TOC de EPUB con anclas
 **Description:** Leer `navMap` NCX y `nav` EPUB3 de forma anidada, resolviendo `src` (ruta + fragmento) al capítulo y bloque reales.
 **Acceptance criteria:**
-- [ ] Un NCX con `navPoint` anidados produce un árbol con hijos y `chapterIndex` correctos.
-- [ ] Un `content src="cap.xhtml#seccion"` con `id="seccion"` en el XHTML apunta al bloque correspondiente.
-- [ ] Libros sin TOC explícito siguen funcionando con el índice derivado.
+- [x] Un NCX con `navPoint` anidados produce un árbol con hijos y `chapterIndex` correctos.
+- [x] Un `content src="cap.xhtml#seccion"` con `id="seccion"` en el XHTML apunta al bloque correspondiente.
+- [x] Libros sin TOC explícito siguen funcionando con el índice derivado.
 **Verification:** `npx vitest run src/core/parsers/epub.test.ts src/core/parsers/normalize.test.ts`.
 **Dependencies:** T26
 **Files:** `src/core/parsers/normalize.ts`, `src/core/parsers/epub.ts`, tests
@@ -355,9 +355,9 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ### T28: TOC de PDF a partir del outline
 **Description:** Usar `pdf.getOutline()` cuando exista y mapear cada destino a la sección que contiene esa página; conservar fallback por heurística.
 **Acceptance criteria:**
-- [ ] `startPage` por sección permite resolver destinos de outline a capítulos reales.
-- [ ] Un PDF sin outline produce un índice plano derivado de sus secciones.
-- [ ] Un outline anidado conserva su jerarquía en `book.toc`.
+- [x] `startPage` por sección permite resolver destinos de outline a capítulos reales.
+- [x] Un PDF sin outline produce un índice plano derivado de sus secciones.
+- [x] Un outline anidado conserva su jerarquía en `book.toc`.
 **Verification:** `npx vitest run src/core/parsers/pdf.test.ts`.
 **Dependencies:** T26
 **Files:** `src/core/parsers/pdf.ts`, `src/types/index.ts`, test
@@ -366,24 +366,24 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ### T29: Índice jerárquico en el reproductor
 **Description:** Árbol colapsable con sangría, entrada activa resaltada y ruta activa (breadcrumb) sobre los stories.
 **Acceptance criteria:**
-- [ ] Los nodos se expanden/colapsan y saltan al clip real de la entrada elegida.
-- [ ] La entrada activa se resalta y el breadcrumb muestra su ruta.
-- [ ] Mantiene el modal responsive compartido.
+- [x] Los nodos se expanden/colapsan y saltan al clip real de la entrada elegida.
+- [x] La entrada activa se resalta y el breadcrumb muestra su ruta.
+- [x] Mantiene el modal responsive compartido.
 **Verification:** `npm run typecheck && npm test && npm run build`.
 **Dependencies:** T26–T28
 **Files:** `src/components/player/TocDrawer.tsx`, `src/components/player/LeetoPlayer.tsx`, tests si aplica
 **Scope:** M
 
 ### Checkpoint F6a
-- [ ] Índice fiel en EPUB y PDF, sin divergencia con el reproductor.
-- [ ] typecheck/tests/build en verde.
+- [x] Índice fiel en EPUB y PDF, sin divergencia con el reproductor.
+- [x] typecheck/tests/build en verde.
 
 ### T30: Biblioteca siempre visible
 **Description:** Buscador y pestañas permanentes, dropzone solo en vacío, botón secundario “Añadir” (archivos/carpeta/raíz), estado de búsqueda en la URL y overlay global de arrastre.
 **Acceptance criteria:**
-- [ ] Con libros, la biblioteca y la búsqueda están siempre visibles; no aparece el bloque “Privacidad…”.
-- [ ] `?q=` y `?tab=` se sincronizan con la UI y sobreviven a una recarga.
-- [ ] Arrastar archivos sobre cualquier zona abre el overlay y suelta importa.
+- [x] Con libros, la biblioteca y la búsqueda están siempre visibles; no aparece el bloque “Privacidad…”.
+- [x] `?q=` y `?tab=` se sincronizan con la UI y sobreviven a una recarga.
+- [x] Arrastar archivos sobre cualquier zona abre el overlay y suelta importa.
 **Verification:** `npm run typecheck && npm test && npm run build`.
 **Dependencies:** T12–T15
 **Files:** `src/pages/LibraryPage.tsx`, `src/components/library/*`, tests de URL si aplica
@@ -392,14 +392,24 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ### T31: Carpetas y raíces guardadas
 **Description:** Selección de carpeta (File System Access o `webkitdirectory`), recorrido recursivo, raíces recordadas con revalidación de permiso y diálogo de escaneo con selección de archivos.
 **Acceptance criteria:**
-- [ ] El escáner encuentra `.epub`/`.pdf` recursivamente y permite elegir cuáles importar.
-- [ ] Las raíces guardadas se pueden volver a usar; si el permiso caduca se pide de nuevo.
-- [ ] La limitación del navegador (no escaneo global del dispositivo) se explica en la UI.
+- [x] El escáner encuentra `.epub`/`.pdf` recursivamente y permite elegir cuáles importar.
+- [x] Las raíces guardadas se pueden volver a usar; si el permiso caduca se pide de nuevo.
+- [x] La limitación del navegador (no escaneo global del dispositivo) se explica en la UI.
 **Verification:** `npx vitest run src/core/import/folder.test.ts`; `npm run build`.
 **Dependencies:** T30
 **Files:** `src/core/import/folder.ts`, test, `src/types/index.ts`, UI de biblioteca
 **Scope:** M
 
 ### Checkpoint F6b
-- [ ] Flujo añadir → escanear → seleccionar → importar funciona.
-- [ ] `npm run typecheck`, `npm test` (verde), `npm run build` (solo aviso de chunk).
+- [x] Flujo añadir → escanear → seleccionar → importar funciona.
+- [x] `npm run typecheck`, `npm test` (verde), `npm run build` (solo aviso de chunk).
+
+### T32: PWA instalable y offline
+**Description:** Manifest, service worker con caché de assets y navegación, registro solo en producción.
+**Acceptance criteria:**
+- [x] `manifest.webmanifest` con nombre, colores, display standalone e icono.
+- [x] `public/sw.js` sirve la shell y los assets en cache-first; navegación network-first con fallback.
+- [x] Registro condicionado a `import.meta.env.PROD`.
+**Verification:** `npm run build` y comprobación manual de instalación/offline.
+**Files:** `public/manifest.webmanifest`, `public/sw.js`, `index.html`, `src/main.tsx`
+**Scope:** S

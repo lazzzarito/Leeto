@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Library, UploadCloud } from 'lucide-react';
-import { useRef, useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import AddMenu from '@/components/library/AddMenu';
 import Dropzone from '@/components/library/Dropzone';
@@ -19,6 +20,7 @@ import {
 } from '@/core/import/folder';
 import { useImport } from '@/hooks/useImport';
 import { useBooks, useQuotes } from '@/hooks/useLibrary';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newId } from '@/lib/ids';
 import type { LeetoBook } from '@/types';
 
@@ -46,7 +48,15 @@ export default function LibraryPage() {
   const [scanOpen, setScanOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string>();
+  const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
   const dragDepth = useRef(0);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
+  useEffect(() => {
+    setActionSlot(
+      document.getElementById(isDesktop ? 'library-sidebar-actions' : 'library-floating-actions'),
+    );
+  }, [isDesktop]);
 
   const editingBook = books.find((book) => book.id === editingBookId);
 
@@ -106,7 +116,7 @@ export default function LibraryPage() {
 
   return (
     <div
-      className="relative space-y-6"
+      className="relative isolate pb-28"
       onDragEnter={handleDragEnter}
       onDragOver={(event) => {
         if (hasFiles(event)) event.preventDefault();
@@ -114,22 +124,9 @@ export default function LibraryPage() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <section className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Biblioteca</h1>
-          <p className="text-muted-foreground text-sm">
-            Tus libros viven en este dispositivo. Sin cuenta, sin servidores, sin publicidad.
-          </p>
-        </div>
-        <AddMenu
-          onFiles={(files) => void importFiles(files)}
-          onPickFolder={() => void handlePickFolder()}
-          onOpenScan={() => setScanOpen(true)}
-          nativeFolderPicker={isDirectoryPickerSupported()}
-        />
-      </section>
+      <div className="library-doodle-bg pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
+      <h1 className="sr-only">Biblioteca</h1>
 
-      <SearchBar value={query} onChange={(value) => setParam('q', value)} />
       <ImportQueue jobs={jobs} onClear={clearFinished} />
 
       {books.length === 0 ? (
@@ -220,6 +217,24 @@ export default function LibraryPage() {
       >
         <p className="text-muted-foreground pb-6 text-sm">Esta acción no se puede deshacer.</p>
       </ResponsiveDialog>
+
+      {actionSlot &&
+        createPortal(
+          <AddMenu
+            onFiles={(files) => void importFiles(files)}
+            onPickFolder={() => void handlePickFolder()}
+            onOpenScan={() => setScanOpen(true)}
+            nativeFolderPicker={isDirectoryPickerSupported()}
+          />,
+          actionSlot,
+        )}
+
+      <div className="pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 flex justify-center md:bottom-6 lg:left-64 lg:right-6">
+        <div className="pointer-events-auto flex w-full items-center gap-2">
+          <SearchBar value={query} onChange={(value) => setParam('q', value)} />
+          <div id="library-floating-actions" className="shrink-0" />
+        </div>
+      </div>
     </div>
   );
 }

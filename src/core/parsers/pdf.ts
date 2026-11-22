@@ -1,6 +1,7 @@
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
 import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import type { LeetoChapter, TocEntry } from '@/types';
 import { countWords, makeBlockIdFactory } from './normalize';
 import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
 
@@ -15,6 +16,13 @@ interface TextLine {
 interface Section {
   title: string;
   paragraphs: string[];
+  startPage: number;
+}
+
+export interface PdfOutlineNode {
+  title: string;
+  dest?: unknown;
+  items?: PdfOutlineNode[];
 }
 
 const CHAPTER_PATTERN = /^\s*(cap[ií]tulo|chapter|parte|part)\s+(\d+|[ivxlcdm]+)\b/i;
@@ -100,16 +108,19 @@ function stripMarginals(lines: TextLine[], height: number, repeated: Set<string>
   });
 }
 
-function buildSections(pages: Array<{ lines: TextLine[] }>, fallbackTitle: string): Section[] {
+function buildSections(
+  pages: Array<{ lines: TextLine[]; pageNumber: number }>,
+  fallbackTitle: string,
+): Section[] {
   const sections: Section[] = [];
-  let current: Section = { title: fallbackTitle, paragraphs: [] };
+  let current: Section = { title: fallbackTitle, paragraphs: [], startPage: pages[0]?.pageNumber ?? 1 };
 
   for (const page of pages) {
     for (const line of page.lines) {
       const heading = CHAPTER_PATTERN.exec(line.text);
       if (heading && line.text.length < 120) {
         if (current.paragraphs.length > 0) sections.push(current);
-        current = { title: line.text.trim(), paragraphs: [] };
+        current = { title: line.text.trim(), paragraphs: [], startPage: page.pageNumber };
         continue;
       }
     }
@@ -118,6 +129,79 @@ function buildSections(pages: Array<{ lines: TextLine[] }>, fallbackTitle: strin
 
   if (current.paragraphs.length > 0 || sections.length === 0) sections.push(current);
   return sections;
+}
+
+/** Convierte el outline de PDF en entradas que apuntan a las secciones reales. */
+export async function buildPdfToc(
+  outline: PdfOutlineNode[],
+  resolvePage: (dest: unknown) => Promise<number | undefined>,
+  chapters: LeetoChapter[],
+): Promise<TocEntry[]> {
+  let counter = 0;
+  const walk = async (nodes: PdfOutlineNode[]): Promise<TocEntry[]> => {
+    const entries: TocEntry[] = [];
+    for (const node of nodes) {
+      const title = node.title?.trim();
+      const children = await walk(node.items ?? []);
+      if (!title || !node.dest) {
+        entries.push(...children);
+        continue;
+      }
+
+      const page = await resolvePage(node.dest);
+      if (page === undefined) {
+        entries.push(...children);
+        continue;
+      }
+
+      let chapterIndex = 0;
+      chapters.forEach((chapter, index) => {
+        if ((chapter.startPage ?? 1) <= page) chapterIndex = index;
+      });
+      const blockId = chapters[chapterIndex]?.blocks[0]?.id;
+      counter += 1;
+      entries.push({
+        id: `toc_pdf_${counter}`,
+        title,
+        chapterIndex,
+        ...(blockId ? { blockId } : {}),
+        children,
+      });
+    }
+    return entries;
+  };
+  return walk(outline);
+}
+
+/** Resuelve un destino de outline (nombre o array) a una página 1-based. */
+async function resolvePdfPage(
+  pdf: PDFDocumentProxy,
+  dest: unknown,
+): Promise<number | undefined> {
+  const toPage = async (target: unknown): Promise<number | undefined> => {
+    if (!Array.isArray(target) || !target.length) return undefined;
+    const first: unknown = target[0];
+    if (typeof first === 'number') return first + 1;
+    if (first && typeof first === 'object' && 'num' in first) {
+      try {
+        return (await pdf.getPageIndex(first as Parameters<PDFDocumentProxy['getPageIndex']>[0])) + 1;
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  };
+
+  if (typeof dest === 'string') {
+    try {
+      const resolved = await pdf.getDestination(dest);
+      const page = await toPage(resolved);
+      if (page !== undefined) return page;
+    } catch {
+      // Algunos PDF usan nombres que getDestination no resuelve; se prueba el valor directo.
+    }
+  }
+  return toPage(dest);
 }
 
 export async function parsePdf(
@@ -173,8 +257,9 @@ export async function parsePdf(
 
     onProgress({ stage: 'extracting-assets', percent: 80, message: 'Depurando cabeceras y pies' });
     const repeated = repeatedMarginals(pages);
-    const cleanedPages = pages.map((page) => ({
+    const cleanedPages = pages.map((page, index) => ({
       lines: stripMarginals(page.lines, page.height, repeated),
+      pageNumber: index + 1,
     }));
 
     onProgress({ stage: 'normalizing', percent: 92, message: 'Normalizando bloques' });
@@ -185,6 +270,7 @@ export async function parsePdf(
     const chapters = sections.map((section, chapterIndex) => ({
       index: chapterIndex,
       title: section.title || fallbackTitle,
+      startPage: section.startPage,
       blocks: section.paragraphs
         .filter((content) => content.length > 0)
         .map((content) => ({
@@ -194,6 +280,15 @@ export async function parsePdf(
           wordCount: countWords(content),
         })),
     }));
+
+    const outline = (await pdf.getOutline().catch(() => undefined)) ?? [];
+    const toc = outline.length
+      ? await buildPdfToc(
+          outline as unknown as PdfOutlineNode[],
+          (dest) => resolvePdfPage(pdf, dest),
+          chapters,
+        )
+      : [];
 
     const totalWordCount = chapters.reduce(
       (sum, chapter) =>
@@ -215,6 +310,7 @@ export async function parsePdf(
       fileSize: request.fileSize,
       mimeType: request.mimeType,
       chapters,
+      ...(toc.length > 0 ? { toc } : {}),
       assets: [],
       totalWordCount,
     };

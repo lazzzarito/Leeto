@@ -42,23 +42,51 @@
   animation: leeto-clip-in 220ms ease-out both;
 }
 
-@keyframes leeto-heart-pop {
+/* La cita se “captura” como una foto y se encoge (efecto genie) dentro del botón. */
+@keyframes leeto-quote-capture {
   0% {
     opacity: 0;
-    transform: scale(0.6);
+    transform: translate(-50%, -50%) scale(2.6) rotate(-5deg);
+    border-radius: 0.25rem;
   }
-  40% {
-    opacity: 1;
-    transform: scale(1.25);
+  22% {
+    opacity: 0.95;
+    transform: translate(-50%, -50%) scale(1.7) rotate(0deg);
+    border-radius: 0.5rem;
+  }
+  65% {
+    opacity: 0.75;
+    transform: translate(-50%, -50%) scale(0.38);
+    border-radius: 50%;
   }
   100% {
     opacity: 0;
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(0.03);
+    border-radius: 50%;
   }
 }
 
-.leeto-heart-pop {
-  animation: leeto-heart-pop 650ms ease-out both;
+.leeto-quote-capture {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132%;
+  height: 132%;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.2));
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.55);
+  animation: leeto-quote-capture 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes leeto-quote-icon {
+  0%, 55% { transform: scale(1); }
+  75% { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+.leeto-quote-icon {
+  animation: leeto-quote-icon 800ms ease-out both;
 }
 
 @keyframes leeto-ken-burns {
@@ -123,13 +151,35 @@
   will-change: transform;
 }
 
+@keyframes reel-heading-zoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  18% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.reel-heading-zoom {
+  animation: reel-heading-zoom 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kinetic-word,
   .leeto-clip-enter,
-  .leeto-heart-pop,
+  .leeto-quote-capture,
+  .leeto-quote-icon,
   .leeto-ken-burns,
   .reel-backdrop-drift,
   .reel-rail-enter,
+  .reel-heading-zoom,
   .leeto-marquee {
     animation: none !important;
     transition: none !important;

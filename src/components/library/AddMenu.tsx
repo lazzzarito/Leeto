@@ -28,7 +28,7 @@ export default function AddMenu({
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="border-border hover:bg-muted inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium"
+            className="border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium"
           >
             <Plus className="size-4" aria-hidden="true" />
             Añadir
@@ -67,6 +67,7 @@ export default function AddMenu({
         type="file"
         accept=".epub,.pdf,application/epub+zip,application/pdf"
         multiple
+        hidden
         className="sr-only"
         aria-label="Seleccionar archivos EPUB o PDF"
         onChange={(event) => {
@@ -79,6 +80,7 @@ export default function AddMenu({
         ref={(element) => element?.setAttribute('webkitdirectory', '')}
         type="file"
         multiple
+        hidden
         className="sr-only"
         aria-label="Seleccionar una carpeta de libros"
         onChange={(event) => {

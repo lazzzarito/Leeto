@@ -124,7 +124,13 @@ export function htmlToBlocks(
     return `\u0000IMG${index}\u0000`;
   });
 
-  const text = htmlToPlainText(marked);
+  // Los encabezados se marcan antes de convertir a texto para conservar su naturaleza.
+  const withHeadings = marked.replace(
+    /<\s*(h[1-6])\b[^>]*>([\s\S]*?)<\s*\/\s*\1\s*>/gi,
+    (_match, _tag: string, inner: string) => `\u0001${inner}\u0003\n`,
+  );
+
+  const text = htmlToPlainText(withHeadings);
   const parts = text.split(/(\u0000IMG\d+\u0000)/);
   const blocks: LeetoBlock[] = [];
 
@@ -147,7 +153,16 @@ export function htmlToBlocks(
     for (const paragraph of part.split(/\n+/)) {
       const content = paragraph.trim();
       if (!content) continue;
-      blocks.push({ id: nextId(), type: 'text', content, wordCount: countWords(content) });
+      const heading = content.includes('\u0001');
+      const clean = content.replace(/[\u0001\u0003]/g, '').trim();
+      if (!clean) continue;
+      blocks.push({
+        id: nextId(),
+        type: 'text',
+        content: clean,
+        wordCount: countWords(clean),
+        ...(heading ? { heading: true } : {}),
+      });
     }
   }
 

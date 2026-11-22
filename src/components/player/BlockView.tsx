@@ -44,6 +44,7 @@ const BlockView = memo(function BlockView({
       ref={kineticRef}
       content={text}
       variant={variant}
+      heading={block.heading}
       fontSize={fontSize}
       lineHeight={lineHeight}
       dimIntensity={dimIntensity}

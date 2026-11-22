@@ -36,6 +36,7 @@ export default function Dropzone({ onFiles }: DropzoneProps) {
         type="file"
         accept=".epub,.pdf,application/epub+zip,application/pdf"
         multiple
+        hidden
         className="sr-only"
         aria-label="Seleccionar archivos EPUB o PDF"
         onChange={(event) => {

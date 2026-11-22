@@ -22,7 +22,7 @@ export default function ReelBackdrop({ coverAssetId, animate }: ReelBackdropProp
         )}
       />
       <div className="reel-backdrop-tint absolute inset-0 bg-black/55" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/75" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/70" />
     </div>
   );
 }

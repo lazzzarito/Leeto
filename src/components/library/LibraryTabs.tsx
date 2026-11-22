@@ -57,7 +57,7 @@ export default function LibraryTabs({
     <Tabs.Root value={value} onValueChange={onValueChange} className="space-y-4">
       <Tabs.List
         aria-label="Vistas de la biblioteca"
-        className="border-border flex gap-1 overflow-x-auto border-b"
+        className="border-border flex gap-1 overflow-x-auto border-b lg:hidden"
       >
         <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
           Todos

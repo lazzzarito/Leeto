@@ -1,13 +1,12 @@
-import { Heart, List, Music2, Send, SlidersHorizontal } from 'lucide-react';
+import { List, Music2, Quote, Send, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface ReelActionRailProps {
   title: string;
-  quoteCount: number;
   ttsEnabled: boolean;
   playing: boolean;
   reducedMotion: boolean;
-  heartPop: boolean;
+  quoteCaptured: boolean;
   onQuote: () => void;
   onToc: () => void;
   onShare: () => void;
@@ -21,11 +20,10 @@ const LABEL_CLASS = 'text-reel-muted text-[10px] leading-none';
 
 export default function ReelActionRail({
   title,
-  quoteCount,
   ttsEnabled,
   playing,
   reducedMotion,
-  heartPop,
+  quoteCaptured,
   onQuote,
   onToc,
   onShare,
@@ -36,7 +34,7 @@ export default function ReelActionRail({
     <aside
       aria-label="Acciones del lector"
       className={cn(
-        'reel-rail-enter absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex items-center justify-center gap-2 px-4 md:gap-5',
+        'reel-rail-enter absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex items-center justify-between gap-1 px-4 md:px-10',
         reducedMotion && 'reel-rail-static',
       )}
       onPointerDown={(event) => event.stopPropagation()}
@@ -53,25 +51,24 @@ export default function ReelActionRail({
         <span className={LABEL_CLASS} aria-hidden="true">Compartir</span>
       </button>
 
+      <button type="button" onClick={onQuote} aria-label="Guardar cita" className="flex flex-col items-center gap-1">
+        <span className={cn(BUTTON_CLASS, 'relative size-12 overflow-hidden')}>
+          <Quote
+            className={cn('size-6', quoteCaptured && !reducedMotion && 'leeto-quote-icon')}
+            aria-hidden="true"
+          />
+          {quoteCaptured && !reducedMotion && (
+            <span className="leeto-quote-capture" aria-hidden="true" />
+          )}
+        </span>
+        <span className={LABEL_CLASS} aria-hidden="true">Cita</span>
+      </button>
+
       <button type="button" onClick={onToc} aria-label="Abrir índice" className="flex flex-col items-center gap-1">
         <span className={BUTTON_CLASS}>
           <List className="size-5" aria-hidden="true" />
         </span>
         <span className={LABEL_CLASS} aria-hidden="true">Índice</span>
-      </button>
-
-      <button type="button" onClick={onQuote} aria-label="Guardar cita" className="flex flex-col items-center gap-1">
-        <span className={cn(BUTTON_CLASS, 'size-12')}>
-          <Heart
-            className={cn(
-              'size-6',
-              heartPop && 'fill-rose-500 text-rose-500',
-              heartPop && !reducedMotion && 'leeto-heart-pop',
-            )}
-            aria-hidden="true"
-          />
-        </span>
-        <span className={LABEL_CLASS} aria-hidden="true">{quoteCount}</span>
       </button>
 
       <button

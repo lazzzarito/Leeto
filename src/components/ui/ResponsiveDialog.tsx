@@ -66,11 +66,16 @@ export default function ResponsiveDialog({
           </div>
 
           {footer && (
-            <footer className="pb-safe bg-background border-t border-border/70 shrink-0 px-4 py-3 sm:px-6">
+            <footer className="bg-background border-t border-border/70 shrink-0 px-4 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] sm:px-6">
               {footer}
             </footer>
           )}
-          {!footer && <div className="pb-safe bg-background shrink-0" aria-hidden="true" />}
+          {!footer && (
+            <div
+              className="bg-background shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)]"
+              aria-hidden="true"
+            />
+          )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

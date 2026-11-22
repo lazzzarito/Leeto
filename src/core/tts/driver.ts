@@ -7,6 +7,9 @@ export interface TtsSession {
   cancel(): void;
 }
 
+/** `cancel()` al cambiar de fragmento provoca estos errores esperados del navegador. */
+const EXPECTED_TTS_ERRORS = new Set(['interrupted', 'canceled', 'cancelled']);
+
 export interface SpeakOptions {
   text: string;
   voiceURI?: string;
@@ -47,7 +50,11 @@ export function speakText(options: SpeakOptions): TtsSession | undefined {
       options.onBoundary?.({ wordIndex, charIndex: event.charIndex });
     };
     utterance.onend = () => options.onEnd?.();
-    utterance.onerror = (event) => options.onError?.(event.error || 'Error de síntesis');
+    utterance.onerror = (event) => {
+      const reason = event.error || 'Error de síntesis';
+      if (EXPECTED_TTS_ERRORS.has(reason)) return;
+      options.onError?.(reason);
+    };
 
     window.speechSynthesis.speak(utterance);
     return { cancel: () => window.speechSynthesis.cancel() };

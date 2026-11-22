@@ -22,6 +22,7 @@ interface KineticTextProps {
   lineHeight: number;
   dimIntensity: number;
   variant?: 'body' | 'subtitle';
+  heading?: boolean;
 }
 
 /**
@@ -30,7 +31,7 @@ interface KineticTextProps {
  */
 const KineticText = memo(
   forwardRef<KineticTextHandle, KineticTextProps>(function KineticText(
-    { content, fontSize, lineHeight, dimIntensity, variant = 'body' },
+    { content, fontSize, lineHeight, dimIntensity, variant = 'body', heading = false },
     ref,
   ) {
     const words = useMemo(() => content.split(/\s+/).filter(Boolean), [content]);
@@ -107,6 +108,7 @@ const KineticText = memo(
       <p
         className={cn(
           'font-reading',
+          heading && variant === 'subtitle' && 'reel-heading-zoom',
           variant === 'subtitle'
             ? 'text-reel max-w-none text-balance text-center'
             : 'mx-auto max-w-[68ch] text-left',
