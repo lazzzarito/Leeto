@@ -80,7 +80,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         aria-hidden="true"
         width={48}
         height={48}
-        className="onboard-gesture-pop absolute bottom-28 left-8 size-12 rounded-xl object-contain opacity-20"
+        className="onboard-gesture-pop absolute bottom-28 left-8 size-12 rounded-xl object-contain opacity-40"
       />
 
       <div className="relative flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
@@ -123,14 +123,14 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
           <div className="mx-auto w-full max-w-md text-center">
             <div className="relative mx-auto mb-8 flex size-28 items-center justify-center">
               <span className="preloader-ring border-primary/25 border-t-primary absolute inset-0 rounded-full border-2" />
-              <span className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-2xl shadow-xl shadow-black/20">
+              <span className="bg-background border-primary/30 flex size-16 items-center justify-center rounded-2xl border shadow-xl shadow-black/20">
                 <img
                   src="/icons/icon-192.webp"
                   alt=""
                   aria-hidden="true"
-                  width={32}
-                  height={32}
-                  className="size-8 rounded-lg object-contain"
+                  width={52}
+                  height={52}
+                  className="size-[52px] rounded-xl object-contain"
                 />
               </span>
             </div>

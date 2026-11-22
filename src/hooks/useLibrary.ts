@@ -11,6 +11,11 @@ export function useBooksLoading(): boolean {
   return useLiveQuery(() => db.books.count(), [], undefined) === undefined;
 }
 
+/** Número total de libros, para contadores de navegación. */
+export function useBookCount(): number {
+  return useLiveQuery(() => db.books.count(), [], 0);
+}
+
 export function useBookProgress(bookId?: string): ReadingProgress | undefined {
   return useLiveQuery(() => (bookId ? db.progress.get(bookId) : undefined), [bookId]);
 }

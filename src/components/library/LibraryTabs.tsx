@@ -60,7 +60,7 @@ export default function LibraryTabs({
         className="bg-background/85 sticky top-[calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))] z-20 grid w-full grid-cols-4 gap-1.5 px-1 pt-3 pb-2.5 backdrop-blur lg:hidden"
       >
         <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
-          Todos
+          Todos ({books.length})
         </Tabs.Trigger>
         <Tabs.Trigger value="authors" className={TRIGGER_CLASS}>
           Autores

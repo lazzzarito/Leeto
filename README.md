@@ -25,7 +25,7 @@ que siempre está contigo. Todo se queda en tu dispositivo. 🏠
 
 | 📚 Tu biblioteca | 🎬 El lector | 🧭 Tu índice |
 | :---: | :---: | :---: |
-| <img src="docs/screens/05-biblioteca-con-libro-movil.png" alt="Biblioteca de Leeto en móvil" width="230"> | <img src="docs/screens/08-lector-movil.png" alt="Lector a pantalla completa" width="230"> | <img src="docs/screens/10-indice.png" alt="Índice jerárquico" width="230"> |
+| <img src="docs/screens/05-biblioteca-con-libros-movil.png" alt="Biblioteca de Leeto en móvil" width="230"> | <img src="docs/screens/08-lector-movil.png" alt="Lector a pantalla completa" width="230"> | <img src="docs/screens/10-indice.png" alt="Índice jerárquico" width="230"> |
 | Portadas, progreso y tiempo restante de un vistazo. | Desliza y el texto sigue el ritmo contigo. | Capítulos y secciones reales, sin perderte nunca. |
 
 <br>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import { useSettings } from '@/core/db/settings';
+import { useBookCount } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
 import { cn } from '@/lib/cn';
 import { greetingForName } from '@/lib/greeting';
@@ -21,6 +22,7 @@ export default function AppShell() {
   const reading = location.pathname.startsWith('/read/');
   const activeTab = searchParams.get('tab') ?? 'all';
   const { userName } = useSettings();
+  const bookCount = useBookCount();
   const greeting = greetingForName(userName);
   const [compact, setCompact] = useState(false);
 
@@ -109,6 +111,11 @@ export default function AppShell() {
               >
                 <Icon className="size-4" aria-hidden="true" />
                 {label}
+                {value === 'all' && (
+                  <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px] tabular-nums">
+                    {bookCount}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

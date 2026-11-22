@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn';
 import { useSettings } from '@/core/db/settings';
 import { useAssetUrl } from '@/hooks/useAssetUrl';
 import { useBookProgress } from '@/hooks/useLibrary';
+import { formatFileSize, formatFileType } from '@/lib/file';
 import { estimateRemainingTime, formatDuration } from '@/lib/time';
 import type { LeetoBook } from '@/types';
 
@@ -91,6 +92,12 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
               {typeof book.volumeNumber === 'number' ? ` · ${book.volumeNumber}` : ''}
             </p>
           )}
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide">
+              {formatFileType(book.mimeType)}
+            </span>
+            <span className="text-muted-foreground text-[11px]">{formatFileSize(book.fileSize)}</span>
+          </div>
         </div>
 
         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
