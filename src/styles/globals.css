@@ -258,12 +258,13 @@
     --tw-ring-offset-color: transparent;
   }
 
-  /* Fondo de la biblioteca: garabatos de libros en mosaico, muy tenues (estilo WhatsApp). */
+  /* Fondo de la biblioteca: garabatos dispersos, rotados y de tamaños variados. */
   .library-doodle-bg {
-    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='160'%20height='160'%20viewBox='0%200%20160%20160'%3E%3Cg%20fill='none'%20stroke='%236b7280'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M12%2024c8-5%2016-5%2024%200v26c-8-5-16-5-24%200zM12%2024v26'/%3E%3Cpath%20d='M52%2018h22v30H52zM56%2024h14M56%2030h14'/%3E%3Cpath%20d='M96%2022l10%204-6%2016-10-4z'/%3E%3Cpath%20d='M120%2030h20v20h-20zM124%2034h12M124%2040h8'/%3E%3Cpath%20d='M20%2084h30v8H20zM24%2092v10h22V92'/%3E%3Cpath%20d='M70%2086l6-6%206%206-6%206zM70%2092l6%206%206-6'/%3E%3Cpath%20d='M108%2082c6%200%2010%204%2010%2010s-4%2010-10%2010-10-4-10-10%204-10%2010-10z'/%3E%3Cpath%20d='M132%2084v20M128%2088h8'/%3E%3Cpath%20d='M14%20136c10-6%2020-6%2030%200v20c-10-6-20-6-30%200z'/%3E%3Cpath%20d='M60%20138h30M60%20146h22'/%3E%3Cpath%20d='M112%20136l4%2010%2010%204-10%204-4%2010-4-10-10-4%2010-4z'/%3E%3C/g%3E%3C/svg%3E");
+    background-image: url('/doodles.svg');
     background-repeat: repeat;
-    background-size: 160px 160px;
-    opacity: 0.07;
+    background-size: 620px 620px;
+    background-position: -40px -30px;
+    opacity: 0.1;
   }
 
   [data-reading-theme='oled'] .library-doodle-bg {

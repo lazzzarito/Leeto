@@ -109,6 +109,10 @@ export interface AppSettings {
   id: 'singleton';
   deviceId: string;
   readingTheme: ReadingTheme;
+  /** `system` sigue prefers-color-scheme; `manual` usa readingTheme. */
+  themeMode?: 'system' | 'manual';
+  userName?: string;
+  onboardingCompleted?: boolean;
   fontSize: number;
   lineHeight: number;
   wpm: number;

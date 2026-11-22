@@ -14,6 +14,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   id: 'singleton',
   deviceId: getOrCreateDeviceId(),
   readingTheme: getInitialTheme(),
+  themeMode: 'system',
   fontSize: 20,
   lineHeight: 1.7,
   wpm: 240,
@@ -65,4 +66,9 @@ export async function removeScanRoot(id: string): Promise<AppSettings> {
 export function useSettings(): AppSettings {
   const stored = useLiveQuery(() => db.settings.get('singleton'), [], undefined);
   return stored ?? DEFAULT_SETTINGS;
+}
+
+/** `false` hasta que Dexie confirma que los ajustes están disponibles. */
+export function useSettingsLoaded(): boolean {
+  return useLiveQuery(() => db.settings.get('singleton'), [], undefined) !== undefined;
 }

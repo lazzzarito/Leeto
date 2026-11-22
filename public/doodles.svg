@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <g id="ic-book"><path d="M-14-10c5-3 10-3 14 0 4-3 9-3 14 0v20c-5-3-10-3-14 0-4-3-9-3-14 0zM0-10v20"/></g>
+    <g id="ic-star"><path d="M0-12 3-4l9 0-7 6 3 9-8-5-8 5 3-9-7-6h9z"/></g>
+    <g id="ic-heart"><path d="M0 9C-6 4-11 0-11-5a6 6 0 0 1 11-2 6 6 0 0 1 11 2C11 0 6 4 0 9z"/></g>
+    <g id="ic-cup"><path d="M-10-6h18v10a8 8 0 0 1-18 0zM8-4h4a4 4 0 0 1 0 8H8M-12 12h24"/></g>
+    <g id="ic-leaf"><path d="M0 10C-10 2-8-10 4-12 8-2 6 8 0 10zM0 10c-2-8 0-14 4-18"/></g>
+    <g id="ic-plane"><path d="M-12 4 12-8 4 10 0 2zM0 2 12-8"/></g>
+    <g id="ic-music"><path d="M4-10v12a4 4 0 1 1-4-4v-8l10-3v10M10-3a4 4 0 1 1-4-4"/></g>
+    <g id="ic-camera"><path d="M-12-6h6l2-4h8l2 4h6v14h-24z"/><circle cx="0" cy="1" r="4"/></g>
+    <g id="ic-cloud"><path d="M-12 4a6 6 0 0 1 6-8 8 8 0 0 1 14 2 5 5 0 0 1 2 6z"/></g>
+    <g id="ic-sun"><circle cx="0" cy="0" r="6"/><path d="M0-10v-3M0 10v3M-10 0h-3M10 0h3M-7-7l-2-2M7 7l2 2M7-7l2-2M-7 7l-2 2"/></g>
+    <g id="ic-pencil"><path d="M-8 6 6-8l4 4L-4 10l-6 2zM4-6l4 4"/></g>
+    <g id="ic-sparkle"><path d="M0-12 2-2 12 0 2 2 0 12-2 2-12 0-2-2z"/></g>
+    <g id="ic-bolt"><path d="M2-12-8 2h8l-2 10L10-4H2z"/></g>
+  </defs>
+  <g fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#ic-book" transform="translate(42 58) rotate(-12) scale(1.2)" opacity=".9"/>
+    <use href="#ic-star" transform="translate(184 36) rotate(18) scale(.8)" opacity=".75"/>
+    <use href="#ic-cup" transform="translate(320 72) rotate(-24) scale(1.1)" opacity=".85"/>
+    <use href="#ic-heart" transform="translate(470 40) rotate(8) scale(.9)" opacity=".8"/>
+    <use href="#ic-leaf" transform="translate(610 66) rotate(-8) scale(1.3)" opacity=".9"/>
+    <use href="#ic-bolt" transform="translate(742 44) rotate(22) scale(.75)" opacity=".7"/>
+    <use href="#ic-plane" transform="translate(96 168) rotate(14) scale(.9)" opacity=".85"/>
+    <use href="#ic-camera" transform="translate(248 142) rotate(-16) scale(1.25)" opacity=".8"/>
+    <use href="#ic-music" transform="translate(396 180) rotate(26) scale(.7)" opacity=".75"/>
+    <use href="#ic-cloud" transform="translate(540 150) rotate(-10) scale(1.1)" opacity=".85"/>
+    <use href="#ic-sun" transform="translate(690 184) rotate(12) scale(1)" opacity=".8"/>
+    <use href="#ic-book" transform="translate(770 250) rotate(-20) scale(.8)" opacity=".7"/>
+    <use href="#ic-sparkle" transform="translate(50 278) rotate(22) scale(1.15)" opacity=".9"/>
+    <use href="#ic-heart" transform="translate(180 300) rotate(-8) scale(.9)" opacity=".8"/>
+    <use href="#ic-pencil" transform="translate(300 262) rotate(16) scale(1)" opacity=".85"/>
+    <use href="#ic-star" transform="translate(430 310) rotate(-14) scale(1.2)" opacity=".75"/>
+    <use href="#ic-cup" transform="translate(570 270) rotate(10) scale(.85)" opacity=".9"/>
+    <use href="#ic-leaf" transform="translate(700 330) rotate(-24) scale(1.05)" opacity=".8"/>
+    <use href="#ic-cloud" transform="translate(110 400) rotate(-18) scale(1.3)" opacity=".75"/>
+    <use href="#ic-bolt" transform="translate(250 382) rotate(12) scale(.8)" opacity=".9"/>
+    <use href="#ic-book" transform="translate(380 420) rotate(-6) scale(1.1)" opacity=".85"/>
+    <use href="#ic-music" transform="translate(520 390) rotate(24) scale(.95)" opacity=".8"/>
+    <use href="#ic-plane" transform="translate(650 430) rotate(-12) scale(1.25)" opacity=".7"/>
+    <use href="#ic-star" transform="translate(760 470) rotate(18) scale(.9)" opacity=".85"/>
+    <use href="#ic-camera" transform="translate(36 500) rotate(10) scale(1)" opacity=".8"/>
+    <use href="#ic-heart" transform="translate(160 540) rotate(-22) scale(1.15)" opacity=".75"/>
+    <use href="#ic-sun" transform="translate(290 510) rotate(14) scale(.8)" opacity=".9"/>
+    <use href="#ic-sparkle" transform="translate(420 545) rotate(-16) scale(1.2)" opacity=".8"/>
+    <use href="#ic-pencil" transform="translate(560 520) rotate(8) scale(1)" opacity=".85"/>
+    <use href="#ic-cup" transform="translate(690 560) rotate(-10) scale(.9)" opacity=".75"/>
+    <use href="#ic-leaf" transform="translate(80 640) rotate(20) scale(1.1)" opacity=".85"/>
+    <use href="#ic-book" transform="translate(210 620) rotate(-12) scale(.9)" opacity=".8"/>
+    <use href="#ic-bolt" transform="translate(340 665) rotate(16) scale(1.25)" opacity=".7"/>
+    <use href="#ic-cloud" transform="translate(480 630) rotate(-24) scale(1)" opacity=".85"/>
+    <use href="#ic-star" transform="translate(620 660) rotate(12) scale(.85)" opacity=".8"/>
+    <use href="#ic-music" transform="translate(750 640) rotate(-8) scale(1.1)" opacity=".75"/>
+    <use href="#ic-plane" transform="translate(40 730) rotate(-16) scale(.9)" opacity=".85"/>
+    <use href="#ic-heart" transform="translate(170 750) rotate(22) scale(1.05)" opacity=".8"/>
+    <use href="#ic-camera" transform="translate(300 720) rotate(-10) scale(.8)" opacity=".75"/>
+    <use href="#ic-sun" transform="translate(440 760) rotate(14) scale(1.2)" opacity=".85"/>
+    <use href="#ic-sparkle" transform="translate(580 730) rotate(-20) scale(1)" opacity=".8"/>
+    <use href="#ic-pencil" transform="translate(710 770) rotate(10) scale(.9)" opacity=".75"/>
+    <use href="#ic-star" transform="translate(120 110) rotate(28) scale(.65)" opacity=".6"/>
+    <use href="#ic-sparkle" transform="translate(360 110) rotate(-30) scale(.6)" opacity=".55"/>
+    <use href="#ic-heart" transform="translate(660 110) rotate(25) scale(.65)" opacity=".6"/>
+    <use href="#ic-bolt" transform="translate(240 220) rotate(30) scale(.6)" opacity=".55"/>
+    <use href="#ic-cup" transform="translate(500 220) rotate(-28) scale(.7)" opacity=".6"/>
+    <use href="#ic-music" transform="translate(620 350) rotate(32) scale(.6)" opacity=".55"/>
+    <use href="#ic-leaf" transform="translate(200 470) rotate(-30) scale(.65)" opacity=".6"/>
+    <use href="#ic-plane" transform="translate(460 480) rotate(28) scale(.6)" opacity=".55"/>
+  </g>
+</svg>

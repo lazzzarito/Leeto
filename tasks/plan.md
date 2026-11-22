@@ -75,6 +75,15 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 **Checkpoint F6:** `npm run typecheck`, `npm test`, `npm run build` en verde; TOC y biblioteca verificados.
 
+### Fase 7 — Primera impresión y pulido visual (completada)
+- T33: Tema automático: modo `system/manual`, seguimiento reactivo de `prefers-color-scheme` y control en ajustes.
+- T34: Preloader animado de arranque y skeletons acordes a biblioteca, lector, tarjetas y diálogos.
+- T35: Onboarding de primer uso con gestos animados, nombre y saludo personalizado en el header.
+- T36: Fondo de garabatos dispersos, pills de pestañas a ancho completo, header sticky compacto y marquee en títulos.
+- T37: QA real en navegador (390×844 y escritorio), PWA offline, code-split y README de presentación.
+
+**Checkpoint F7:** 93 tests en verde, build sin avisos de chunk y 19 comprobaciones de navegador sin errores de consola.
+
 ## Riesgos y mitigaciones
 
 | Riesgo | Impacto | Mitigación |

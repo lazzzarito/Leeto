@@ -15,7 +15,7 @@ interface LibraryTabsProps {
 }
 
 const TRIGGER_CLASS =
-  'border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground';
+  'bg-muted/60 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex h-9 w-full items-center justify-center rounded-full px-2 text-xs font-medium transition-colors sm:text-sm';
 
 const GRID_CLASS = 'grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
 
@@ -57,7 +57,7 @@ export default function LibraryTabs({
     <Tabs.Root value={value} onValueChange={onValueChange} className="space-y-4">
       <Tabs.List
         aria-label="Vistas de la biblioteca"
-        className="border-border flex gap-1 overflow-x-auto border-b lg:hidden"
+        className="bg-background/85 sticky top-[calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))] z-20 grid w-full grid-cols-4 gap-1.5 px-1 pt-3 pb-2.5 backdrop-blur lg:hidden"
       >
         <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
           Todos

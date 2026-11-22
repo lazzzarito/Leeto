@@ -1,0 +1,19 @@
+PASS onboarding aparece en primer uso
+PASS saludo personalizado en el header — Buenas noches, Juan
+PASS fondo de garabatos dispersos
+PASS buscador y botón Añadir con la misma altura — 40px / 40px
+PASS header fijo arriba
+PASS importar EPUB añade el libro
+PASS pestañas sticky a cuatro columnas
+PASS tras recargar, portada visible
+PASS sidebar visible en escritorio
+PASS tema automático oscuro
+PASS tema automático claro
+PASS modal de ajustes abre
+PASS interruptor de tema automático
+PASS lector abre a pantalla completa
+PASS gesto/teclado cambia de fragmento
+PASS índice jerárquico muestra la ruta activa
+PASS service worker registrado
+PASS la app abre offline
+PASS consola sin errores ni warnings

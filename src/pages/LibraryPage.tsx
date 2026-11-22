@@ -11,6 +11,7 @@ import MetadataDialog from '@/components/library/MetadataDialog';
 import ScanDialog from '@/components/library/ScanDialog';
 import SearchBar from '@/components/library/SearchBar';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
+import { LibrarySkeleton } from '@/components/ui/Skeletons';
 import { deleteBookCascade } from '@/core/db/delete';
 import { addScanRoot, getSettings, removeScanRoot, useSettings } from '@/core/db/settings';
 import {
@@ -19,7 +20,7 @@ import {
   pickBookDirectory,
 } from '@/core/import/folder';
 import { useImport } from '@/hooks/useImport';
-import { useBooks, useQuotes } from '@/hooks/useLibrary';
+import { useBooks, useBooksLoading, useQuotes } from '@/hooks/useLibrary';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newId } from '@/lib/ids';
 import type { LeetoBook } from '@/types';
@@ -32,6 +33,7 @@ function hasFiles(event: DragEvent): boolean {
 
 export default function LibraryPage() {
   const books = useBooks();
+  const booksLoading = useBooksLoading();
   const quotes = useQuotes();
   const settings = useSettings();
   const savedSettings = useLiveQuery(() => getSettings(), [], settings);
@@ -129,7 +131,9 @@ export default function LibraryPage() {
 
       <ImportQueue jobs={jobs} onClear={clearFinished} />
 
-      {books.length === 0 ? (
+      {booksLoading ? (
+        <LibrarySkeleton />
+      ) : books.length === 0 ? (
         <section aria-label="Biblioteca vacía" className="space-y-4">
           <div className="text-center">
             <div className="bg-muted mx-auto mb-3 flex size-12 items-center justify-center rounded-full">

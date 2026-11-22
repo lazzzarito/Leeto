@@ -413,3 +413,32 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 **Verification:** `npm run build` y comprobación manual de instalación/offline.
 **Files:** `public/manifest.webmanifest`, `public/sw.js`, `index.html`, `src/main.tsx`
 **Scope:** S
+
+---
+
+## Fase 7 — Primera impresión y pulido visual ✅
+
+### T33: Tema automático
+- [x] El modo `system` sigue `prefers-color-scheme` en vivo (paper/oled).
+- [x] Elegir un tema lo fija como manual y se puede volver a automático.
+- [x] Interruptor en ajustes generales y selector en ajustes del lector.
+
+### T34: Preloader y skeletons
+- [x] Logo animado al abrir la app, con retardo mínimo y salida desvanecida.
+- [x] Skeletons de tarjetas, pestañas, lector y diálogos con la forma del contenido real.
+- [x] Movimiento reducido desactiva las animaciones nuevas.
+
+### T35: Onboarding y saludo
+- [x] Recorrido de tres pasos con gestos animados y petición de nombre.
+- [x] El nombre se guarda localmente y aparece como saludo bajo el logo del header.
+- [x] Omitir y Escape permiten salir sin nombre.
+
+### T36: Biblioteca y acabado visual
+- [x] Garabatos dispersos, rotados y de tamaños variados (tipo WhatsApp).
+- [x] Pestañas pills a ancho completo, sticky bajo un header compacto sin separadores.
+- [x] Títulos de libros con marquee cuando desbordan.
+
+### T37: Verificación y presentación
+- [x] QA real en Edge a 390×844 y 1440×900 sin errores de consola.
+- [x] Importar → recargar → portada; tema automático; gestos; índice; PWA offline.
+- [x] Code-split de vendors (sin avisos de chunk) y README ilustrado.

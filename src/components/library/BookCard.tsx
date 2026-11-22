@@ -1,6 +1,7 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { BookOpenText, Clock3, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Marquee from '@/components/ui/Marquee';
 import { useSettings } from '@/core/db/settings';
 import { useAssetUrl } from '@/hooks/useAssetUrl';
 import { useBookProgress } from '@/hooks/useLibrary';
@@ -42,8 +43,8 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
         </div>
 
         <div className="mt-3 space-y-0.5">
-          <h3 className="truncate text-sm font-medium" title={book.title}>
-            {book.title}
+          <h3 className="text-sm font-medium" title={book.title}>
+            <Marquee text={book.title} />
           </h3>
           <p className="text-muted-foreground truncate text-xs" title={book.author}>
             {book.author}

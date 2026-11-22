@@ -2,19 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, BookOpenText } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import LeetoPlayer from '@/components/player/LeetoPlayer';
+import { ReaderSkeleton } from '@/components/ui/Skeletons';
 import { db } from '@/core/db/db';
 
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>();
   const book = useLiveQuery(() => (id ? db.books.get(id) : undefined), [id], null);
 
-  if (book === null) {
-    return (
-      <main className="bg-reader text-reader flex h-[100dvh] w-full items-center justify-center">
-        <p className="text-muted-foreground text-sm">Cargando libro…</p>
-      </main>
-    );
-  }
+  if (book === null) return <ReaderSkeleton />;
 
   if (!book) {
     return (

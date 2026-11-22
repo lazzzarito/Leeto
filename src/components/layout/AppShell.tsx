@@ -1,9 +1,11 @@
 import { BookOpen, Layers, Library, Quote, Settings2, Users } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
+import { useSettings } from '@/core/db/settings';
 import { SyncProvider } from '@/hooks/useSyncContext';
 import { cn } from '@/lib/cn';
+import { greetingForName } from '@/lib/greeting';
 
 const NAV_ITEMS = [
   { value: 'all', label: 'Todos', Icon: Library },
@@ -18,6 +20,25 @@ export default function AppShell() {
   const settingsOpen = searchParams.get('settings') === '1';
   const reading = location.pathname.startsWith('/read/');
   const activeTab = searchParams.get('tab') ?? 'all';
+  const { userName } = useSettings();
+  const greeting = greetingForName(userName);
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    if (reading) return;
+    const update = () => setCompact(window.scrollY > 24);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, [reading]);
+
+  useEffect(() => {
+    if (reading) return;
+    document.documentElement.style.setProperty('--header-h', compact ? '3.5rem' : '4rem');
+    return () => {
+      document.documentElement.style.removeProperty('--header-h');
+    };
+  }, [compact, reading]);
 
   useEffect(() => {
     if (!reading) return;
@@ -58,7 +79,10 @@ export default function AppShell() {
         <aside className="pl-safe sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border/70 bg-card/40 px-4 py-5 lg:flex">
           <Link to="/" className="flex items-center gap-2 rounded-md px-2 focus-visible:ring-2">
             <BookOpen className="size-5 text-primary" aria-hidden="true" />
-            <span className="font-semibold tracking-tight">Leeto</span>
+            <span className="flex flex-col leading-tight">
+              <span className="font-semibold tracking-tight">Leeto</span>
+              <span className="text-muted-foreground text-[11px]">{greeting}</span>
+            </span>
           </Link>
 
           <nav aria-label="Biblioteca" className="mt-8 space-y-1">
@@ -100,11 +124,26 @@ export default function AppShell() {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="pt-safe border-b border-border/70 bg-background/90 backdrop-blur lg:hidden">
-            <div className="flex h-14 items-center justify-between px-4 sm:px-6">
+          <header className="pt-safe bg-background/80 sticky top-0 z-30 backdrop-blur lg:hidden">
+            <div
+              className={cn(
+                'flex items-center justify-between px-4 transition-[height] duration-300 sm:px-6',
+                compact ? 'h-14' : 'h-16',
+              )}
+            >
               <Link to="/" className="flex items-center gap-2 rounded-md focus-visible:ring-2">
                 <BookOpen className="size-5 text-primary" aria-hidden="true" />
-                <span className="font-semibold tracking-tight">Leeto</span>
+                <span className="flex flex-col leading-tight">
+                  <span className="font-semibold tracking-tight">Leeto</span>
+                  <span
+                    className={cn(
+                      'text-muted-foreground text-[11px] transition-opacity duration-300',
+                      compact && 'opacity-0 sm:opacity-100',
+                    )}
+                  >
+                    {greeting}
+                  </span>
+                </span>
               </Link>
 
               <button

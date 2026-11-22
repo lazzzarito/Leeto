@@ -18,7 +18,7 @@ export default function PlayerSettingsDialog({
   onOpenChange,
   settings,
 }: PlayerSettingsDialogProps) {
-  const { theme, setTheme, themes } = useTheme();
+  const { theme, setTheme, themeMode, setThemeMode, themes } = useTheme();
 
   return (
     <ResponsiveDialog
@@ -95,6 +95,18 @@ export default function PlayerSettingsDialog({
                 {option.label}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label className={LABEL_CLASS}>
+          Modo de tema
+          <select
+            value={themeMode}
+            onChange={(event) => setThemeMode(event.target.value as 'system' | 'manual')}
+            className={CONTROL_CLASS}
+          >
+            <option value="system">Automático</option>
+            <option value="manual">Manual</option>
           </select>
         </label>
 

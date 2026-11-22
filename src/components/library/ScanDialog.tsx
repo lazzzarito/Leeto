@@ -1,6 +1,7 @@
 import { FolderPlus, LoaderCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
+import { DialogSkeleton } from '@/components/ui/Skeletons';
 import {
   collectFromDirectory,
   ensureReadPermission,
@@ -158,6 +159,13 @@ export default function ScanDialog({
             </ul>
           )}
         </div>
+
+        {scanningRoot && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Buscando libros…</h3>
+            <DialogSkeleton rows={2} />
+          </div>
+        )}
 
         {items.length > 0 && (
           <div className="space-y-2">

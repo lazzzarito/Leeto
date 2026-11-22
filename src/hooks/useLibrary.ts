@@ -6,6 +6,11 @@ export function useBooks(): LeetoBook[] {
   return useLiveQuery(() => db.books.orderBy('importedAt').reverse().toArray(), [], []);
 }
 
+/** `true` mientras IndexedDB todavía no ha devuelto el listado. */
+export function useBooksLoading(): boolean {
+  return useLiveQuery(() => db.books.count(), [], undefined) === undefined;
+}
+
 export function useBookProgress(bookId?: string): ReadingProgress | undefined {
   return useLiveQuery(() => (bookId ? db.progress.get(bookId) : undefined), [bookId]);
 }

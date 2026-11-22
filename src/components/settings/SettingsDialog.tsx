@@ -11,7 +11,7 @@ interface SettingsDialogProps {
 
 /** Configuración como modal: hoja inferior en móvil y panel lateral en pantallas anchas. */
 export default function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
-  const { theme, setTheme, themes } = useTheme();
+  const { theme, setTheme, themeMode, setThemeMode, themes } = useTheme();
 
   return (
     <ResponsiveDialog
@@ -22,11 +22,35 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     >
       <div className="space-y-8 pb-8">
         <section aria-labelledby="settings-theme-heading" className="space-y-3">
-          <div>
-            <h2 id="settings-theme-heading" className="text-base font-medium">
-              Tema de lectura
-            </h2>
-            <p className="text-muted-foreground text-sm">Cada tema define todos los colores.</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 id="settings-theme-heading" className="text-base font-medium">
+                Tema de lectura
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                {themeMode === 'system'
+                  ? `Automático según tu dispositivo (${theme === 'oled' ? 'oscuro' : 'claro'}).`
+                  : 'Tema fijado manualmente.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={themeMode === 'system'}
+              aria-label="Seguir el tema del dispositivo"
+              onClick={() => setThemeMode(themeMode === 'system' ? 'manual' : 'system')}
+              className={cn(
+                'relative h-6 w-11 shrink-0 rounded-full transition-colors',
+                themeMode === 'system' ? 'bg-primary' : 'bg-muted',
+              )}
+            >
+              <span
+                className={cn(
+                  'bg-background absolute top-0.5 size-5 rounded-full shadow transition-transform',
+                  themeMode === 'system' ? 'translate-x-5.5' : 'translate-x-0.5',
+                )}
+              />
+            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">

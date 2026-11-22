@@ -1,9 +1,10 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { updateSettings, useSettings } from '@/core/db/settings';
 import { READING_THEMES } from '@/core/theme/themes';
 import type { ReadingTheme } from '@/types';
 
 const THEME_CACHE_KEY = 'leeto.theme';
+const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 function readCachedTheme(): ReadingTheme | null {
   try {
@@ -14,13 +15,32 @@ function readCachedTheme(): ReadingTheme | null {
   }
 }
 
-/** Aplica el tema al elemento root y persiste la elección en Dexie + caché local. */
+function prefersDark(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(DARK_QUERY).matches;
+}
+
+/**
+ * Tema reactivo: por defecto sigue al sistema (paper/oled) y permite fijar uno
+ * manualmente. El resultado se aplica al root y se cachea para el primer paint.
+ */
 export function useTheme() {
-  const { readingTheme } = useSettings();
-  const theme = readCachedTheme() ?? readingTheme;
+  const { readingTheme, themeMode } = useSettings();
+  const [systemDark, setSystemDark] = useState(prefersDark);
+  const mode = themeMode ?? 'system';
+  const manualTheme = readCachedTheme() ?? readingTheme;
+  const theme: ReadingTheme = mode === 'system' ? (systemDark ? 'oled' : 'paper') : manualTheme;
+
+  useEffect(() => {
+    const media = window.matchMedia(DARK_QUERY);
+    const update = () => setSystemDark(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.readingTheme = theme;
+    document.documentElement.style.colorScheme = theme === 'oled' ? 'dark' : 'light';
     try {
       localStorage.setItem(THEME_CACHE_KEY, theme);
     } catch {
@@ -35,8 +55,12 @@ export function useTheme() {
     } catch {
       // ignorar
     }
-    void updateSettings({ readingTheme: next });
+    void updateSettings({ readingTheme: next, themeMode: 'manual' });
   }, []);
 
-  return { theme, setTheme, themes: READING_THEMES };
+  const setThemeMode = useCallback((next: 'system' | 'manual') => {
+    void updateSettings({ themeMode: next });
+  }, []);
+
+  return { theme, setTheme, themeMode: mode, setThemeMode, themes: READING_THEMES };
 }
