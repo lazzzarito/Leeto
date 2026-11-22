@@ -12,6 +12,8 @@ interface ResponsiveDialogProps {
   footer?: ReactNode;
   /** `full` para ajustes/índice; `content` para formularios cortos. */
   height?: 'full' | 'content';
+  /** `sheet` es el panel lateral en escritorio; `centered` es un modal compacto. */
+  variant?: 'sheet' | 'centered';
 }
 
 /**
@@ -26,6 +28,7 @@ export default function ResponsiveDialog({
   children,
   footer,
   height = 'full',
+  variant = 'sheet',
 }: ResponsiveDialogProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -35,7 +38,9 @@ export default function ResponsiveDialog({
           className={cn(
             'bg-background fixed inset-x-0 bottom-0 z-50 flex w-full flex-col overflow-hidden',
             'rounded-t-2xl border border-border shadow-2xl outline-none',
-            'md:inset-x-auto md:inset-y-0 md:right-0 md:w-1/2',
+            variant === 'sheet'
+              ? 'md:inset-x-auto md:inset-y-0 md:right-0 md:w-1/2'
+              : 'md:inset-x-0 md:inset-y-0 md:left-1/2 md:top-1/2 md:right-auto md:bottom-auto md:w-[calc(100%-2rem)] md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl',
             height === 'full'
               ? 'h-[90dvh] md:h-dvh md:rounded-none md:border-r-0 md:border-y-0'
               : 'max-h-[90dvh] md:my-auto md:h-auto md:max-h-dvh md:rounded-xl',

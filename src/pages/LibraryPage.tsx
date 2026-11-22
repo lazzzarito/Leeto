@@ -199,6 +199,7 @@ export default function LibraryPage() {
         open={Boolean(deletingBook)}
         onOpenChange={(open) => !open && setDeletingBook(undefined)}
         height="content"
+        variant="centered"
         title="Eliminar libro"
         description="Se borrarán también su progreso, citas e imágenes."
         footer={

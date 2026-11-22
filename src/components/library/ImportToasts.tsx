@@ -26,7 +26,7 @@ function ToastItem({ toast, onDismiss }: { toast: ImportToast; onDismiss: (id: s
     <div
       role={toast.kind === 'error' ? 'alert' : 'status'}
       className={cn(
-        'bg-background/95 border-border flex w-full items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur sm:w-80',
+        'bg-background/95 border-border flex w-full items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur',
         toast.kind === 'error' ? 'border-destructive/50' : 'border-primary/30',
       )}
     >
@@ -62,11 +62,11 @@ export default function ImportToasts({ toasts, onDismiss }: ImportToastsProps) {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] z-[70] flex flex-col items-center gap-2 sm:inset-x-auto sm:right-6 sm:items-end md:bottom-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]"
+      className="pointer-events-none fixed inset-x-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-[70] flex flex-col items-center gap-2"
       aria-live="polite"
     >
       {toasts.map((toast) => (
-        <div key={toast.id} className="pointer-events-auto w-full sm:w-80">
+        <div key={toast.id} className="pointer-events-auto w-full max-w-md">
           <ToastItem toast={toast} onDismiss={onDismiss} />
         </div>
       ))}
