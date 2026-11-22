@@ -1,18 +1,9 @@
 import { hashBytes } from '@/lib/hash';
+import { detectMimeType, EPUB_MIME, PDF_MIME } from './formats';
 import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
 import { runParserWorker } from './workerClient';
 
-export const EPUB_MIME = 'application/epub+zip';
-export const PDF_MIME = 'application/pdf';
-
-export function detectMimeType(file: File): string | undefined {
-  const name = file.name.toLowerCase();
-  if (file.type === EPUB_MIME || name.endsWith('.epub')) return EPUB_MIME;
-  if (file.type === PDF_MIME || name.endsWith('.pdf')) return PDF_MIME;
-  return undefined;
-}
-
-/** Hash + parseo, delegando EPUB a su worker y PDF al worker propio de PDF.js. */
+/** Hash + parseo: EPUB en worker, PDF con PDF.js y texto en el hilo principal. */
 export async function parseFile(
   file: File,
   onProgress: (progress: ParseProgress) => void,
@@ -21,7 +12,7 @@ export async function parseFile(
   const mimeType = detectMimeType(file);
   if (!mimeType) {
     throw new ParseError(
-      'Formato no soportado. Leeto admite EPUB y PDF con texto seleccionable.',
+      'Formato no soportado. Leeto admite EPUB, PDF con texto y archivos TXT, Markdown y HTML.',
       'INVALID_FORMAT',
     );
   }
@@ -37,9 +28,22 @@ export async function parseFile(
 
   if (mimeType === EPUB_MIME) return runParserWorker('epub', request, onProgress);
 
-  // PDF.js es pesado: se carga solo cuando se importa un PDF.
-  const { parsePdf } = await import('./pdf');
-  return parsePdf(request, onProgress);
+  if (mimeType === PDF_MIME) {
+    // PDF.js es pesado: se carga solo cuando se importa un PDF.
+    const { parsePdf } = await import('./pdf');
+    return parsePdf(request, onProgress);
+  }
+
+  const { parseText } = await import('./text');
+  return parseText(request, onProgress);
 }
 
+export {
+  detectMimeType,
+  EPUB_MIME,
+  HTML_MIME,
+  MARKDOWN_MIME,
+  PDF_MIME,
+  TXT_MIME,
+} from './formats';
 export { ParseError, type ParseProgress, type ParseResult } from './types';

@@ -50,7 +50,7 @@ export default function AddMenu({
           >
             <DropdownMenu.Item className={ITEM_CLASS} onSelect={() => fileInputRef.current?.click()}>
               <Upload className="size-4" aria-hidden="true" />
-              Archivos EPUB/PDF
+              Archivos de libro
             </DropdownMenu.Item>
             <DropdownMenu.Item
               className={ITEM_CLASS}
@@ -74,11 +74,11 @@ export default function AddMenu({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".epub,.pdf,application/epub+zip,application/pdf"
+        accept=".epub,.pdf,.txt,.md,.markdown,.html,.htm,application/epub+zip,application/pdf,text/plain,text/markdown,text/html"
         multiple
         hidden
         className="sr-only"
-        aria-label="Seleccionar archivos EPUB o PDF"
+        aria-label="Seleccionar archivos de libro"
         onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           if (files.length > 0) onFiles(files);

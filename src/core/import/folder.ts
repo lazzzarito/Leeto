@@ -1,4 +1,8 @@
-/** Descubrimiento de EPUB/PDF en carpetas, sin depender de React ni de la UI. */
+/** Descubrimiento de libros en carpetas, sin depender de React ni de la UI. */
+
+import { isBookFile } from '@/core/parsers/formats';
+
+export { isBookFile };
 
 export interface BookCandidate {
   file: File;
@@ -18,12 +22,6 @@ type PermissionCapableHandle = FileSystemDirectoryHandle & {
   queryPermission?: (descriptor: { name: 'read'; mode?: 'read' }) => Promise<PermissionState>;
   requestPermission?: (descriptor: { name: 'read'; mode?: 'read' }) => Promise<PermissionState>;
 };
-
-const BOOK_EXTENSION = /\.(epub|pdf)$/i;
-
-export function isBookFile(name: string): boolean {
-  return BOOK_EXTENSION.test(name);
-}
 
 /** Normaliza un `<input webkitdirectory>` a rutas relativas estables. */
 export function fromFileList(files: File[]): BookCandidate[] {

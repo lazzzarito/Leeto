@@ -32,22 +32,26 @@ function candidate(file: File, path: string): File {
 }
 
 describe('descubrimiento de libros en carpetas', () => {
-  it('acepta solo EPUB y PDF, sin importar mayúsculas', () => {
+  it('acepta los formatos soportados, sin importar mayúsculas', () => {
     expect(isBookFile('Libro.EPUB')).toBe(true);
     expect(isBookFile('capitulo.pdf')).toBe(true);
-    expect(isBookFile('notas.txt')).toBe(false);
+    expect(isBookFile('notas.txt')).toBe(true);
+    expect(isBookFile('borrador.md')).toBe(true);
+    expect(isBookFile('portada.jpg')).toBe(false);
   });
 
   it('conserva la ruta relativa de un input de carpeta', () => {
     const files = [
       candidate(new File(['a'], 'uno.epub'), 'Saga/Vol 1/uno.epub'),
       candidate(new File(['b'], 'dos.pdf'), 'Saga/dos.pdf'),
-      candidate(new File(['c'], 'ignorado.txt'), 'Saga/ignorado.txt'),
+      candidate(new File(['c'], 'notas.txt'), 'Saga/notas.txt'),
+      candidate(new File(['d'], 'ignorado.jpg'), 'Saga/ignorado.jpg'),
     ];
 
     expect(fromFileList(files).map((item) => item.path)).toEqual([
       'Saga/Vol 1/uno.epub',
       'Saga/dos.pdf',
+      'Saga/notas.txt',
     ]);
   });
 
@@ -60,10 +64,14 @@ describe('descubrimiento de libros en carpetas', () => {
     ]);
 
     const shallow = await collectFromDirectory(root, 0);
-    expect(shallow.map((item) => item.path)).toEqual(['uno.epub']);
+    expect(shallow.map((item) => item.path)).toEqual(['uno.epub', 'leeme.txt']);
 
     const deep: DirectoryCandidate[] = await collectFromDirectory(root);
-    expect(deep.map((item) => item.path)).toEqual(['uno.epub', 'profundo/libro.pdf']);
+    expect(deep.map((item) => item.path)).toEqual([
+      'uno.epub',
+      'leeme.txt',
+      'profundo/libro.pdf',
+    ]);
   });
 
   it('pide permiso solo cuando la raíz guardada no tiene acceso', async () => {

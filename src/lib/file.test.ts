@@ -17,6 +17,8 @@ describe('formatFileType', () => {
   it('reduce el MIME a la etiqueta del formato', () => {
     expect(formatFileType('application/epub+zip')).toBe('EPUB');
     expect(formatFileType('application/pdf')).toBe('PDF');
-    expect(formatFileType('text/plain')).toBe('PLAIN');
+    expect(formatFileType('text/plain')).toBe('TXT');
+    expect(formatFileType('text/markdown')).toBe('MD');
+    expect(formatFileType('text/html')).toBe('HTML');
   });
 });

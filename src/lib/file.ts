@@ -11,5 +11,8 @@ export function formatFileSize(bytes: number): string {
 export function formatFileType(mimeType: string): string {
   if (mimeType.includes('epub')) return 'EPUB';
   if (mimeType.includes('pdf')) return 'PDF';
+  if (mimeType.includes('plain')) return 'TXT';
+  if (mimeType.includes('markdown')) return 'MD';
+  if (mimeType.includes('html')) return 'HTML';
   return mimeType.split('/').pop()?.toUpperCase() || 'LIBRO';
 }
