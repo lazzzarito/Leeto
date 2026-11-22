@@ -20,5 +20,8 @@ describe('formatFileType', () => {
     expect(formatFileType('text/plain')).toBe('TXT');
     expect(formatFileType('text/markdown')).toBe('MD');
     expect(formatFileType('text/html')).toBe('HTML');
+    expect(formatFileType('application/x-fictionbook+xml')).toBe('FB2');
+    expect(formatFileType('application/vnd.openxmlformats-officedocument.wordprocessingml.document')).toBe('DOCX');
+    expect(formatFileType('application/vnd.oasis.opendocument.text')).toBe('ODT');
   });
 });

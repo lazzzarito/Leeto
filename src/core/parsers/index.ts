@@ -1,5 +1,5 @@
 import { hashBytes } from '@/lib/hash';
-import { detectMimeType, EPUB_MIME, PDF_MIME } from './formats';
+import { detectMimeType, DOCX_MIME, EPUB_MIME, FB2_MIME, ODT_MIME, PDF_MIME } from './formats';
 import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
 import { runParserWorker } from './workerClient';
 
@@ -12,7 +12,7 @@ export async function parseFile(
   const mimeType = detectMimeType(file);
   if (!mimeType) {
     throw new ParseError(
-      'Formato no soportado. Leeto admite EPUB, PDF con texto y archivos TXT, Markdown y HTML.',
+      'Formato no soportado. Leeto admite EPUB, PDF con texto, FB2, DOCX, ODT, TXT, Markdown y HTML.',
       'INVALID_FORMAT',
     );
   }
@@ -34,13 +34,28 @@ export async function parseFile(
     return parsePdf(request, onProgress);
   }
 
+  if (mimeType === FB2_MIME) {
+    const { parseFb2 } = await import('./fb2');
+    return parseFb2(request, onProgress);
+  }
+
+  if (mimeType === DOCX_MIME || mimeType === ODT_MIME) {
+    const { parseDocx, parseOdt } = await import('./office');
+    return mimeType === DOCX_MIME
+      ? parseDocx(request, onProgress)
+      : parseOdt(request, onProgress);
+  }
+
   const { parseText } = await import('./text');
   return parseText(request, onProgress);
 }
 
 export {
   detectMimeType,
+  DOCX_MIME,
   EPUB_MIME,
+  FB2_MIME,
+  ODT_MIME,
   HTML_MIME,
   MARKDOWN_MIME,
   PDF_MIME,

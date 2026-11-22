@@ -1,4 +1,3 @@
-import { XMLParser } from 'fast-xml-parser';
 import JSZip from 'jszip';
 import { newId } from '@/lib/ids';
 import type { LeetoBlock, TocEntry } from '@/types';
@@ -11,44 +10,15 @@ import {
   resolveRelativePath,
 } from './normalize';
 import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
+import { assertZipSafety } from './zipSafety';
 
-interface XmlNode {
-  '#text'?: string;
-  [key: string]: unknown;
-}
+import { asNode, attributeOf, makeXmlParser, nodeArray, textOf, type XmlNode } from './xml';
 
 interface ManifestItem {
   id: string;
   href: string;
   mediaType: string;
   properties: string;
-}
-
-function isNode(value: unknown): value is XmlNode {
-  return typeof value === 'object' && value !== null;
-}
-
-function asNode(value: unknown): XmlNode {
-  return isNode(value) ? value : {};
-}
-
-function nodeArray(value: unknown): XmlNode[] {
-  if (Array.isArray(value)) return value.filter(isNode);
-  return isNode(value) ? [value] : [];
-}
-
-function textOf(value: unknown): string {
-  if (typeof value === 'string' || typeof value === 'number') return String(value).trim();
-  if (isNode(value) && typeof value['#text'] === 'string') return value['#text'].trim();
-  return '';
-}
-
-function attributeOf(value: unknown, name: string): string {
-  const node = asNode(value);
-  const attribute = node[`@_${name}`];
-  return typeof attribute === 'string' || typeof attribute === 'number'
-    ? String(attribute).trim()
-    : '';
 }
 
 function decodeZipText(bytes: Uint8Array): string {
@@ -194,6 +164,7 @@ export async function parseEpub(
   onProgress: (progress: ParseProgress) => void,
 ): Promise<ParseResult> {
   onProgress({ stage: 'parsing', percent: 5, message: 'Leyendo el contenedor EPUB' });
+  assertZipSafety(request.bytes);
 
   let zip: JSZip;
   try {
@@ -207,13 +178,7 @@ export async function parseEpub(
     throw new ParseError('El EPUB no contiene META-INF/container.xml.', 'INVALID_FORMAT');
   }
 
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: '@_',
-    removeNSPrefix: true,
-    parseTagValue: false,
-    trimValues: true,
-  });
+  const parser = makeXmlParser();
 
   const container = parser.parse(decodeZipText(await containerFile.async('uint8array')));
   const rootfile = nodeArray(asNode(container.container).rootfiles).flatMap((node) =>
