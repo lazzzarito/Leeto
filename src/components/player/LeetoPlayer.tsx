@@ -18,6 +18,7 @@ import { useQuotes } from '@/hooks/useLibrary';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
 import { shareText } from '@/lib/share';
+import Marquee from '@/components/ui/Marquee';
 import type { LeetoBook } from '@/types';
 import BlockView from './BlockView';
 import PlayerSettingsDialog from './PlayerSettingsDialog';
@@ -328,25 +329,24 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         onTouchEnd={(event) => event.stopPropagation()}
         onWheel={(event) => event.stopPropagation()}
       >
-        <div className="flex h-12 items-center justify-between gap-3">
+        <div className="flex h-12 items-center gap-2">
           <Link
             to="/"
+            aria-label="Volver a la biblioteca"
             className={cn(
-              'text-reel hover:text-reel-muted inline-flex items-center gap-1.5 text-sm',
+              'text-reel hover:bg-white/10 flex size-9 shrink-0 items-center justify-center rounded-full',
               optionalChromeClass,
             )}
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Biblioteca
+            <ArrowLeft className="size-5" aria-hidden="true" />
           </Link>
-          <span
-            className={cn(
-              'text-reel min-w-0 flex-1 truncate text-center text-sm font-medium',
-              optionalChromeClass,
-            )}
-          >
-            {chapter?.title}
-          </span>
+          <div className={cn('min-w-0 flex-1', optionalChromeClass)}>
+            <Marquee
+              text={chapter?.title ?? ''}
+              animate={!reducedMotion}
+              className="text-reel text-sm font-medium"
+            />
+          </div>
           <button
             type="button"
             onClick={(event) => {
@@ -375,19 +375,21 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           <div
             key={clip.key}
             className={cn(
-              'absolute inset-0 z-10 flex items-center justify-center px-5',
+              'absolute inset-x-0 top-[calc(env(safe-area-inset-top)+6rem)] z-10 flex justify-center px-4 [&_img]:max-h-[36dvh]',
               !reducedMotion && 'leeto-clip-enter',
             )}
           >
-            <BlockView
-              block={clip.block}
-              text={clip.text}
-              kineticRef={kineticRef}
-              fontSize={subtitleFontSize}
-              lineHeight={subtitleLineHeight}
-              dimIntensity={settings.focusDimIntensity}
-              kenBurns={!reducedMotion}
-            />
+            <div className="w-full max-w-lg">
+              <BlockView
+                block={clip.block}
+                text={clip.text}
+                kineticRef={kineticRef}
+                fontSize={subtitleFontSize}
+                lineHeight={subtitleLineHeight}
+                dimIntensity={settings.focusDimIntensity}
+                kenBurns={!reducedMotion}
+              />
+            </div>
           </div>
         )}
 
@@ -412,11 +414,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         )}
 
         {clip && (
-          <div className="pointer-events-none absolute inset-x-0 top-24 bottom-[calc(env(safe-area-inset-bottom)+4rem)] z-[15] flex items-center justify-center pl-4 pr-20 md:px-4">
-            <div className="w-full max-w-md rounded-2xl bg-black/45 px-5 py-6 backdrop-blur-sm">
-              <p className="text-reel-muted mb-2 text-center text-[11px]">
-                {book.author} · {book.title}
-              </p>
+          <div
+            className={cn(
+              'pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-[15] flex items-center justify-center pl-4 pr-20 md:bottom-[calc(env(safe-area-inset-bottom)+4rem)] md:px-4',
+              clip.block.type === 'image' ? 'top-[52dvh]' : 'top-24',
+            )}
+          >
+            <div className="w-full max-w-md px-1 py-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
               {clip.block.type === 'text' ? (
                 <BlockView
                   block={clip.block}
@@ -431,12 +435,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
               ) : (
                 <p className="text-reel text-center text-sm">{clip.block.caption ?? 'Imagen'}</p>
               )}
-              <p className="text-reel-muted mt-3 text-center text-[11px]">
-                Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
-                {clip.block.type === 'text'
-                  ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
-                  : 'Imagen'}
-              </p>
               <div
                 className={cn(
                   'pointer-events-auto mt-3 hidden items-center justify-center gap-4 md:flex',
@@ -481,6 +479,24 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           />
         </div>
       </div>
+
+      {clip && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex justify-center pl-4 pr-20 md:px-4">
+          <div className="w-full max-w-md text-center">
+            <Marquee
+              text={book.title}
+              animate={!reducedMotion}
+              className="text-reel text-sm font-medium"
+            />
+            <p className="text-reel-muted mt-0.5 text-[11px]">
+              Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
+              {clip.block.type === 'text'
+                ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
+                : 'Imagen'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {notice && (
         <p

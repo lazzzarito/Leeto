@@ -42,7 +42,7 @@ export default function ImageBlock({
       )}
       {fill && <span className="reel-top-scrim pointer-events-none absolute inset-x-0 top-0 h-32" aria-hidden="true" />}
       {caption && !fill && (
-        <figcaption className="text-muted-foreground text-center text-sm">{caption}</figcaption>
+        <figcaption className="text-reel-muted mt-2 text-center text-sm">{caption}</figcaption>
       )}
     </figure>
   );

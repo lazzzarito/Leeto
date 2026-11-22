@@ -109,13 +109,28 @@
   transform: none;
 }
 
+@keyframes leeto-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.leeto-marquee {
+  animation: leeto-marquee 14s linear infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kinetic-word,
   .leeto-clip-enter,
   .leeto-heart-pop,
   .leeto-ken-burns,
   .reel-backdrop-drift,
-  .reel-rail-enter {
+  .reel-rail-enter,
+  .leeto-marquee {
     animation: none !important;
     transition: none !important;
   }
