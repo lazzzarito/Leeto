@@ -1,4 +1,4 @@
-import { ArrowLeft, Play, SkipBack, SkipForward } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, Play, SkipBack, SkipForward } from 'lucide-react';
 import {
   useCallback,
   useEffect,
@@ -33,7 +33,6 @@ interface TouchStart {
   time: number;
 }
 
-const CHROME_DELAY_MS = 2500;
 const SWIPE_THRESHOLD_PX = 50;
 const DOUBLE_TAP_MS = 320;
 const LONG_PRESS_MS = 500;
@@ -72,7 +71,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const [tocOpen, setTocOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [notice, setNotice] = useState<string>();
-  const [chromeVisible, setChromeVisible] = useState(true);
+  const [cleanMode, setCleanMode] = useState(false);
   const [heartPop, setHeartPop] = useState(false);
 
   const showNotice = useCallback((message: string) => {
@@ -144,17 +143,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     }
   }, [activeWordIndex, reducedMotion, settings.kineticTextEnabled, state.status, clip?.key]);
 
-  useEffect(() => {
-    if (state.status !== 'playing') {
-      setChromeVisible(true);
-      return;
-    }
-    const timer = setTimeout(() => setChromeVisible(false), CHROME_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [state.status, chromeVisible]);
-
-  const wakeChrome = useCallback(() => setChromeVisible(true), []);
-
   useEffect(
     () => () => {
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
@@ -175,7 +163,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         return;
       }
       if (tocOpen || settingsOpen) return;
-      wakeChrome();
       switch (event.key) {
         case ' ':
           event.preventDefault();
@@ -213,7 +200,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleQuote, navigate, next, pause, previous, settingsOpen, showNotice, state.status, tocOpen, toggle, wakeChrome]);
+  }, [handleQuote, navigate, next, pause, previous, settingsOpen, showNotice, state.status, tocOpen, toggle]);
 
   const cancelLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -227,12 +214,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     if (!touch) return;
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
     longPressFiredRef.current = false;
-    wakeChrome();
     cancelLongPress();
     longPressTimerRef.current = setTimeout(() => {
       longPressFiredRef.current = true;
       pause();
-      wakeChrome();
       showNotice('Reproducción pausada');
     }, LONG_PRESS_MS);
   };
@@ -278,7 +263,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       return;
     }
     toggle();
-    wakeChrome();
   };
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
@@ -288,7 +272,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     lastWheelRef.current = now;
     if (event.deltaY > 0) next();
     else previous();
-    wakeChrome();
   };
 
   const segments = useMemo(
@@ -309,11 +292,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     [book.chapters, state],
   );
 
-  const chromeClass = cn(
+  // El modo limpio es manual (botón del header). El texto nunca se oculta solo.
+  const optionalChromeClass = cn(
     'transition-opacity duration-200',
-    chromeVisible || state.status !== 'playing'
-      ? 'opacity-100'
-      : 'pointer-events-none opacity-0',
+    cleanMode && 'pointer-events-none opacity-0',
   );
   const quoteCount = quotes.filter((quote) => quote.bookId === book.id).length;
   const subtitleFontSize = Math.min(26, Math.max(18, settings.fontSize + 2));
@@ -322,7 +304,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   return (
     <div
       ref={containerRef}
-      onPointerMove={wakeChrome}
       onTouchStart={handleTouchStart}
       onTouchMove={cancelLongPress}
       onTouchEnd={handleTouchEnd}
@@ -340,7 +321,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       </p>
 
       <div
-        className={cn('pt-safe relative z-30 px-4', chromeClass)}
+        className="pt-safe relative z-30 px-4"
         onPointerDown={(event) => event.stopPropagation()}
         onPointerUp={(event) => event.stopPropagation()}
         onTouchStart={(event) => event.stopPropagation()}
@@ -350,15 +331,38 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         <div className="flex h-12 items-center justify-between gap-3">
           <Link
             to="/"
-            className="text-reel hover:text-reel-muted inline-flex items-center gap-1.5 text-sm"
+            className={cn(
+              'text-reel hover:text-reel-muted inline-flex items-center gap-1.5 text-sm',
+              optionalChromeClass,
+            )}
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
             Biblioteca
           </Link>
-          <span className="text-reel min-w-0 flex-1 truncate text-center text-sm font-medium">
+          <span
+            className={cn(
+              'text-reel min-w-0 flex-1 truncate text-center text-sm font-medium',
+              optionalChromeClass,
+            )}
+          >
             {chapter?.title}
           </span>
-          <span className="size-9 shrink-0" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setCleanMode((value) => !value);
+            }}
+            aria-label={cleanMode ? 'Mostrar controles de lectura' : 'Ocultar controles de lectura'}
+            aria-pressed={cleanMode}
+            className="text-reel hover:bg-white/10 flex size-9 shrink-0 items-center justify-center rounded-full"
+          >
+            {cleanMode ? (
+              <Eye className="size-5" aria-hidden="true" />
+            ) : (
+              <EyeOff className="size-5" aria-hidden="true" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -393,7 +397,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             onClick={(event) => {
               event.stopPropagation();
               toggle();
-              wakeChrome();
             }}
             onPointerDown={(event) => event.stopPropagation()}
             onPointerUp={(event) => event.stopPropagation()}
@@ -409,57 +412,59 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         )}
 
         {clip && (
-          <div
-            className={cn(
-              'reel-scrim pointer-events-none absolute inset-x-0 bottom-0 z-[15] pt-24 pr-20 pl-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] md:pr-5',
-              chromeClass,
-            )}
-          >
-            <p className="text-reel-muted mb-2 text-center text-[11px]">
-              {book.author} · {book.title}
-            </p>
-            {clip.block.type === 'text' ? (
-              <BlockView
-                block={clip.block}
-                text={clip.text}
-                kineticRef={kineticRef}
-                fontSize={subtitleFontSize}
-                lineHeight={subtitleLineHeight}
-                dimIntensity={settings.focusDimIntensity}
-                kenBurns={!reducedMotion}
-                variant="subtitle"
-              />
-            ) : (
-              <p className="text-reel text-center text-sm">{clip.block.caption ?? 'Imagen'}</p>
-            )}
-            <p className="text-reel-muted mt-3 text-center text-[11px]">
-              Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
-              {clip.block.type === 'text'
-                ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
-                : 'Imagen'}
-            </p>
-            <div className="pointer-events-auto mt-3 hidden items-center justify-center gap-4 md:flex">
-              <button
-                type="button"
-                onClick={previous}
-                aria-label="Fragmento anterior"
-                className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+          <div className="pointer-events-none absolute inset-x-0 top-24 bottom-[calc(env(safe-area-inset-bottom)+4rem)] z-[15] flex items-center justify-center pl-4 pr-20 md:px-4">
+            <div className="w-full max-w-md rounded-2xl bg-black/45 px-5 py-6 backdrop-blur-sm">
+              <p className="text-reel-muted mb-2 text-center text-[11px]">
+                {book.author} · {book.title}
+              </p>
+              {clip.block.type === 'text' ? (
+                <BlockView
+                  block={clip.block}
+                  text={clip.text}
+                  kineticRef={kineticRef}
+                  fontSize={subtitleFontSize}
+                  lineHeight={subtitleLineHeight}
+                  dimIntensity={settings.focusDimIntensity}
+                  kenBurns={!reducedMotion}
+                  variant="subtitle"
+                />
+              ) : (
+                <p className="text-reel text-center text-sm">{clip.block.caption ?? 'Imagen'}</p>
+              )}
+              <p className="text-reel-muted mt-3 text-center text-[11px]">
+                Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
+                {clip.block.type === 'text'
+                  ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
+                  : 'Imagen'}
+              </p>
+              <div
+                className={cn(
+                  'pointer-events-auto mt-3 hidden items-center justify-center gap-4 md:flex',
+                  optionalChromeClass,
+                )}
               >
-                <SkipBack className="size-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={next}
-                aria-label="Fragmento siguiente"
-                className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
-              >
-                <SkipForward className="size-4" aria-hidden="true" />
-              </button>
+                <button
+                  type="button"
+                  onClick={previous}
+                  aria-label="Fragmento anterior"
+                  className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+                >
+                  <SkipBack className="size-4" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={next}
+                  aria-label="Fragmento siguiente"
+                  className="text-reel flex size-9 items-center justify-center rounded-full hover:bg-white/10"
+                >
+                  <SkipForward className="size-4" aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        <div className={chromeClass}>
+        <div className={optionalChromeClass}>
           <ReelActionRail
             coverAssetId={book.coverAssetId}
             title={book.title}
