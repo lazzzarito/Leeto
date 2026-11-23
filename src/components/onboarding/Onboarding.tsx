@@ -97,7 +97,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
           <span className="w-10" />
         )}
 
-        <div className="flex gap-2" aria-label={`Paso ${step + 1} de 3`}>
+        <div className="flex gap-2" role="group" aria-label={`Paso ${step + 1} de 3`}>
           {[0, 1, 2].map((index) => (
             <span
               key={index}
@@ -135,11 +135,10 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
               </span>
             </div>
             <h2 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Tu biblioteca, a tu ritmo
+              Tus libros, a pantalla completa
             </h2>
             <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm leading-relaxed sm:text-base">
-              Leeto lee tus libros con texto a pantalla completa. Tus libros y tu progreso se
-              quedan en este dispositivo.
+              Lee sin conexión. Tu progreso se queda en este dispositivo.
             </p>
             <button
               type="button"
@@ -154,11 +153,8 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         {step === 1 && (
           <div className="mx-auto w-full max-w-lg">
             <h2 id="onboarding-title" className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Así de fácil se lee
+              Gestos del lector
             </h2>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Tres gestos y atajos para sentirte en casa.
-            </p>
 
             <div className="mt-7 space-y-3">
               {FEATURES.map(({ Icon, title, detail, className }, index) => (
@@ -218,7 +214,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
               ¿Cómo te llamas?
             </h2>
             <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm">
-              Te daremos la bienvenida cada vez que abras Leeto. Solo se guarda en este dispositivo.
+              Solo se guarda en este dispositivo.
             </p>
 
             <label className="mt-8 block text-left">

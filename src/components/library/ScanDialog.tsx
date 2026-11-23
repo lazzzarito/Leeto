@@ -106,13 +106,13 @@ export default function ScanDialog({
     >
       <div className="space-y-4 pb-8">
         <p className="text-muted-foreground text-xs">
-          El navegador no permite escanear todo el dispositivo. Guarda una carpeta y vuelve a
-          escanearla cuando quieras; si el permiso caduca te lo pediremos de nuevo.
+          El navegador solo puede leer las carpetas que elijas. Si caduca el permiso, vuelve a
+          elegirlas.
         </p>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Raíces guardadas</h3>
+            <h3 className="text-sm font-medium">Carpetas guardadas</h3>
             {canAddRoot && (
               <button
                 type="button"
@@ -128,7 +128,7 @@ export default function ScanDialog({
           {roots.length === 0 ? (
             <p className="text-muted-foreground rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs">
               {canAddRoot
-                ? 'Todavía no hay carpetas guardadas.'
+                ? 'No hay carpetas guardadas.'
                 : 'Este navegador no permite guardar carpetas. Usa «Carpeta completa» o selecciona varios libros a la vez.'}
             </p>
           ) : (

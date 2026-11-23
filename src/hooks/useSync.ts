@@ -166,7 +166,7 @@ export function useSync() {
       await applyMergeResult(result);
       setStatus({
         phase: 'ok',
-        message: result.changed ? 'Importación fusionada sin pérdidas' : 'Importación sin cambios',
+        message: result.changed ? 'Importación fusionada' : 'Importación sin cambios',
         lastSyncedAt: imported.updatedAt,
       });
     } catch (error) {

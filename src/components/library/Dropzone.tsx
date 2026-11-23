@@ -50,7 +50,7 @@ export default function Dropzone({ onFiles }: DropzoneProps) {
       <p className="mt-2 text-sm font-medium">Arrastra tus libros aquí</p>
       <p className="text-muted-foreground mt-1 text-xs">{BOOK_FORMAT_LABEL}</p>
       <p className="text-muted-foreground mt-0.5 text-xs">
-        Los PDF necesitan texto seleccionable; los CBZ se leen por páginas.
+        PDF con texto seleccionable · CBZ por páginas
       </p>
       <button
         type="button"

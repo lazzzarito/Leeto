@@ -32,7 +32,7 @@ export default function QuoteList({ quotes, books, query }: QuoteListProps) {
       <div className="rounded-xl border border-border bg-card px-6 py-12 text-center">
         <Quote className="text-muted-foreground mx-auto size-6" aria-hidden="true" />
         <p className="mt-3 text-sm font-medium">
-          {query ? 'No hay citas que coincidan con la búsqueda' : 'Todavía no hay citas guardadas'}
+          {query ? 'No hay citas que coincidan con la búsqueda' : 'No hay citas guardadas'}
         </p>
         {!query && (
           <p className="text-muted-foreground mt-1 text-xs">

@@ -89,6 +89,13 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 El canonical, `og:url`, `og:image`, `sitemap.xml` y `robots.txt` apuntan a `https://leeto.vercel.app/` (ver `.env.production`). Para otro dominio, cambia `VITE_SITE_URL` antes de compilar. En desarrollo, sin el plugin de build, la app calcula el canonical desde el navegador.
 
+Para instalar Leeto como aplicación necesitas servirla por HTTPS (Vercel ya lo hace) y un navegador compatible. El aviso de instalación lo muestra el navegador; la app no puede forzarlo.
+
+## Límites
+
+- Los PDF escaneados necesitan OCR: sin texto seleccionable no se puede seguir la lectura palabra por palabra.
+- MOBI, AZW3 y DJVU no son compatibles. Convierte esos archivos a EPUB o PDF antes de importarlos.
+
 <div align="center">
 
 Hecho con ❤️‍🔥 por [1azarito](https://1azarito.vercel.app)

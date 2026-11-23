@@ -51,7 +51,7 @@ const ReelActionRail = memo(function ReelActionRail({
         type="button"
         onClick={onShare}
         aria-label="Compartir fragmento actual"
-        title="Comparte este fragmento con el título y autor del libro"
+        title="Compartir fragmento"
         className="flex flex-col items-center gap-1"
       >
         <span className={BUTTON_CLASS}>
@@ -83,7 +83,7 @@ const ReelActionRail = memo(function ReelActionRail({
       <button
         type="button"
         onClick={onToggleTts}
-        aria-label={ttsEnabled ? 'Desactivar voz local' : 'Activar voz local'}
+        aria-label={ttsEnabled ? 'Desactivar voz' : 'Activar voz'}
         aria-pressed={ttsEnabled}
         className="flex flex-col items-center gap-1"
       >

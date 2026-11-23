@@ -44,6 +44,6 @@ export function describeImportBatch(summary: ImportBatchSummary): Omit<ImportToa
     detail:
       summary.duplicates > 0
         ? `${summary.duplicates} ya estaban en la biblioteca`
-        : 'Todos los libros se importaron correctamente',
+        : 'Se importaron todos',
   };
 }

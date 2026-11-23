@@ -8,7 +8,7 @@ describe('describeImportBatch', () => {
     ).toEqual({
       kind: 'success',
       title: 'Se importaron 4 libros',
-      detail: 'Todos los libros se importaron correctamente',
+      detail: 'Se importaron todos',
     });
   });
 

@@ -67,7 +67,7 @@ export default function AddMenu({
             </DropdownMenu.Item>
             <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
               <FolderSearch className="size-4" aria-hidden="true" />
-              Escanear raíces guardadas
+              Escanear carpetas guardadas
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>

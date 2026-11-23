@@ -100,9 +100,7 @@ export default function LibraryTabs({
         {visibleReading.length > 0 ? (
           <BookGrid books={visibleReading} onEdit={onEdit} onDelete={onDelete} />
         ) : (
-          <NoResults
-            message={query ? undefined : 'Todavía no hay libros en lectura.'}
-          />
+          <NoResults message={query ? undefined : 'Sin libros en lectura.'} />
         )}
       </Tabs.Content>
 
@@ -110,9 +108,7 @@ export default function LibraryTabs({
         {visibleFinished.length > 0 ? (
           <BookGrid books={visibleFinished} onEdit={onEdit} onDelete={onDelete} />
         ) : (
-          <NoResults
-            message={query ? undefined : 'Todavía no has terminado ningún libro.'}
-          />
+          <NoResults message={query ? undefined : 'Sin libros terminados.'} />
         )}
       </Tabs.Content>
 
@@ -121,7 +117,7 @@ export default function LibraryTabs({
           <BookGrid books={visibleFavorites} onEdit={onEdit} onDelete={onDelete} />
         ) : (
           <NoResults
-            message={query ? undefined : 'Marca tus libros favoritos desde el menú de cada portada.'}
+            message={query ? undefined : 'Marca favoritos desde el menú de cada portada.'}
           />
         )}
       </Tabs.Content>

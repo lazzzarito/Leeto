@@ -76,10 +76,10 @@ export default function PlayerSettingsDialog({
       onOpenChange={onOpenChange}
       height="content"
       title="Ajustes de lectura"
-      description="Ritmo, apariencia y voz del reproductor."
+      description="Opciones de lectura."
     >
       <div className="divide-border space-y-6 pb-8">
-        <Section title="Ritmo" description="Cuánto tarda cada fragmento en pasar.">
+        <Section title="Ritmo" description="Duración de cada fragmento.">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Field label="Velocidad">
               <select
@@ -206,7 +206,7 @@ export default function PlayerSettingsDialog({
           </label>
         </Section>
 
-        <Section title="Voz" description="Síntesis de voz local del dispositivo.">
+        <Section title="Voz" description="Voz del dispositivo.">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="text-muted-foreground flex items-center gap-2 text-sm">
               <input
@@ -237,7 +237,7 @@ export default function PlayerSettingsDialog({
           </div>
         </Section>
 
-        <Section title="Este libro" description="Solo afecta a la biblioteca de este dispositivo.">
+        <Section title="Este libro">
           <button
             type="button"
             role="switch"

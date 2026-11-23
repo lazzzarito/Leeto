@@ -143,9 +143,9 @@ export default function LibraryPage() {
             <div className="bg-muted mx-auto mb-3 flex size-12 items-center justify-center rounded-full">
               <Library className="text-muted-foreground size-5" aria-hidden="true" />
             </div>
-            <h2 className="text-lg font-medium">Todavía no hay libros</h2>
+            <h2 className="text-lg font-medium">No hay libros</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Importa tu primer libro: EPUB, PDF, TXT, FB2, DOCX, ODT o CBZ.
+              Importa tu primer libro: {BOOK_FORMAT_LABEL}.
             </p>
           </div>
           <Dropzone onFiles={(files) => void importFiles(files)} />
