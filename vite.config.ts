@@ -6,15 +6,15 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
+const SITE_URL = 'https://leeto.vercel.app/';
 
-/** URL pública opcional. Sin ella se usan rutas relativas y el canonical se calcula en el cliente. */
-function publicSiteUrl(): string | undefined {
-  const raw = process.env.VITE_SITE_URL?.trim();
-  if (!raw) return undefined;
+/** URL pública de producción; se puede sobreescribir con VITE_SITE_URL. */
+function publicSiteUrl(): string {
+  const raw = process.env.VITE_SITE_URL?.trim() || SITE_URL;
   try {
     return new URL(raw).href.replace(/\/?$/, '/');
   } catch {
-    return undefined;
+    return SITE_URL;
   }
 }
 
@@ -31,21 +31,17 @@ function escapeXml(value: string): string {
   });
 }
 
-/** Metadatos de compartir y robots: absolutos solo cuando hay dominio configurado. */
+/** Metadatos de compartir, canonical y robots para el dominio de producción. */
 function siteMetadata() {
   return {
     name: 'leeto-site-metadata',
     apply: 'build' as const,
     transformIndexHtml() {
       const site = publicSiteUrl();
-      const image = site ? `${site}og-image.png` : '/og-image.png';
+      const image = `${site}og-image.png`;
       return [
-        ...(site
-          ? [
-              { tag: 'link', attrs: { rel: 'canonical', href: site }, injectTo: 'head' as const },
-              { tag: 'meta', attrs: { property: 'og:url', content: site }, injectTo: 'head' as const },
-            ]
-          : []),
+        { tag: 'link', attrs: { rel: 'canonical', href: site }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { property: 'og:url', content: site }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { property: 'og:image', content: image }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { property: 'og:image:height', content: '630' }, injectTo: 'head' as const },
@@ -57,13 +53,13 @@ function siteMetadata() {
     closeBundle() {
       const outDir = join(rootDir, 'dist');
       const site = publicSiteUrl();
-      const sitemap = site
-        ? `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${escapeXml(site)}</loc></url>\n</urlset>\n`
-        : undefined;
-      if (sitemap) writeFileSync(join(outDir, 'sitemap.xml'), sitemap);
+      writeFileSync(
+        join(outDir, 'sitemap.xml'),
+        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${escapeXml(site)}</loc></url>\n</urlset>\n`,
+      );
       writeFileSync(
         join(outDir, 'robots.txt'),
-        `User-agent: *\nAllow: /\n${sitemap ? `Sitemap: ${site}sitemap.xml\n` : ''}`,
+        `User-agent: *\nAllow: /\nSitemap: ${site}sitemap.xml\n`,
       );
     },
   };

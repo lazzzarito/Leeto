@@ -85,7 +85,9 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 ## Despliegue
 
-`npm run build` genera un sitio estático en `dist/`. Si lo publicas en un dominio propio, define `VITE_SITE_URL=https://tu-dominio/ruta/` antes de compilar: así el canonical, `og:url`, `sitemap.xml` y `robots.txt` apuntan a esa URL. Sin esa variable, la app calcula el canonical en el navegador y no genera sitemap.
+`npm run build` genera un sitio estático en `dist/`. La configuración de Vercel está en `vercel.json`: redirige las rutas SPA a `index.html` y separa la caché del service worker de la de los assets con hash.
+
+El canonical, `og:url`, `og:image`, `sitemap.xml` y `robots.txt` apuntan a `https://leeto.vercel.app/` (ver `.env.production`). Para otro dominio, cambia `VITE_SITE_URL` antes de compilar. En desarrollo, sin el plugin de build, la app calcula el canonical desde el navegador.
 
 <div align="center">
 
