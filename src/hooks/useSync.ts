@@ -4,9 +4,9 @@ import { applyMergeResult, loadLocalEnvelope } from '@/core/sync/apply';
 import { BACKUP_FILENAME, SYNC_FILENAME, rotateBackup, restoreBackup } from '@/core/sync/backup';
 import { getWebDavPassword } from '@/core/sync/credentials';
 import { parseEnvelope, serializeEnvelope } from '@/core/sync/envelope';
-import { createLocalFolderProvider, getSyncDirectory } from '@/core/sync/localFolder';
+import { createLocalFolderProvider, getSyncDirectory, isLocalFolderSupported } from '@/core/sync/localFolder';
 import { mergeEnvelopes, prepareForWrite } from '@/core/sync/merge';
-import type { SyncProvider } from '@/core/sync/provider';
+import { isSecureSyncUrl, type SyncProvider } from '@/core/sync/provider';
 import {
   createLoopGuard,
   createSyncScheduler,
@@ -38,6 +38,30 @@ function buildProvider(settings: AppSettings): SyncProvider {
   throw new Error('Proveedor de sincronización no soportado en esta versión');
 }
 
+/** Configuración mínima para hablar con el proveedor, con auto-sync activado o no. */
+export function isSyncConfigured(settings: AppSettings): boolean {
+  if (settings.syncProvider === 'webdav') {
+    return Boolean(settings.syncWebDavUrl) && isSecureSyncUrl(settings.syncWebDavUrl!);
+  }
+  if (settings.syncProvider === 'local-folder') {
+    return isLocalFolderSupported() && Boolean(getSyncDirectory());
+  }
+  return false;
+}
+
+/** El scheduler y el botón manual comparten la misma comprobación. */
+export function canSync(settings: AppSettings): boolean {
+  return settings.syncEnabled && isSyncConfigured(settings);
+}
+
+async function saveBackup(envelope: Parameters<typeof rotateBackup>[1]) {
+  try {
+    await rotateBackup(localStorage, envelope);
+  } catch {
+    throw new Error('No se pudo guardar el backup local; revisa el almacenamiento del navegador');
+  }
+}
+
 /** Orquesta backup → lectura → merge por registro → escritura condicional. */
 export function useSync() {
   const settings = useSettings();
@@ -54,7 +78,7 @@ export function useSync() {
       const provider = buildProvider(current);
       const local = await loadLocalEnvelope(current.deviceId);
       // Backup local del último estado aplicado antes de tocar nada remoto.
-      await rotateBackup(localStorage, local);
+      await saveBackup(local);
 
       const remote = await provider.read(SYNC_FILENAME);
       if (!remote.text) {
@@ -106,7 +130,7 @@ export function useSync() {
 
   useEffect(() => {
     const unsubscribe = subscribeLocalSyncChange(() => {
-      if (settingsRef.current.syncEnabled) scheduler.trigger();
+      if (canSync(settingsRef.current)) scheduler.trigger();
     });
     scheduler.start();
     return () => {
@@ -116,8 +140,8 @@ export function useSync() {
   }, [scheduler]);
 
   useEffect(() => {
-    if (settings.syncEnabled) scheduler.trigger();
-  }, [scheduler, settings.syncEnabled]);
+    if (canSync(settingsRef.current)) scheduler.trigger();
+  }, [scheduler, settings.syncEnabled, settings.syncProvider, settings.syncWebDavUrl]);
 
   const exportJson = useCallback(async () => {
     const envelope = await loadLocalEnvelope(settingsRef.current.deviceId);
@@ -126,31 +150,50 @@ export function useSync() {
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = SYNC_FILENAME;
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    anchor.remove();
+    // Firefox y Safari cancelan la descarga si se revoca el objeto en el mismo tick.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, []);
 
   const importJson = useCallback(async (text: string) => {
-    const imported = parseEnvelope(text);
-    const local = await loadLocalEnvelope(settingsRef.current.deviceId);
-    await rotateBackup(localStorage, local);
-    const result = mergeEnvelopes(local, imported);
-    await applyMergeResult(result);
-    setStatus({
-      phase: 'ok',
-      message: result.changed ? 'Importación fusionada sin pérdidas' : 'Importación sin cambios',
-      lastSyncedAt: imported.updatedAt,
-    });
+    try {
+      const imported = parseEnvelope(text);
+      const local = await loadLocalEnvelope(settingsRef.current.deviceId);
+      await saveBackup(local);
+      const result = mergeEnvelopes(local, imported);
+      await applyMergeResult(result);
+      setStatus({
+        phase: 'ok',
+        message: result.changed ? 'Importación fusionada sin pérdidas' : 'Importación sin cambios',
+        lastSyncedAt: imported.updatedAt,
+      });
+    } catch (error) {
+      setStatus({
+        phase: 'error',
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }, []);
 
   const restoreBackupNow = useCallback(async () => {
-    const backup = await restoreBackup(localStorage);
-    if (!backup) throw new Error('No hay ningún backup disponible en este dispositivo');
-    const local = await loadLocalEnvelope(settingsRef.current.deviceId);
-    await rotateBackup(localStorage, local);
-    const result = mergeEnvelopes(local, backup.envelope);
-    await applyMergeResult(result);
-    setStatus({ phase: 'ok', message: 'Backup restaurado', lastSyncedAt: backup.savedAt });
+    try {
+      const backup = await restoreBackup(localStorage);
+      if (!backup) throw new Error('No hay ningún backup disponible en este dispositivo');
+      const local = await loadLocalEnvelope(settingsRef.current.deviceId);
+      await saveBackup(local);
+      const result = mergeEnvelopes(local, backup.envelope);
+      await applyMergeResult(result);
+      setStatus({ phase: 'ok', message: 'Backup restaurado', lastSyncedAt: backup.savedAt });
+    } catch (error) {
+      setStatus({
+        phase: 'error',
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }, []);
 
   return {

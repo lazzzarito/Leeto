@@ -95,7 +95,10 @@ export function createLocalFolderProvider(directory: FileSystemDirectoryHandle):
       if (current.text !== null) await writeFile(backupName, current.text);
     },
 
-    async write(name, text): Promise<SyncWriteResult> {
+    async write(name, text, options = {}): Promise<SyncWriteResult> {
+      if (options.etag) {
+        throw new Error('Carpeta local: no puede verificar escrituras condicionales; usa WebDAV');
+      }
       // La API no ofrece rename atómico: escritura temporal + final + verificación.
       await writeFile(`${name}.tmp`, text);
       await writeFile(name, text);

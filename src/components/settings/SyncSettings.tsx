@@ -16,6 +16,7 @@ import { clearWebDavPassword, getWebDavPassword, saveWebDavPassword } from '@/co
 import { getSyncDirectory, isLocalFolderSupported, pickSyncDirectory } from '@/core/sync/localFolder';
 import { isSecureSyncUrl } from '@/core/sync/provider';
 import { useSettings } from '@/core/db/settings';
+import { isSyncConfigured } from '@/hooks/useSync';
 import { useSyncController } from '@/hooks/useSyncContext';
 
 type ConfirmAction = 'import' | 'restore';
@@ -38,6 +39,7 @@ export default function SyncSettings() {
   const folderSupported = isLocalFolderSupported();
   const insecureUrl = Boolean(settings.syncWebDavUrl) && !isSecureSyncUrl(settings.syncWebDavUrl!);
   const syncing = status.phase === 'syncing' || busy;
+  const configured = isSyncConfigured(settings);
 
   const chooseFolder = async () => {
     try {
@@ -198,7 +200,7 @@ export default function SyncSettings() {
         <button
           type="button"
           onClick={() => void handleSync()}
-          disabled={syncing || insecureUrl}
+          disabled={syncing || !configured}
           className="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm disabled:opacity-60"
         >
           {syncing ? (

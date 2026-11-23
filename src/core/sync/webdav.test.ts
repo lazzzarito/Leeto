@@ -36,7 +36,7 @@ describe('provider WebDAV', () => {
     ]);
   });
 
-  it('escribe de forma atómica: PUT temporal + MOVE con Destination y If-Match', async () => {
+  it('escribe de forma atómica: PUT temporal + MOVE condicionado al destino', async () => {
     const calls: Array<{ method: string; url: string; init: RequestInit }> = [];
     const sync = provider({
       fetchFn: mockFetch((url, init) => {
@@ -56,7 +56,7 @@ describe('provider WebDAV', () => {
     expect(calls[1]?.init.headers).toMatchObject({
       Destination: `${BASE}leeto_sync.json`,
       Overwrite: 'T',
-      'If-Match': '"old"',
+      If: `<${BASE}leeto_sync.json> ["old"]`,
     });
   });
 
@@ -128,5 +128,37 @@ describe('provider WebDAV', () => {
     });
     await sync.read('leeto_sync.json');
     expect(authorization).toBe(`Basic ${btoa('user:pass')}`);
+  });
+
+  it('codifica contraseñas con caracteres fuera de Latin-1', async () => {
+    let authorization = '';
+    const sync = provider({
+      username: 'uso',
+      password: 'clave😀',
+      fetchFn: mockFetch((_url, init) => {
+        authorization = String((init.headers as Record<string, string>).Authorization ?? '');
+        return jsonResponse('ok');
+      }),
+    });
+    await sync.read('leeto_sync.json');
+
+    expect(authorization).toBe(`Basic ${btoa(new TextEncoder().encode('uso:clave😀').reduce((text, byte) => text + String.fromCharCode(byte), ''))}`);
+  });
+
+  it('no reintenta con PUT si el destino cambió (412)', async () => {
+    const methods: string[] = [];
+    const sync = provider({
+      fetchFn: mockFetch((_url, init) => {
+        methods.push(init.method ?? '');
+        return init.method === 'MOVE'
+          ? new Response(null, { status: 412, statusText: 'Precondition Failed' })
+          : new Response(null, { status: 201 });
+      }),
+    });
+
+    await expect(
+      sync.write('leeto_sync.json', '{"ok":true}', { etag: '"old"' }),
+    ).rejects.toThrow(/cambió/i);
+    expect(methods).toEqual(['PUT', 'MOVE']);
   });
 });
