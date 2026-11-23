@@ -135,6 +135,7 @@ export default function AppShell() {
           </nav>
 
           <div className="mt-auto space-y-1">
+            <div id="library-sidebar-search" />
             <div id="library-sidebar-actions" />
             <button
               type="button"

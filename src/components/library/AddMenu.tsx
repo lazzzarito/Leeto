@@ -35,6 +35,7 @@ export default function AddMenu({
             type="button"
             className={cn(
               'border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
+              !fullWidth && 'bg-card text-foreground shadow-lg',
               fullWidth && 'flex w-full justify-start px-2',
             )}
           >

@@ -53,6 +53,7 @@ export default function LibraryPage() {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string>();
   const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
+  const [searchSlot, setSearchSlot] = useState<HTMLElement | null>(null);
   const dragDepth = useRef(0);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
@@ -60,6 +61,7 @@ export default function LibraryPage() {
     setActionSlot(
       document.getElementById(isDesktop ? 'library-sidebar-actions' : 'library-floating-actions'),
     );
+    setSearchSlot(isDesktop ? document.getElementById('library-sidebar-search') : null);
   }, [isDesktop]);
 
   const editingBook = books.find((book) => book.id === editingBookId);
@@ -228,6 +230,14 @@ export default function LibraryPage() {
 
       <ImportToasts toasts={toasts} onDismiss={dismissToast} />
 
+      {searchSlot &&
+        createPortal(
+          <div className="w-full">
+            <SearchBar value={query} onChange={(value) => setParam('q', value)} />
+          </div>,
+          searchSlot,
+        )}
+
       {actionSlot &&
         createPortal(
           <AddMenu
@@ -240,9 +250,11 @@ export default function LibraryPage() {
           actionSlot,
         )}
 
-      <div className="pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 flex justify-center sm:inset-x-6 md:bottom-6 lg:left-[calc(16rem+1.5rem)] lg:right-6">
+      <div
+        className={`pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 justify-center sm:inset-x-6 md:bottom-6 lg:left-[calc(16rem+1.5rem)] lg:right-6 ${isDesktop ? 'hidden' : 'flex'}`}
+      >
         <div className="pointer-events-auto flex w-full items-center gap-2">
-          <SearchBar value={query} onChange={(value) => setParam('q', value)} />
+          {!isDesktop && <SearchBar value={query} onChange={(value) => setParam('q', value)} />}
           <div id="library-floating-actions" className="shrink-0" />
         </div>
       </div>

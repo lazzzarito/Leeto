@@ -20,7 +20,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         placeholder="Buscar por título, autor, saga o cita…"
         aria-label="Buscar en la biblioteca"
         className={cn(
-          'bg-card/85 border-border placeholder:text-muted-foreground h-10 w-full rounded-lg border pl-9 text-sm outline-none focus-visible:ring-2 [&::-webkit-search-cancel-button]:appearance-none',
+          'bg-card border-border placeholder:text-muted-foreground h-10 w-full rounded-lg border pl-9 text-sm shadow-sm outline-none focus-visible:ring-2 [&::-webkit-search-cancel-button]:appearance-none',
           value ? 'pr-10' : 'pr-3',
         )}
       />
