@@ -39,8 +39,13 @@ function isTextItem(item: unknown): item is TextItem {
   return typeof item === 'object' && item !== null && 'str' in item;
 }
 
+/** Los números cambiantes pasan a `#`: «Página 1» y «Página 2» son el mismo marginal. */
 function normalizeForComparison(text: string): string {
-  return text.toLowerCase().replace(/[\d\s.,;:¡!¿?()\-]/g, '').trim();
+  return text
+    .toLowerCase()
+    .replace(/\d+/g, '#')
+    .replace(/[\s.,;:¡!¿?()\-]/g, '')
+    .trim();
 }
 
 function collectLines(items: TextItem[]): TextLine[] {
@@ -99,7 +104,8 @@ function repeatedMarginals(
       const relative = line.y / Math.max(1, page.height);
       if (relative > 0.08 && relative < 0.92) continue;
       const key = normalizeForComparison(line.text);
-      if (key.length > 2) seen.add(key);
+      // Un número de página suelto normaliza a `#` y también debe contarse.
+      if (key.length > 2 || /^#+$/.test(key)) seen.add(key);
     }
     for (const key of seen) counts.set(key, (counts.get(key) ?? 0) + 1);
   }

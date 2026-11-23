@@ -507,10 +507,10 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
               className="text-reel text-sm font-medium"
             />
             <p className="text-reel-muted mt-0.5 text-[11px]">
-              Cap. {(clip.chapterIndex + 1).toString().padStart(2, '0')} ·{' '}
+              Capítulo {clip.chapterIndex + 1} ·{' '}
               {clip.block.type === 'text'
-                ? `${clip.segmentIndex + 1}/${clip.segmentCount}`
-                : 'Imagen'}
+                ? `fragmento ${clip.segmentIndex + 1} de ${clip.segmentCount}`
+                : 'imagen'}
             </p>
           </div>
         </div>

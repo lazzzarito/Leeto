@@ -107,7 +107,7 @@ const KineticText = memo(
     return (
       <p
         className={cn(
-          'font-reading',
+          'font-reading [overflow-wrap:anywhere]',
           heading && variant === 'subtitle' && 'reel-heading-zoom',
           variant === 'subtitle'
             ? 'text-reel max-w-none text-balance text-center'

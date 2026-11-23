@@ -5,7 +5,7 @@ import {
   decodeEntities,
   extractImageReferences,
   guessMimeType,
-  htmlToBlocks,
+  htmlToBlocksWithNotes,
   makeBlockIdFactory,
   resolveRelativePath,
 } from './normalize';
@@ -334,11 +334,13 @@ export async function parseEpub(
       await ensureAsset(resolveRelativePath(documentPath, reference.src), 'image');
     }
 
-    const blocks = htmlToBlocks(
+    const { blocks, notes } = htmlToBlocksWithNotes(
       html,
       (src) => pathToAsset.get(resolveRelativePath(documentPath, src)),
       nextBlockId,
     );
+    // Las notas viajan al final del capítulo como bloques de texto normales.
+    blocks.push(...notes);
     totalWordCount += blocks.reduce(
       (sum, block) => sum + (block.type === 'text' ? block.wordCount : 0),
       0,

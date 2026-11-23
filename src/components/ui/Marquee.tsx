@@ -26,15 +26,21 @@ export default function Marquee({ text, animate = true, className }: MarqueeProp
   const scrolling = overflowing && animate;
 
   return (
-    <span ref={containerRef} className={cn('block overflow-hidden whitespace-nowrap', className)}>
-      <span className={cn('inline-flex', scrolling && 'leeto-marquee')}>
-        <span className={cn('shrink-0', scrolling && 'pr-8')}>{text}</span>
-        {scrolling && (
+    <span
+      ref={containerRef}
+      title={text}
+      className={cn('block overflow-hidden whitespace-nowrap text-ellipsis', className)}
+    >
+      {scrolling ? (
+        <span className="inline-flex leeto-marquee">
+          <span className="shrink-0 pr-8">{text}</span>
           <span aria-hidden="true" className="shrink-0 pr-8">
             {text}
           </span>
-        )}
-      </span>
+        </span>
+      ) : (
+        text
+      )}
     </span>
   );
 }

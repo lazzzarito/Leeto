@@ -164,17 +164,20 @@
   animation-delay: 300ms;
 }
 
+/* El texto está duplicado: al llegar a -50% el reinicio es invisible. */
 @keyframes leeto-marquee {
-  from {
+  0%,
+  10% {
     transform: translateX(0);
   }
-  to {
+  55%,
+  100% {
     transform: translateX(-50%);
   }
 }
 
 .leeto-marquee {
-  animation: leeto-marquee 14s linear infinite;
+  animation: leeto-marquee 16s linear infinite;
   will-change: transform;
 }
 
