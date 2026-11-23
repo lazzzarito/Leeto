@@ -28,7 +28,11 @@ export function listVoices(): SpeechSynthesisVoice[] {
   return isTtsSupported() ? window.speechSynthesis.getVoices() : [];
 }
 
-/** Habla un bloque; el motor de temporizador sigue siendo la fuente de verdad. */
+/**
+ * Habla un bloque sin interrumpir el anterior: el navegador encola las
+ * utterances para no recortar la última palabra ni perder la primera.
+ * Quien cambia de fragmento decide cuándo cancelar.
+ */
 export function speakText(options: SpeakOptions): TtsSession | undefined {
   if (!isTtsSupported()) {
     options.onError?.('Este navegador no ofrece voz local');
@@ -36,7 +40,6 @@ export function speakText(options: SpeakOptions): TtsSession | undefined {
   }
 
   try {
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(options.text);
     const voice = listVoices().find((candidate) => candidate.voiceURI === options.voiceURI);
     if (voice) utterance.voice = voice;

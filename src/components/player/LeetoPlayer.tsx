@@ -89,10 +89,12 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const tts = useTts({
     enabled: settings.ttsEnabled,
     clip,
+    clipIndex: state.clipIndex,
     status: state.status,
     wpm: state.wpm,
     speed: state.speed,
     voiceURI: settings.ttsVoiceURI,
+    lang: book.language || 'es-ES',
     onBoundary: handleTtsBoundary,
     onError: handleTtsError,
   });
