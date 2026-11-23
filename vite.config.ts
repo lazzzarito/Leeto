@@ -105,10 +105,24 @@ function serviceWorkerPrecache() {
 }
 
 export default defineConfig(({ mode }) => {
-  const site = publicSiteUrl(
-    process.env.VITE_SITE_URL || loadEnv(mode, rootDir, 'VITE_').VITE_SITE_URL,
-  );
+  const env = loadEnv(mode, rootDir, 'VITE_');
+  const site = publicSiteUrl(process.env.VITE_SITE_URL || env.VITE_SITE_URL);
+  const packageVersion = (
+    JSON.parse(readFileSync(join(rootDir, 'package.json'), 'utf8')) as { version: string }
+  ).version;
+  const channel = (process.env.VITE_BUILD_CHANNEL || env.VITE_BUILD_CHANNEL) === 'stable'
+    ? 'stable'
+    : 'beta';
+  const channelLabel = channel === 'beta' ? 'Beta' : 'Normal';
+  const apkFileName = `Leeto-${packageVersion}${channel === 'beta' ? '-beta' : ''}.apk`;
+
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(packageVersion),
+      __APP_CHANNEL__: JSON.stringify(channel),
+      __APP_LABEL__: JSON.stringify(`v${packageVersion} · ${channelLabel}`),
+      __APK_FILENAME__: JSON.stringify(apkFileName),
+    },
     plugins: [siteMetadata(site), serviceWorkerPrecache(), react()],
     resolve: {
       alias: {

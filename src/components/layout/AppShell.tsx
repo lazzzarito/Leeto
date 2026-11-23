@@ -2,12 +2,11 @@ import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
-import { useSettings } from '@/core/db/settings';
 import { countBooksByStatus } from '@/core/library/views';
 import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
+import { APP_LABEL } from '@/lib/buildInfo';
 import { cn } from '@/lib/cn';
-import { greetingForName } from '@/lib/greeting';
 
 const SettingsDialog = lazy(() => import('@/components/settings/SettingsDialog'));
 
@@ -27,11 +26,9 @@ export default function AppShell() {
   const settingsOpen = searchParams.get('settings') === '1';
   const reading = location.pathname.startsWith('/read/');
   const activeTab = searchParams.get('tab') ?? 'all';
-  const { userName } = useSettings();
   const bookCount = useBookCount();
   const favoriteCount = useFavoriteCount();
   const statusCounts = countBooksByStatus(useProgressByBook());
-  const greeting = greetingForName(userName);
   const [compact, setCompact] = useState(false);
 
   useEffect(() => {
@@ -109,7 +106,7 @@ export default function AppShell() {
             />
             <span className="flex flex-col leading-tight">
               <span className="font-semibold tracking-tight">Leeto</span>
-              <span className="text-muted-foreground text-[11px]">{greeting}</span>
+              <span className="text-muted-foreground text-[11px]">{APP_LABEL}</span>
             </span>
           </Link>
 
@@ -185,7 +182,7 @@ export default function AppShell() {
                       compact && 'opacity-0 sm:opacity-100',
                     )}
                   >
-                    {greeting}
+                    {APP_LABEL}
                   </span>
                 </span>
               </Link>

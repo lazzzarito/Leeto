@@ -1,7 +1,6 @@
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
   ChevronDown,
   ChevronUp,
   ListTree,
@@ -9,12 +8,11 @@ import {
   Sparkles,
   Volume2,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { greetingForName } from '@/lib/greeting';
 
 interface OnboardingProps {
-  onFinish: (name: string) => void;
+  onFinish: () => void;
 }
 
 const FEATURES = [
@@ -38,28 +36,17 @@ const FEATURES = [
   },
 ] as const;
 
-/** Recorrido de primer uso: bienvenida, gestos y nombre para personalizar el saludo. */
+/** Recorrido de primer uso: bienvenida y gestos del lector. */
 export default function Onboarding({ onFinish }: OnboardingProps) {
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (step === 2) inputRef.current?.focus();
-  }, [step]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onFinish('');
+      if (event.key === 'Escape') onFinish();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onFinish]);
-
-  const submit = (event?: FormEvent) => {
-    event?.preventDefault();
-    onFinish(name.trim());
-  };
 
   return (
     <div
@@ -97,8 +84,8 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
           <span className="w-10" />
         )}
 
-        <div className="flex gap-2" role="group" aria-label={`Paso ${step + 1} de 3`}>
-          {[0, 1, 2].map((index) => (
+        <div className="flex gap-2" role="group" aria-label={`Paso ${step + 1} de 2`}>
+          {[0, 1].map((index) => (
             <span
               key={index}
               className={cn(
@@ -111,7 +98,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
 
         <button
           type="button"
-          onClick={() => onFinish('')}
+          onClick={onFinish}
           className="text-muted-foreground hover:text-foreground text-sm transition-colors"
         >
           Omitir
@@ -138,7 +125,8 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
               Tus libros, a pantalla completa
             </h2>
             <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm leading-relaxed sm:text-base">
-              Lee sin conexión. Tu progreso se queda en este dispositivo.
+              Lee sin conexión. Tu progreso se queda en este dispositivo, sin permisos especiales:
+              solo abres los archivos que tú eliges. Después, pulsa Añadir para cargar tus libros.
             </p>
             <button
               type="button"
@@ -196,55 +184,13 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
               </div>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={onFinish}
                 className="bg-primary text-primary-foreground ms-auto inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-medium shadow-lg shadow-black/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Continuar <ArrowRight className="size-4" aria-hidden="true" />
+                Entrar en Leeto <ArrowRight className="size-4" aria-hidden="true" />
               </button>
             </div>
           </div>
-        )}
-
-        {step === 2 && (
-          <form onSubmit={submit} className="mx-auto w-full max-w-md text-center">
-            <div className="bg-primary/10 text-primary mx-auto mb-7 flex size-16 items-center justify-center rounded-2xl">
-              <Sparkles className="size-7" aria-hidden="true" />
-            </div>
-            <h2 id="onboarding-title" className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              ¿Cómo te llamas?
-            </h2>
-            <p className="text-muted-foreground mx-auto mt-3 max-w-sm text-sm">
-              Solo se guarda en este dispositivo.
-            </p>
-
-            <label className="mt-8 block text-left">
-              <span className="text-muted-foreground mb-2 block text-xs font-medium tracking-wide uppercase">
-                Tu nombre
-              </span>
-              <input
-                ref={inputRef}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                maxLength={24}
-                autoComplete="given-name"
-                placeholder="Por ejemplo, Juan"
-                className="bg-card border-border h-12 w-full rounded-xl border px-4 text-base outline-none focus-visible:ring-2"
-              />
-            </label>
-
-            <div className="bg-card border-border mt-4 flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm">
-              <span className="text-muted-foreground">Vista previa:</span>
-              <span className="text-primary font-medium">{greetingForName(name)}</span>
-            </div>
-
-            <button
-              type="submit"
-              className="bg-primary text-primary-foreground mt-7 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-medium shadow-lg shadow-black/10 transition-transform hover:scale-[1.01] active:scale-[0.98]"
-            >
-              <Check className="size-4" aria-hidden="true" />
-              Entrar en Leeto
-            </button>
-          </form>
         )}
       </div>
     </div>

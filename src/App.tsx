@@ -29,8 +29,8 @@ export default function App() {
     if (ready) document.getElementById('boot-splash')?.remove();
   }, [ready]);
 
-  const finishOnboarding = useCallback((name: string) => {
-    void updateSettings({ userName: name, onboardingCompleted: true });
+  const finishOnboarding = useCallback(() => {
+    void updateSettings({ onboardingCompleted: true });
   }, []);
 
   return (

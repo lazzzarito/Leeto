@@ -112,7 +112,6 @@ export interface AppSettings {
   readingTheme: ReadingTheme;
   /** `system` sigue prefers-color-scheme; `manual` usa readingTheme. */
   themeMode?: 'system' | 'manual';
-  userName?: string;
   onboardingCompleted?: boolean;
   fontSize: number;
   lineHeight: number;
