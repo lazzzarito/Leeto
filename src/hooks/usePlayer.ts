@@ -28,9 +28,9 @@ export function usePlayer(book: LeetoBook) {
   stateRef.current = state;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const lastSavedRef = useRef<string>();
-  const appliedProgressAtRef = useRef<number>();
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastSavedRef = useRef<string | undefined>(undefined);
+  const appliedProgressAtRef = useRef<number | undefined>(undefined);
 
   const flush = useCallback(() => {
     if (saveTimerRef.current) {

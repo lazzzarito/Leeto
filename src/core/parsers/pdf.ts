@@ -248,7 +248,7 @@ async function renderPdfCover(pdf: PDFDocumentProxy): Promise<RawAsset | undefin
       page.cleanup();
       return undefined;
     }
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({ canvas, viewport }).promise;
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     page.cleanup();
     if (!blob) return undefined;
@@ -381,6 +381,6 @@ export async function parsePdf(
       totalWordCount,
     };
   } finally {
-    await pdf.destroy();
+    await pdf.cleanup();
   }
 }

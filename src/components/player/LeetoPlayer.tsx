@@ -58,16 +58,16 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion(settings.reducedMotion);
 
-  const kineticRef = useRef<KineticTextHandle>(null);
+  const kineticRef = useRef<KineticTextHandle>(null!);
   const containerRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef<TouchStart>();
+  const touchStartRef = useRef<TouchStart | undefined>(undefined);
   const lastTapRef = useRef(0);
   const lastGestureRef = useRef(0);
   const lastWheelRef = useRef(0);
-  const noticeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const longPressFiredRef = useRef(false);
-  const quoteTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [tocOpen, setTocOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);

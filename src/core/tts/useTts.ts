@@ -31,11 +31,11 @@ export function useTts({
   onBoundary,
   onError,
 }: UseTtsOptions) {
-  const sessionRef = useRef<TtsSession>();
-  const currentKeyRef = useRef<string>();
-  const spokenRef = useRef<{ index: number }>();
+  const sessionRef = useRef<TtsSession | undefined>(undefined);
+  const currentKeyRef = useRef<string | undefined>(undefined);
+  const spokenRef = useRef<{ index: number } | undefined>(undefined);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>(() => listVoices());
-  const [lastError, setLastError] = useState<string>();
+  const [lastError, setLastError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isTtsSupported()) return;
