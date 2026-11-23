@@ -3,16 +3,17 @@ import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from '
 import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
+import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const SITE_URL = 'https://leeto.vercel.app/';
 
 /** URL pública de producción; se puede sobreescribir con VITE_SITE_URL. */
-function publicSiteUrl(): string {
-  const raw = process.env.VITE_SITE_URL?.trim() || SITE_URL;
+function publicSiteUrl(raw?: string): string {
+  const value = raw?.trim() || SITE_URL;
   try {
-    return new URL(raw).href.replace(/\/?$/, '/');
+    return new URL(value).href.replace(/\/?$/, '/');
   } catch {
     return SITE_URL;
   }
@@ -32,12 +33,11 @@ function escapeXml(value: string): string {
 }
 
 /** Metadatos de compartir, canonical y robots para el dominio de producción. */
-function siteMetadata() {
+function siteMetadata(site: string) {
   return {
     name: 'leeto-site-metadata',
     apply: 'build' as const,
     transformIndexHtml() {
-      const site = publicSiteUrl();
       const image = `${site}og-image.png`;
       return [
         { tag: 'link', attrs: { rel: 'canonical', href: site }, injectTo: 'head' as const },
@@ -52,7 +52,6 @@ function siteMetadata() {
     },
     closeBundle() {
       const outDir = join(rootDir, 'dist');
-      const site = publicSiteUrl();
       writeFileSync(
         join(outDir, 'sitemap.xml'),
         `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${escapeXml(site)}</loc></url>\n</urlset>\n`,
@@ -105,37 +104,42 @@ function serviceWorkerPrecache() {
   };
 }
 
-export default defineConfig({
-  plugins: [siteMetadata(), serviceWorkerPrecache(), react()],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+export default defineConfig(({ mode }) => {
+  const site = publicSiteUrl(
+    process.env.VITE_SITE_URL || loadEnv(mode, rootDir, 'VITE_').VITE_SITE_URL,
+  );
+  return {
+    plugins: [siteMetadata(site), serviceWorkerPrecache(), react()],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/@remix-run')) {
-            return 'react-vendor';
-          }
-          if (id.includes('node_modules/jszip') || id.includes('node_modules/fast-xml-parser')) {
-            return 'epub-vendor';
-          }
-          if (id.includes('node_modules/dexie')) return 'db-vendor';
-          if (id.includes('node_modules/@radix-ui')) return 'ui-vendor';
-          if (id.includes('node_modules/lucide-react')) return 'icons';
-          return undefined;
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/react') || id.includes('node_modules/@remix-run')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules/jszip') || id.includes('node_modules/fast-xml-parser')) {
+              return 'epub-vendor';
+            }
+            if (id.includes('node_modules/dexie')) return 'db-vendor';
+            if (id.includes('node_modules/@radix-ui')) return 'ui-vendor';
+            if (id.includes('node_modules/lucide-react')) return 'icons';
+            return undefined;
+          },
         },
       },
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-  },
-  worker: {
-    format: 'es',
-  },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    },
+    worker: {
+      format: 'es',
+    },
+  };
 });
