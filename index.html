@@ -55,8 +55,8 @@
   </head>
   <body>
     <script>
-      // Si el build no recibió VITE_SITE_URL, completamos las URLs canónicas
-      // con el origen real para que no queden rutas relativas en el HTML.
+      // En desarrollo el build no inyecta metadatos: completamos las URLs
+      // canónicas desde el origen real.
       (function () {
         if (document.querySelector('link[rel="canonical"]')) return;
         var base = location.origin + location.pathname.replace(/index\.html$/, '');

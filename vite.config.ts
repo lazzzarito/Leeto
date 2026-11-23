@@ -46,7 +46,7 @@ function siteMetadata(site: string) {
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { property: 'og:image:height', content: '630' }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { name: 'twitter:title', content: 'Leeto — lector de libros' }, injectTo: 'head' as const },
-        { tag: 'meta', attrs: { name: 'twitter:description', content: 'Lector local-first: importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo.' }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { name: 'twitter:description', content: 'Importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo.' }, injectTo: 'head' as const },
         { tag: 'meta', attrs: { name: 'twitter:image', content: image }, injectTo: 'head' as const },
       ];
     },

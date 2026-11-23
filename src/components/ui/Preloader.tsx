@@ -64,7 +64,7 @@ export default function Preloader({ visible }: PreloaderProps) {
 
       <p className="preloader-title mt-8 text-3xl font-semibold tracking-[0.25em]">Leeto</p>
       <p className="preloader-subtitle text-muted-foreground mt-2 text-xs tracking-[0.2em] uppercase">
-        Lee a tu ritmo
+        Cargando…
       </p>
       <div className="mt-8 flex gap-1.5" aria-hidden="true">
         {[0, 1, 2].map((index) => (
