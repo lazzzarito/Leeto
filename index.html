@@ -18,19 +18,30 @@
     <script>
       // Aplica el tema antes del primer pintado para evitar destello (T5).
       (function () {
+        var saved = null;
+        var mode = 'system';
+        var valid = ['paper', 'amber', 'sepia', 'eink', 'oled'];
         try {
-          var saved = localStorage.getItem('leeto.theme');
-          var valid = ['paper', 'amber', 'sepia', 'eink', 'oled'];
-          var theme =
-            valid.indexOf(saved) !== -1
-              ? saved
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'oled'
-                : 'paper';
-          document.documentElement.dataset.readingTheme = theme;
+          var raw = localStorage.getItem('leeto.theme');
+          if (raw && raw.charAt(0) === '{') {
+            var cached = JSON.parse(raw);
+            saved = cached.theme;
+            mode = cached.mode === 'manual' ? 'manual' : 'system';
+          } else if (raw) {
+            saved = raw;
+            mode = 'manual';
+          }
         } catch (e) {
-          document.documentElement.dataset.readingTheme = 'paper';
+          saved = null;
         }
+        var theme =
+          mode === 'manual' && valid.indexOf(saved) !== -1
+            ? saved
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'oled'
+              : 'paper';
+        document.documentElement.dataset.readingTheme = theme;
+        document.documentElement.style.colorScheme = theme === 'oled' ? 'dark' : 'light';
       })();
     </script>
     <meta property="og:title" content="Leeto — tus libros, a tu ritmo" />

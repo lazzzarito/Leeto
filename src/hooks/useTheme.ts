@@ -1,19 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { updateSettings, useSettings } from '@/core/db/settings';
+import { updateSettings, useSettings, useSettingsLoaded } from '@/core/db/settings';
+import { readThemeCache, writeThemeCache } from '@/core/theme/cache';
 import { READING_THEMES } from '@/core/theme/themes';
 import type { ReadingTheme } from '@/types';
 
-const THEME_CACHE_KEY = 'leeto.theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
-
-function readCachedTheme(): ReadingTheme | null {
-  try {
-    const value = localStorage.getItem(THEME_CACHE_KEY);
-    return READING_THEMES.some((theme) => theme.id === value) ? (value as ReadingTheme) : null;
-  } catch {
-    return null;
-  }
-}
 
 function prefersDark(): boolean {
   return typeof window !== 'undefined' && window.matchMedia(DARK_QUERY).matches;
@@ -25,10 +16,13 @@ function prefersDark(): boolean {
  */
 export function useTheme() {
   const { readingTheme, themeMode } = useSettings();
+  const settingsLoaded = useSettingsLoaded();
   const [systemDark, setSystemDark] = useState(prefersDark);
   const mode = themeMode ?? 'system';
-  const manualTheme = readCachedTheme() ?? readingTheme;
-  const theme: ReadingTheme = mode === 'system' ? (systemDark ? 'oled' : 'paper') : manualTheme;
+  const cached = readThemeCache();
+  const storedTheme =
+    settingsLoaded || cached?.mode !== 'manual' ? readingTheme : (cached?.theme ?? readingTheme);
+  const theme: ReadingTheme = mode === 'system' ? (systemDark ? 'oled' : 'paper') : storedTheme;
 
   useEffect(() => {
     const media = window.matchMedia(DARK_QUERY);
@@ -41,20 +35,12 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.dataset.readingTheme = theme;
     document.documentElement.style.colorScheme = theme === 'oled' ? 'dark' : 'light';
-    try {
-      localStorage.setItem(THEME_CACHE_KEY, theme);
-    } catch {
-      // Almacenamiento no disponible: el tema sigue aplicado en esta sesión.
-    }
-  }, [theme]);
+    if (settingsLoaded) writeThemeCache(theme, mode);
+  }, [theme, mode, settingsLoaded]);
 
   const setTheme = useCallback((next: ReadingTheme) => {
     document.documentElement.dataset.readingTheme = next;
-    try {
-      localStorage.setItem(THEME_CACHE_KEY, next);
-    } catch {
-      // ignorar
-    }
+    writeThemeCache(next, 'manual');
     void updateSettings({ readingTheme: next, themeMode: 'manual' });
   }, []);
 
