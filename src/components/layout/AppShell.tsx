@@ -1,7 +1,7 @@
 import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
-import { LibrarySkeleton } from '@/components/ui/Skeletons';
+import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
 import { useSettings } from '@/core/db/settings';
 import { countBooksByStatus } from '@/core/library/views';
 import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
@@ -86,7 +86,7 @@ export default function AppShell() {
   if (reading) {
     return (
       <SyncProvider>
-        <Suspense fallback={<div className="p-6"><LibrarySkeleton /></div>}>
+        <Suspense fallback={<ReaderSkeleton />}>
           <Outlet />
         </Suspense>
       </SyncProvider>
