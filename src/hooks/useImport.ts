@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { describeImportBatch, type ImportBatchSummary } from '@/core/import/batch';
 import { isDuplicate, persistParseResult } from '@/core/db/import';
 import { parseFile, type ParseProgress } from '@/core/parsers';
 import type { ParseStage } from '@/core/parsers/types';
@@ -29,6 +30,7 @@ export interface ImportToast {
   title: string;
   detail?: string;
 }
+
 
 const STAGE_LABELS: Record<ParseStage, string> = {
   parsing: 'Analizando',
@@ -69,18 +71,33 @@ export function useImport() {
     setToasts((previous) => previous.filter((toast) => toast.id !== toastId));
   }, []);
 
-  /** Un trabajo terminado sale de la cola y pasa a ser una notificación efímera. */
-  const finishJob = useCallback(
-    (id: string, patch: Partial<ImportJob>, toast: Omit<ImportToast, 'id'>) => {
+  const completeJob = useCallback(
+    (id: string, patch: Partial<ImportJob>) => {
       patchJob(id, patch);
       setJobs((previous) => previous.filter((job) => job.id !== id));
-      setToasts((previous) => [...previous, { ...toast, id: newId('toast') }]);
     },
     [patchJob],
   );
 
+  /** Un trabajo terminado sale de la cola y pasa a ser una notificación efímera. */
+  const finishJob = useCallback(
+    (id: string, patch: Partial<ImportJob>, toast: Omit<ImportToast, 'id'>) => {
+      completeJob(id, patch);
+      setToasts((previous) => [...previous, { ...toast, id: newId('toast') }]);
+    },
+    [completeJob],
+  );
+
   const importFiles = useCallback(
     async (files: File[]) => {
+      const batched = files.length > 1;
+      const summary: ImportBatchSummary = {
+        total: files.length,
+        imported: 0,
+        duplicates: 0,
+        failedFiles: [],
+      };
+
       for (const file of files) {
         const id = newId('job');
         setJobs((previous) => [
@@ -92,15 +109,20 @@ export function useImport() {
           patchJob(id, { status: 'hashing', progress: 2 });
           const contentHash = await hashFile(file);
           if (await isDuplicate(contentHash)) {
-            finishJob(
-              id,
-              { status: 'duplicate', progress: 100 },
-              {
-                kind: 'info',
-                title: 'Ya estaba en la biblioteca',
-                detail: file.name,
-              },
-            );
+            if (batched) {
+              summary.duplicates += 1;
+              completeJob(id, { status: 'duplicate', progress: 100 });
+            } else {
+              finishJob(
+                id,
+                { status: 'duplicate', progress: 100 },
+                {
+                  kind: 'info',
+                  title: 'Ya estaba en la biblioteca',
+                  detail: file.name,
+                },
+              );
+            }
             continue;
           }
 
@@ -115,22 +137,36 @@ export function useImport() {
 
           patchJob(id, { status: 'saving', progress: 97 });
           await persistParseResult(result);
-          finishJob(
-            id,
-            { status: 'imported', progress: 100, stage: 'done' },
-            { kind: 'success', title: 'Libro importado', detail: result.title || file.name },
-          );
+          if (batched) {
+            summary.imported += 1;
+            completeJob(id, { status: 'imported', progress: 100, stage: 'done' });
+          } else {
+            finishJob(
+              id,
+              { status: 'imported', progress: 100, stage: 'done' },
+              { kind: 'success', title: 'Libro importado', detail: result.title || file.name },
+            );
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Error desconocido';
-          finishJob(
-            id,
-            { status: 'error', error: message },
-            { kind: 'error', title: 'No se pudo importar', detail: message },
-          );
+          if (batched) {
+            summary.failedFiles.push({ name: file.name, error: message });
+            completeJob(id, { status: 'error', error: message });
+          } else {
+            finishJob(
+              id,
+              { status: 'error', error: message },
+              { kind: 'error', title: 'No se pudo importar', detail: message },
+            );
+          }
         }
       }
+
+      if (batched) {
+        setToasts((previous) => [...previous, { ...describeImportBatch(summary), id: newId('toast') }]);
+      }
     },
-    [finishJob, patchJob],
+    [completeJob, finishJob, patchJob],
   );
 
   return { jobs, toasts, importFiles, dismissToast };

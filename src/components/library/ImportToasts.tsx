@@ -65,7 +65,7 @@ export default function ImportToasts({ toasts, onDismiss }: ImportToastsProps) {
       className="pointer-events-none fixed inset-x-4 top-[calc(env(safe-area-inset-top,0px)+1rem)] z-[70] flex flex-col items-center gap-2"
       aria-live="polite"
     >
-      {toasts.map((toast) => (
+      {toasts.slice(-3).map((toast) => (
         <div key={toast.id} className="pointer-events-auto w-full max-w-md">
           <ToastItem toast={toast} onDismiss={onDismiss} />
         </div>
