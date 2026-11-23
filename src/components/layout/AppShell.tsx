@@ -1,13 +1,15 @@
 import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
-import SettingsDialog from '@/components/settings/SettingsDialog';
+import { LibrarySkeleton } from '@/components/ui/Skeletons';
 import { useSettings } from '@/core/db/settings';
 import { countBooksByStatus } from '@/core/library/views';
 import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
 import { cn } from '@/lib/cn';
 import { greetingForName } from '@/lib/greeting';
+
+const SettingsDialog = lazy(() => import('@/components/settings/SettingsDialog'));
 
 const NAV_ITEMS = [
   { value: 'reading', label: 'Leyendo', Icon: BookOpenText },
@@ -84,7 +86,9 @@ export default function AppShell() {
   if (reading) {
     return (
       <SyncProvider>
-        <Outlet />
+        <Suspense fallback={<div className="p-6"><LibrarySkeleton /></div>}>
+          <Outlet />
+        </Suspense>
       </SyncProvider>
     );
   }
@@ -201,11 +205,17 @@ export default function AppShell() {
           </header>
 
           <main className="w-full flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] sm:px-6 lg:pt-2">
-            <Outlet />
+            <Suspense fallback={<LibrarySkeleton />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
 
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        {settingsOpen && (
+          <Suspense fallback={null}>
+            <SettingsDialog open onOpenChange={setSettingsOpen} />
+          </Suspense>
+        )}
       </div>
     </SyncProvider>
   );

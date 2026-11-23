@@ -6,7 +6,6 @@ import { ensureSettings, updateSettings, useSettings, useSettingsLoaded } from '
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router';
 
-const MIN_SPLASH_MS = 900;
 const MAX_SPLASH_MS = 2500;
 
 export default function App() {
@@ -20,9 +19,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!settingsReady) return;
-    const timer = window.setTimeout(() => setBooted(true), MIN_SPLASH_MS);
-    return () => window.clearTimeout(timer);
+    if (settingsReady) setBooted(true);
   }, [settingsReady]);
 
   // Si IndexedDB no está disponible, la app sigue abriéndose.

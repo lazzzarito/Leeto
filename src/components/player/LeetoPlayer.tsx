@@ -1,5 +1,7 @@
 import { ArrowLeft, Eye, EyeOff, Play, SkipBack, SkipForward } from 'lucide-react';
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -19,12 +21,13 @@ import { shareText } from '@/lib/share';
 import Marquee from '@/components/ui/Marquee';
 import type { LeetoBook } from '@/types';
 import BlockView from './BlockView';
-import PlayerSettingsDialog from './PlayerSettingsDialog';
 import ReelActionRail from './ReelActionRail';
 import ReelBackdrop from './ReelBackdrop';
 import StoriesBar from './StoriesBar';
-import TocDrawer from './TocDrawer';
 import type { KineticTextHandle } from './KineticText';
+
+const PlayerSettingsDialog = lazy(() => import('./PlayerSettingsDialog'));
+const TocDrawer = lazy(() => import('./TocDrawer'));
 
 interface TouchStart {
   x: number;
@@ -130,6 +133,15 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           : 'No se pudo compartir',
     );
   }, [book.author, book.title, chapter?.title, clip, showNotice]);
+
+  const openToc = useCallback(() => setTocOpen(true), []);
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const handleQuoteClick = useCallback(() => void handleQuote(), [handleQuote]);
+  const handleShareClick = useCallback(() => void handleShare(), [handleShare]);
+  const handleTocSeek = useCallback((index: number) => seekTo(index), [seekTo]);
+  const toggleTts = useCallback(() => {
+    void updateSettings({ ttsEnabled: !settings.ttsEnabled });
+  }, [settings.ttsEnabled]);
 
   // El playhead se actualiza de forma imperativa: React no re-renderiza cada palabra.
   useEffect(() => {
@@ -477,11 +489,11 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             playing={state.status === 'playing'}
             reducedMotion={reducedMotion}
             quoteCaptured={quoteCaptured}
-            onQuote={() => void handleQuote()}
-            onToc={() => setTocOpen(true)}
-            onShare={() => void handleShare()}
-            onSettings={() => setSettingsOpen(true)}
-            onToggleTts={() => void updateSettings({ ttsEnabled: !settings.ttsEnabled })}
+            onQuote={handleQuoteClick}
+            onToc={openToc}
+            onShare={handleShareClick}
+            onSettings={openSettings}
+            onToggleTts={toggleTts}
           />
         </div>
       </div>
@@ -513,23 +525,31 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         </p>
       )}
 
-      <PlayerSettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        settings={settings}
-        book={book}
-        voices={tts.voices}
-      />
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <PlayerSettingsDialog
+            open
+            onOpenChange={setSettingsOpen}
+            settings={settings}
+            book={book}
+            voices={tts.voices}
+          />
+        </Suspense>
+      )}
 
-      <TocDrawer
-        open={tocOpen}
-        onOpenChange={setTocOpen}
-        chapters={book.chapters}
-        toc={book.toc}
-        clips={state.clips}
-        activeClipIndex={state.clipIndex}
-        onSeek={(index) => seekTo(index)}
-      />
+      {tocOpen && (
+        <Suspense fallback={null}>
+          <TocDrawer
+            open
+            onOpenChange={setTocOpen}
+            chapters={book.chapters}
+            toc={book.toc}
+            clips={state.clips}
+            activeClipIndex={state.clipIndex}
+            onSeek={handleTocSeek}
+          />
+        </Suspense>
+      )}
 
       {tts.lastError && (
         <p role="alert" className="sr-only">

@@ -47,7 +47,7 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
 
 function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
   if (a.updatedAt !== b.updatedAt) return a.updatedAt - b.updatedAt;
-  // Desempate determinista especificado en §7.2.
+  // Desempate determinista: el mismo par de registros siempre gana el mismo dispositivo.
   return compareText(a.deviceId, b.deviceId);
 }
 

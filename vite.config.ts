@@ -7,6 +7,68 @@ import { defineConfig } from 'vitest/config';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 
+/** URL pública opcional. Sin ella se usan rutas relativas y el canonical se calcula en el cliente. */
+function publicSiteUrl(): string | undefined {
+  const raw = process.env.VITE_SITE_URL?.trim();
+  if (!raw) return undefined;
+  try {
+    return new URL(raw).href.replace(/\/?$/, '/');
+  } catch {
+    return undefined;
+  }
+}
+
+function escapeXml(value: string): string {
+  return value.replace(/[<>&"']/g, (character) => {
+    const entities: Record<string, string> = {
+      '<': '&lt;',
+      '>': '&gt;',
+      '&': '&amp;',
+      '"': '&quot;',
+      "'": '&apos;',
+    };
+    return entities[character];
+  });
+}
+
+/** Metadatos de compartir y robots: absolutos solo cuando hay dominio configurado. */
+function siteMetadata() {
+  return {
+    name: 'leeto-site-metadata',
+    apply: 'build' as const,
+    transformIndexHtml() {
+      const site = publicSiteUrl();
+      const image = site ? `${site}og-image.png` : '/og-image.png';
+      return [
+        ...(site
+          ? [
+              { tag: 'link', attrs: { rel: 'canonical', href: site }, injectTo: 'head' as const },
+              { tag: 'meta', attrs: { property: 'og:url', content: site }, injectTo: 'head' as const },
+            ]
+          : []),
+        { tag: 'meta', attrs: { property: 'og:image', content: image }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { name: 'twitter:title', content: 'Leeto — tus libros, a tu ritmo' }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { name: 'twitter:description', content: 'Lector local-first: importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo.' }, injectTo: 'head' as const },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: image }, injectTo: 'head' as const },
+      ];
+    },
+    closeBundle() {
+      const outDir = join(rootDir, 'dist');
+      const site = publicSiteUrl();
+      const sitemap = site
+        ? `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${escapeXml(site)}</loc></url>\n</urlset>\n`
+        : undefined;
+      if (sitemap) writeFileSync(join(outDir, 'sitemap.xml'), sitemap);
+      writeFileSync(
+        join(outDir, 'robots.txt'),
+        `User-agent: *\nAllow: /\n${sitemap ? `Sitemap: ${site}sitemap.xml\n` : ''}`,
+      );
+    },
+  };
+}
+
 function serviceWorkerPrecache() {
   return {
     name: 'leeto-sw-precache',
@@ -48,7 +110,7 @@ function serviceWorkerPrecache() {
 }
 
 export default defineConfig({
-  plugins: [serviceWorkerPrecache(), react()],
+  plugins: [siteMetadata(), serviceWorkerPrecache(), react()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

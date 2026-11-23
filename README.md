@@ -7,11 +7,9 @@
 
 # Leeto
 
-### 📖 Tus libros, a tu ritmo. Sin ruido, sin nube, sin complicaciones.
+### Lee tus libros a tu ritmo, sin cuenta ni nube de por medio.
 
-**Leeto** convierte tus EPUB, PDF, FB2, DOCX, ODT, CBZ y archivos de texto en una experiencia de lectura en forma de historias:
-texto que se ilumina mientras avanza, imágenes que cobran vida y una biblioteca
-que siempre está contigo. Todo se queda en tu dispositivo. 🏠
+**Leeto** abre EPUB, PDF, FB2, DOCX, ODT, CBZ y archivos de texto. El texto se ilumina mientras avanza, las imágenes aparecen en su momento y la biblioteca se queda en tu dispositivo.
 
 <br>
 
@@ -37,7 +35,7 @@ que siempre está contigo. Todo se queda en tu dispositivo. 🏠
 
 ---
 
-## 🌈 Una bienvenida hecha para ti
+## La primera apertura
 
 La primera vez, Leeto te recibe con un pequeño recorrido y te pregunta tu nombre.
 Desde entonces, arriba de todo verás un saludo que cambia con el día:
@@ -49,7 +47,7 @@ Desde entonces, arriba de todo verás un saludo que cambia con el día:
 
 ---
 
-## 🎯 Lo que te va a encantar
+## Qué incluye
 
 - **🎬 Lectura en clips.** El texto se muestra completo y una suave luz guía la palabra activa. No hay saltos raros ni animaciones que distraigan.
 - **👆 Desliza y sigue.** Sube o baja para cambiar de fragmento. La lectura continúa, no se reinicia.
@@ -84,6 +82,10 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 <br>
 
 ---
+
+## Despliegue
+
+`npm run build` genera un sitio estático en `dist/`. Si lo publicas en un dominio propio, define `VITE_SITE_URL=https://tu-dominio/ruta/` antes de compilar: así el canonical, `og:url`, `sitemap.xml` y `robots.txt` apuntan a esa URL. Sin esa variable, la app calcula el canonical en el navegador y no genera sitemap.
 
 <div align="center">
 

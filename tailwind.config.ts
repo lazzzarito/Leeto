@@ -58,6 +58,7 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-ui)', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         serif: ['var(--font-reading)', 'Newsreader', 'Merriweather', 'Lora', 'Georgia', 'serif'],
+        reading: ['var(--font-reading)', 'Newsreader', 'Merriweather', 'Lora', 'Georgia', 'serif'],
       },
     },
   },

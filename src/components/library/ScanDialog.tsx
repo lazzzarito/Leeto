@@ -83,7 +83,7 @@ export default function ScanDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Escanear carpetas"
-      description="Encuentra EPUB y PDF en las carpetas que guardes."
+      description="Encuentra libros en las carpetas que guardes."
       height="content"
       footer={
         <div className="flex items-center justify-between gap-3">

@@ -1,4 +1,5 @@
 import { List, Quote, Send, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react';
+import { memo } from 'react';
 import { cn } from '@/lib/cn';
 
 interface ReelActionRailProps {
@@ -18,7 +19,7 @@ const BUTTON_CLASS =
   'border-white/25 bg-black/25 text-reel flex size-11 items-center justify-center rounded-full border backdrop-blur-sm transition-colors hover:bg-black/40';
 const LABEL_CLASS = 'text-reel-muted text-[10px] leading-none';
 
-export default function ReelActionRail({
+const ReelActionRail = memo(function ReelActionRail({
   title,
   ttsEnabled,
   playing,
@@ -127,4 +128,6 @@ export default function ReelActionRail({
       </button>
     </aside>
   );
-}
+});
+
+export default ReelActionRail;

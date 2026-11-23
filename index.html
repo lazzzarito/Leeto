@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b0b0b" />
     <meta
       name="description"
-      content="Leeto — lectura dinámica local-first. Tus libros, en tu dispositivo."
+      content="Leeto: importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo. Sin nube y sin cuentas."
     />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
@@ -16,7 +16,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Leeto" />
     <script>
-      // Aplica el tema antes del primer pintado para evitar destello (T5).
+      // Aplica el tema antes del primer pintado para evitar el destello inicial.
       (function () {
         var saved = null;
         var mode = 'system';
@@ -47,14 +47,38 @@
     <meta property="og:title" content="Leeto — tus libros, a tu ritmo" />
     <meta
       property="og:description"
-      content="Lector local-first de EPUB y PDF: sin nube, funciona offline y tus libros se quedan en tu dispositivo."
+      content="Importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo. Sin nube y sin cuentas."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <title>Leeto — lector local-first de EPUB y PDF</title>
+    <title>Leeto — lector local-first de EPUB, PDF y cómics</title>
   </head>
   <body>
+    <script>
+      // Si el build no recibió VITE_SITE_URL, completamos las URLs canónicas
+      // con el origen real para que no queden rutas relativas en el HTML.
+      (function () {
+        if (document.querySelector('link[rel="canonical"]')) return;
+        var base = location.origin + location.pathname.replace(/index\.html$/, '');
+        var head = document.head;
+        var link = document.createElement('link');
+        link.rel = 'canonical';
+        link.href = base;
+        head.appendChild(link);
+        var ogUrl = document.createElement('meta');
+        ogUrl.setAttribute('property', 'og:url');
+        ogUrl.content = base;
+        head.appendChild(ogUrl);
+        var ogImage = document.querySelector('meta[property="og:image"]');
+        if (ogImage && ogImage.content.charAt(0) === '/') {
+          ogImage.content = location.origin + ogImage.content;
+        }
+      })();
+    </script>
+    <div id="boot-splash" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0b0b0b;color:#fafafa;font-family:system-ui,sans-serif">
+      <img src="/icons/icon-192.webp" alt="" width="72" height="72" style="width:72px;height:72px;border-radius:18px">
+      <p style="margin:16px 0 0;font-size:1.5rem;letter-spacing:.25em">Leeto</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

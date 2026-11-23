@@ -1,7 +1,7 @@
 {
-  "name": "Leeto — lector dinámico",
+  "name": "Leeto — lector de libros",
   "short_name": "Leeto",
-  "description": "Lee tus EPUB y PDF a ritmo propio, guardados en tu dispositivo.",
+  "description": "Lee EPUB, PDF, cómics y texto a tu ritmo, sin conexión y sin salir del dispositivo.",
   "lang": "es",
   "start_url": "/",
   "scope": "/",
