@@ -116,17 +116,18 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const handleShare = useCallback(async () => {
     if (!clip) return;
     const caption = clip.block.type === 'image' ? (clip.block.caption ?? '') : '';
-    const text = `${book.title} — ${book.author}\n\n“${clip.text || caption}”`;
+    const source = [book.title, book.author, chapter?.title].filter(Boolean).join(' · ');
+    const text = `“${clip.text || caption}”\n\n— ${source}`;
     const result = await shareText(text, book.title);
     if (result === 'cancelled') return;
     showNotice(
       result === 'copied'
-        ? 'Fragmento copiado'
+        ? 'Fragmento copiado al portapapeles'
         : result === 'shared'
-          ? 'Fragmento compartido'
+          ? 'Fragmento enviado'
           : 'No se pudo compartir',
     );
-  }, [book.author, book.title, clip, showNotice]);
+  }, [book.author, book.title, chapter?.title, clip, showNotice]);
 
   // El playhead se actualiza de forma imperativa: React no re-renderiza cada palabra.
   useEffect(() => {

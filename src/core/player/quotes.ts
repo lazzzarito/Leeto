@@ -20,6 +20,18 @@ export function buildQuoteForClip(book: LeetoBook, clip: PlayerClip, now = Date.
   };
 }
 
+/** Texto que se comparte: la cita y su procedencia completa. */
+export function formatQuoteShareText(
+  book: LeetoBook | undefined,
+  quote: SavedQuote,
+  chapterTitle: string,
+): string {
+  const source = [book?.title ?? 'Libro eliminado', book?.author, chapterTitle]
+    .filter(Boolean)
+    .join(' · ');
+  return `“${quote.excerpt}”\n\n— ${source}`;
+}
+
 export async function saveQuoteForClip(book: LeetoBook, clip: PlayerClip): Promise<SavedQuote> {
   const quote = buildQuoteForClip(book, clip);
   await quotesRepo.put(quote);

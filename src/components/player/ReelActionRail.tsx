@@ -46,7 +46,13 @@ export default function ReelActionRail({
       onWheel={(event) => event.stopPropagation()}
       onClick={(event) => event.stopPropagation()}
     >
-      <button type="button" onClick={onShare} aria-label="Compartir fragmento" className="flex flex-col items-center gap-1">
+      <button
+        type="button"
+        onClick={onShare}
+        aria-label="Compartir fragmento actual"
+        title="Comparte este fragmento con el título y autor del libro"
+        className="flex flex-col items-center gap-1"
+      >
         <span className={BUTTON_CLASS}>
           <Send className="size-5" aria-hidden="true" />
         </span>

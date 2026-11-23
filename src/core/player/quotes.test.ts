@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import type { LeetoBook } from '@/types';
-import { buildQuoteForClip, softDeleteQuote } from './quotes';
+import { buildQuoteForClip, formatQuoteShareText, softDeleteQuote } from './quotes';
 import { buildClips, type PlayerClip } from './state';
 
 const book: LeetoBook = {
@@ -60,6 +60,14 @@ describe('citas del reproductor', () => {
     const secondSegment = clips[1]!;
 
     expect(buildQuoteForClip(book, secondSegment).excerpt).toBe(content);
+  });
+
+  it('incluye libro, autor y capítulo al compartir una cita', () => {
+    const quote = buildQuoteForClip(book, buildClips(book.chapters)[0]!);
+
+    expect(formatQuoteShareText(book, quote, 'Capítulo 1')).toBe(
+      '“Una frase memorable”\n\n— Libro · Autora · Capítulo 1',
+    );
   });
 
   it('recorta fragmentos largos y usa el texto alternativo de imágenes', () => {
