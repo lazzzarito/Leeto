@@ -2,6 +2,7 @@ import { Check } from 'lucide-react';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/cn';
+import AndroidAppSettings from './AndroidAppSettings';
 import SyncSettings from './SyncSettings';
 
 interface SettingsDialogProps {
@@ -98,6 +99,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
           </div>
         </section>
 
+        <AndroidAppSettings />
         <SyncSettings />
       </div>
     </ResponsiveDialog>

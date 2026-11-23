@@ -1,6 +1,7 @@
 import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
+import ApkDownloadNotice from '@/components/download/ApkDownloadNotice';
 import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
 import { countBooksByStatus } from '@/core/library/views';
 import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
@@ -207,6 +208,8 @@ export default function AppShell() {
             </Suspense>
           </main>
         </div>
+
+        <ApkDownloadNotice />
 
         {settingsOpen && (
           <Suspense fallback={null}>
