@@ -2,6 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { FolderOpen, FolderSearch, Plus, Upload } from 'lucide-react';
 import { useRef } from 'react';
 import { fromFileList, isDirectoryInputSupported } from '@/core/import/folder';
+import { BOOK_ACCEPT } from '@/core/parsers/formats';
 import { cn } from '@/lib/cn';
 
 interface AddMenuProps {
@@ -75,7 +76,7 @@ export default function AddMenu({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".epub,.pdf,.fb2,.docx,.odt,.cbz,.txt,.md,.markdown,.html,.htm,application/epub+zip,application/pdf,application/x-fictionbook+xml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/vnd.comicbook+zip,text/plain,text/markdown,text/html"
+        accept={BOOK_ACCEPT}
         multiple
         hidden
         className="sr-only"

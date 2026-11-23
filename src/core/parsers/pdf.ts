@@ -116,6 +116,19 @@ function stripMarginals(lines: TextLine[], height: number, repeated: Set<string>
   });
 }
 
+function medianHeight(lines: TextLine[]): number {
+  if (!lines.length) return 10;
+  const heights = lines.map((line) => line.height).sort((a, b) => a - b);
+  return heights[Math.floor(heights.length / 2)];
+}
+
+function isHeading(line: TextLine, bodyHeight: number): boolean {
+  if (line.text.length >= 120 || !CHAPTER_PATTERN.test(line.text)) return false;
+  // Un encabezado no puede ser más pequeño que el cuerpo; así evitamos partir
+  // un párrafo que empieza con "Capítulo 1" en una frase corriente.
+  return line.height >= bodyHeight * 0.9;
+}
+
 function buildSections(
   pages: Array<{ lines: TextLine[]; pageNumber: number }>,
   fallbackTitle: string,
@@ -124,15 +137,24 @@ function buildSections(
   let current: Section = { title: fallbackTitle, paragraphs: [], startPage: pages[0]?.pageNumber ?? 1 };
 
   for (const page of pages) {
+    const bodyHeight = medianHeight(page.lines);
+    let pending: TextLine[] = [];
+    const flush = () => {
+      if (!pending.length) return;
+      current.paragraphs.push(...linesToParagraphs(pending));
+      pending = [];
+    };
+
     for (const line of page.lines) {
-      const heading = CHAPTER_PATTERN.exec(line.text);
-      if (heading && line.text.length < 120) {
-        if (current.paragraphs.length > 0) sections.push(current);
-        current = { title: line.text.trim(), paragraphs: [], startPage: page.pageNumber };
+      if (!isHeading(line, bodyHeight)) {
+        pending.push(line);
         continue;
       }
+      flush();
+      if (current.paragraphs.length > 0) sections.push(current);
+      current = { title: line.text.trim(), paragraphs: [], startPage: page.pageNumber };
     }
-    current.paragraphs.push(...linesToParagraphs(page.lines));
+    flush();
   }
 
   if (current.paragraphs.length > 0 || sections.length === 0) sections.push(current);

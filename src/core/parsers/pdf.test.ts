@@ -73,6 +73,25 @@ describe('parsePdf', () => {
     expect(result.chapters[0]?.blocks.some((block) => block.type === 'text')).toBe(true);
   });
 
+  it('no repite los encabezados en el cuerpo y separa secciones de la misma página', async () => {
+    const bytes = buildPdfFixture([
+      'Chapter 1',
+      'Texto previo con suficientes palabras para formar un párrafo completo y detectable.',
+      'Chapter 2',
+      'Texto posterior con suficientes palabras para formar otro párrafo completo y detectable.',
+    ]);
+    const result = await parsePdf(requestFor(bytes), () => {});
+
+    const textOf = (chapterIndex: number) => {
+      const block = result.chapters[chapterIndex]?.blocks[0];
+      return block?.type === 'text' ? block.content : '';
+    };
+    expect(result.chapters.map((chapter) => chapter.title)).toEqual(['Chapter 1', 'Chapter 2']);
+    expect(textOf(0)).not.toContain('Chapter');
+    expect(textOf(0)).toContain('previo');
+    expect(textOf(1)).toContain('posterior');
+  });
+
   it('rechaza un PDF sin capa de texto como escaneado', async () => {
     const bytes = buildPdfFixture([]);
     await expect(parsePdf(requestFor(bytes), () => {})).rejects.toMatchObject({

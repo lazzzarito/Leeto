@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BOOK_ACCEPT,
+  BOOK_EXTENSIONS,
   CBZ_MIME,
   detectMimeType,
   DOCX_MIME,
@@ -36,5 +38,11 @@ describe('isBookFile', () => {
   it('reconoce todos los formatos importables en una carpeta', () => {
     expect(['a.epub', 'b.PDF', 'c.txt', 'd.md', 'e.htm', 'f.fb2', 'g.docx', 'h.odt', 'i.cbz'].every(isBookFile)).toBe(true);
     expect(isBookFile('portada.jpg')).toBe(false);
+  });
+
+  it('anuncia todos los formatos en el selector de archivos', () => {
+    for (const extension of BOOK_EXTENSIONS) {
+      expect(BOOK_ACCEPT).toContain(`.${extension}`);
+    }
   });
 });

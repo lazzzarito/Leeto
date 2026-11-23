@@ -1,5 +1,6 @@
 import { UploadCloud } from 'lucide-react';
 import { useRef, useState, type DragEvent } from 'react';
+import { BOOK_ACCEPT, BOOK_FORMAT_LABEL } from '@/core/parsers/formats';
 import { cn } from '@/lib/cn';
 
 interface DropzoneProps {
@@ -34,11 +35,11 @@ export default function Dropzone({ onFiles }: DropzoneProps) {
       <input
         ref={inputRef}
         type="file"
-        accept=".epub,.pdf,application/epub+zip,application/pdf"
+        accept={BOOK_ACCEPT}
         multiple
         hidden
         className="sr-only"
-        aria-label="Seleccionar archivos EPUB o PDF"
+        aria-label={`Seleccionar archivos: ${BOOK_FORMAT_LABEL}`}
         onChange={(event) => {
           const files = Array.from(event.target.files ?? []);
           if (files.length > 0) onFiles(files);
@@ -46,8 +47,11 @@ export default function Dropzone({ onFiles }: DropzoneProps) {
         }}
       />
       <UploadCloud className="text-muted-foreground mx-auto size-6" aria-hidden="true" />
-      <p className="mt-2 text-sm font-medium">Arrastra EPUB o PDF aquí</p>
-      <p className="text-muted-foreground mt-1 text-xs">Solo archivos con texto seleccionable</p>
+      <p className="mt-2 text-sm font-medium">Arrastra tus libros aquí</p>
+      <p className="text-muted-foreground mt-1 text-xs">{BOOK_FORMAT_LABEL}</p>
+      <p className="text-muted-foreground mt-0.5 text-xs">
+        Los PDF necesitan texto seleccionable; los CBZ se leen por páginas.
+      </p>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}

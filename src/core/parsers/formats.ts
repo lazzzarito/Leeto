@@ -37,6 +37,12 @@ const EXTENSION_MIME: Record<string, string> = {
   cbz: CBZ_MIME,
 };
 
+export const BOOK_EXTENSIONS = Object.keys(EXTENSION_MIME);
+export const BOOK_ACCEPT = [...BOOK_EXTENSIONS.map((extension) => `.${extension}`), ...BOOK_MIMES].join(
+  ',',
+);
+export const BOOK_FORMAT_LABEL = 'EPUB, PDF, TXT, MD, HTML, FB2, DOCX, ODT y CBZ';
+
 const BOOK_EXTENSION = /\.(epub|pdf|txt|text|md|markdown|html|htm|fb2|docx|odt|cbz)$/i;
 
 export function isBookFile(name: string): boolean {

@@ -20,6 +20,7 @@ import {
   isDirectoryPickerSupported,
   pickBookDirectory,
 } from '@/core/import/folder';
+import { BOOK_FORMAT_LABEL } from '@/core/parsers/formats';
 import { useImport } from '@/hooks/useImport';
 import { useBooks, useBooksLoading, useProgressByBook, useQuotes } from '@/hooks/useLibrary';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -144,7 +145,7 @@ export default function LibraryPage() {
             </div>
             <h2 className="text-lg font-medium">Todavía no hay libros</h2>
             <p className="text-muted-foreground mt-1 text-sm">
-              Importa tu primer EPUB o PDF con texto seleccionable.
+              Importa tu primer libro: EPUB, PDF, TXT, FB2, DOCX, ODT o CBZ.
             </p>
           </div>
           <Dropzone onFiles={(files) => void importFiles(files)} />
@@ -176,7 +177,7 @@ export default function LibraryPage() {
           <div className="border-primary bg-background flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-10 py-8 text-center shadow-2xl">
             <UploadCloud className="text-primary size-8" />
             <p className="text-lg font-medium">Suelta para importar</p>
-            <p className="text-muted-foreground text-sm">EPUB y PDF con texto seleccionable</p>
+            <p className="text-muted-foreground text-sm">{BOOK_FORMAT_LABEL}</p>
           </div>
         </div>
       )}
