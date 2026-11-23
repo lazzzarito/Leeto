@@ -18,11 +18,13 @@ import type { LeetoBook } from '@/types';
 const SAVE_DEBOUNCE_MS = 300;
 
 /** Motor del lector: reloj único, sincronización con ajustes y progreso persistido. */
-export function usePlayer(book: LeetoBook) {
+export function usePlayer(book?: LeetoBook) {
   const settings = useSettings();
-  const progress = useBookProgress(book.id);
+  const bookId = book?.id;
+  const totalWordCount = book?.totalWordCount ?? 0;
+  const progress = useBookProgress(bookId ?? '');
   const [state, dispatch] = useReducer(playerReducer, undefined, createInitialState);
-  const clips = useMemo(() => buildClips(book.chapters), [book.chapters]);
+  const clips = useMemo(() => buildClips(book?.chapters ?? []), [book?.chapters]);
 
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -39,19 +41,19 @@ export function usePlayer(book: LeetoBook) {
     }
     const current = stateRef.current;
     const clip = current.clips[current.clipIndex];
-    if (!clip) return;
+    if (!clip || !bookId) return;
     lastSavedRef.current = `${clip.block.id}:${clip.segmentIndex}`;
     void progressRepo.put({
-      bookId: book.id,
+      bookId,
       chapterIndex: clip.chapterIndex,
       blockId: clip.block.id,
       segmentIndex: clip.segmentIndex,
-      percentage: getProgressPercentage(current, book.totalWordCount),
+      percentage: getProgressPercentage(current, totalWordCount),
       updatedAt: Date.now(),
       deviceId: settings.deviceId,
     });
     notifyLocalSyncChange();
-  }, [book.id, book.totalWordCount, settings.deviceId]);
+  }, [bookId, totalWordCount, settings.deviceId]);
 
   const scheduleSave = useCallback(() => {
     const current = stateRef.current;
@@ -157,6 +159,7 @@ export function usePlayer(book: LeetoBook) {
     dispatch({ type: 'align', elapsedMs });
   }, []);
   const saveQuote = useCallback(async () => {
+    if (!book) return undefined;
     const clip = stateRef.current.clips[stateRef.current.clipIndex];
     const quote = clip ? await saveQuoteForClip(book, clip) : undefined;
     if (quote) notifyLocalSyncChange();
@@ -164,14 +167,14 @@ export function usePlayer(book: LeetoBook) {
   }, [book]);
 
   const clip = state.clips[state.clipIndex];
-  const chapter = book.chapters[clip?.chapterIndex ?? 0];
+  const chapter = book?.chapters[clip?.chapterIndex ?? 0];
 
   return {
     state,
     clip,
     chapter,
     activeWordIndex: getActiveWordIndex(state),
-    percentage: getProgressPercentage(state, book.totalWordCount),
+    percentage: book ? getProgressPercentage(state, book.totalWordCount) : 0,
     play,
     pause,
     toggle,

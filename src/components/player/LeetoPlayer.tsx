@@ -12,9 +12,8 @@ import {
 } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { updateSettings, useSettings } from '@/core/db/settings';
+import { usePlayerContext } from '@/core/player/PlayerProvider';
 import { getClipDuration } from '@/core/player/state';
-import { useTts } from '@/core/tts/useTts';
-import { usePlayer } from '@/hooks/usePlayer';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
 import { shareText } from '@/lib/share';
@@ -51,9 +50,9 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     previous,
     pause,
     seekTo,
-    alignPlayhead,
     saveQuote,
-  } = usePlayer(book);
+    tts,
+  } = usePlayerContext();
   const settings = useSettings();
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion(settings.reducedMotion);
@@ -80,27 +79,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
     noticeTimerRef.current = setTimeout(() => setNotice(undefined), 2200);
   }, []);
-
-  const handleTtsBoundary = useCallback(
-    (elapsedMs: number) => alignPlayhead(elapsedMs),
-    [alignPlayhead],
-  );
-  const handleTtsError = useCallback(
-    (message: string) => showNotice(`Voz: ${message}`),
-    [showNotice],
-  );
-  const tts = useTts({
-    enabled: settings.ttsEnabled,
-    clip,
-    clipIndex: state.clipIndex,
-    status: state.status,
-    wpm: state.wpm,
-    speed: state.speed,
-    voiceURI: settings.ttsVoiceURI,
-    lang: book.language || 'es-ES',
-    onBoundary: handleTtsBoundary,
-    onError: handleTtsError,
-  });
 
   const flashQuote = useCallback(() => {
     if (reducedMotion) return;

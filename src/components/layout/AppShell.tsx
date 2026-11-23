@@ -2,7 +2,9 @@ import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import ApkDownloadNotice from '@/components/download/ApkDownloadNotice';
+import PlayerNotch from '@/components/player/PlayerNotch';
 import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
+import { PlayerProvider } from '@/core/player/PlayerProvider';
 import { countBooksByStatus } from '@/core/library/views';
 import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
@@ -92,8 +94,9 @@ export default function AppShell() {
   }
 
   return (
-    <SyncProvider>
-      <div className="relative flex min-h-dvh text-foreground">
+    <PlayerProvider>
+      <SyncProvider>
+        <div className="relative flex min-h-dvh text-foreground">
         <div className="library-doodle-bg pointer-events-none fixed inset-0 -z-10" aria-hidden="true" />
         <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/40 py-6 pr-6 pl-[calc(env(safe-area-inset-left,0px)+1rem)] lg:flex">
           <Link to="/" className="flex items-center gap-2 rounded-md px-2 focus-visible:ring-2">
@@ -142,6 +145,7 @@ export default function AppShell() {
           <div className="mt-auto space-y-1">
             <div id="library-sidebar-search" />
             <div id="library-sidebar-actions" />
+            <PlayerNotch className="mx-2 mb-2 w-[calc(100%-1rem)] max-w-none" />
             <button
               type="button"
               onClick={() => setSettingsOpen(true)}
@@ -162,7 +166,7 @@ export default function AppShell() {
           <header className="pt-safe bg-background/80 sticky top-0 z-30 backdrop-blur lg:hidden">
             <div
               className={cn(
-                'flex items-center justify-between px-4 transition-[height] duration-300 sm:px-6',
+                'relative flex items-center justify-between px-4 transition-[height] duration-300 sm:px-6',
                 compact ? 'h-14' : 'h-16',
               )}
             >
@@ -188,6 +192,7 @@ export default function AppShell() {
                 </span>
               </Link>
 
+              <PlayerNotch className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
@@ -216,7 +221,8 @@ export default function AppShell() {
             <SettingsDialog open onOpenChange={setSettingsOpen} />
           </Suspense>
         )}
-      </div>
-    </SyncProvider>
+        </div>
+      </SyncProvider>
+    </PlayerProvider>
   );
 }
