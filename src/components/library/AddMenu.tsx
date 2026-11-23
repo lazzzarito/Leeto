@@ -74,7 +74,7 @@ export default function AddMenu({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".epub,.pdf,.fb2,.docx,.odt,.txt,.md,.markdown,.html,.htm,application/epub+zip,application/pdf,application/x-fictionbook+xml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,text/markdown,text/html"
+        accept=".epub,.pdf,.fb2,.docx,.odt,.cbz,.txt,.md,.markdown,.html,.htm,application/epub+zip,application/pdf,application/x-fictionbook+xml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,application/vnd.comicbook+zip,text/plain,text/markdown,text/html"
         multiple
         hidden
         className="sr-only"

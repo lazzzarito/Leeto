@@ -8,6 +8,7 @@ export const HTML_MIME = 'text/html';
 export const FB2_MIME = 'application/x-fictionbook+xml';
 export const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 export const ODT_MIME = 'application/vnd.oasis.opendocument.text';
+export const CBZ_MIME = 'application/vnd.comicbook+zip';
 
 export const BOOK_MIMES = [
   EPUB_MIME,
@@ -18,6 +19,7 @@ export const BOOK_MIMES = [
   FB2_MIME,
   DOCX_MIME,
   ODT_MIME,
+  CBZ_MIME,
 ];
 
 const EXTENSION_MIME: Record<string, string> = {
@@ -32,9 +34,10 @@ const EXTENSION_MIME: Record<string, string> = {
   fb2: FB2_MIME,
   docx: DOCX_MIME,
   odt: ODT_MIME,
+  cbz: CBZ_MIME,
 };
 
-const BOOK_EXTENSION = /\.(epub|pdf|txt|text|md|markdown|html|htm|fb2|docx|odt)$/i;
+const BOOK_EXTENSION = /\.(epub|pdf|txt|text|md|markdown|html|htm|fb2|docx|odt|cbz)$/i;
 
 export function isBookFile(name: string): boolean {
   return BOOK_EXTENSION.test(name);

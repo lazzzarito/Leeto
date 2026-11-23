@@ -176,6 +176,41 @@ describe('máquina de estados del reproductor', () => {
     expect(getProgressPercentage(aligned, 40)).toBe(25);
   });
 
+  it('calcula el progreso por páginas en libros sin palabras', () => {
+    const comic: LeetoChapter[] = [
+      {
+        index: 0,
+        title: 'Cómic',
+        blocks: [1, 2, 3, 4].map((page) => ({
+          id: `page${page}`,
+          type: 'image' as const,
+          assetId: `asset${page}`,
+        })),
+      },
+    ];
+    const state = playerReducer(createInitialState(), {
+      type: 'load',
+      clips: buildClips(comic),
+      wpm: 240,
+      speed: 1,
+      imageDurationMs: 6000,
+    });
+
+    expect(getProgressPercentage(state, 0)).toBe(0);
+    expect(
+      getProgressPercentage(playerReducer(state, { type: 'align', elapsedMs: 3000 }), 0),
+    ).toBe(12.5);
+    expect(
+      getProgressPercentage(playerReducer(state, { type: 'seek', clipIndex: 2 }), 0),
+    ).toBe(50);
+    expect(
+      getProgressPercentage(
+        playerReducer(state, { type: 'seek', clipIndex: 3, elapsedMs: 6000 }),
+        0,
+      ),
+    ).toBe(100);
+  });
+
   it('reporta errores y se reanuda desde el inicio tras ended', () => {
     const failed = playerReducer(loaded(), { type: 'error', message: 'sin voz' });
     expect(failed.status).toBe('error');

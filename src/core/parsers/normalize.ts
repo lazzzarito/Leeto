@@ -204,6 +204,10 @@ export function guessMimeType(path: string): string {
       return 'image/gif';
     case 'webp':
       return 'image/webp';
+    case 'bmp':
+      return 'image/bmp';
+    case 'avif':
+      return 'image/avif';
     case 'svg':
       return 'image/svg+xml';
     default:

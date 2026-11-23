@@ -17,5 +17,6 @@ export function formatFileType(mimeType: string): string {
   if (mimeType.includes('fictionbook')) return 'FB2';
   if (mimeType.includes('wordprocessingml')) return 'DOCX';
   if (mimeType.includes('opendocument.text')) return 'ODT';
+  if (mimeType.includes('comicbook')) return 'CBZ';
   return mimeType.split('/').pop()?.toUpperCase() || 'LIBRO';
 }

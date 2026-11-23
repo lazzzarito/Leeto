@@ -9,13 +9,13 @@
 
 ### 📖 Tus libros, a tu ritmo. Sin ruido, sin nube, sin complicaciones.
 
-**Leeto** convierte tus EPUB, PDF, FB2, DOCX, ODT y archivos de texto en una experiencia de lectura en forma de historias:
+**Leeto** convierte tus EPUB, PDF, FB2, DOCX, ODT, CBZ y archivos de texto en una experiencia de lectura en forma de historias:
 texto que se ilumina mientras avanza, imágenes que cobran vida y una biblioteca
 que siempre está contigo. Todo se queda en tu dispositivo. 🏠
 
 <br>
 
-`📚 EPUB + PDF + FB2 + DOCX/ODT + TXT/MD/HTML`　`🔒 100 % local`　`📴 Funciona sin internet`　`🎧 Voz opcional`　`🌙 Tema automático`
+`📚 EPUB + PDF + FB2 + DOCX/ODT + CBZ + TXT/MD/HTML`　`🔒 100 % local`　`📴 Funciona sin internet`　`🎧 Voz opcional`　`🌙 Tema automático`
 
 </div>
 
@@ -53,7 +53,7 @@ Desde entonces, arriba de todo verás un saludo que cambia con el día:
 
 - **🎬 Lectura en clips.** El texto se muestra completo y una suave luz guía la palabra activa. No hay saltos raros ni animaciones que distraigan.
 - **👆 Desliza y sigue.** Sube o baja para cambiar de fragmento. La lectura continúa, no se reinicia.
-- **🖼️ Imágenes con calma.** Aparecen arriba, con su pie debajo y un movimiento muy sutil, como una película tranquila.
+- **🖼️ Imágenes con calma.** Aparecen arriba, con su pie debajo y un movimiento muy sutil, como una película tranquila. En los CBZ el progreso avanza página a página.
 - **💬 Citas al instante.** Guarda el fragmento exacto que estás leyendo con un toque y una animación de «captura».
 - **🧭 Índice de verdad.** La tabla de contenidos de tu EPUB o PDF se respeta tal cual; en FB2, TXT, Markdown y HTML se genera a partir de sus encabezados.
 - **🎧 Escucha si quieres.** Activa la voz local y sigue el mismo ritmo visual. Si no quieres oír nada, también funciona perfecto.

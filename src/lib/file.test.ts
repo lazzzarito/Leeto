@@ -23,5 +23,6 @@ describe('formatFileType', () => {
     expect(formatFileType('application/x-fictionbook+xml')).toBe('FB2');
     expect(formatFileType('application/vnd.openxmlformats-officedocument.wordprocessingml.document')).toBe('DOCX');
     expect(formatFileType('application/vnd.oasis.opendocument.text')).toBe('ODT');
+    expect(formatFileType('application/vnd.comicbook+zip')).toBe('CBZ');
   });
 });

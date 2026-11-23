@@ -1,5 +1,13 @@
 import { hashBytes } from '@/lib/hash';
-import { detectMimeType, DOCX_MIME, EPUB_MIME, FB2_MIME, ODT_MIME, PDF_MIME } from './formats';
+import {
+  CBZ_MIME,
+  detectMimeType,
+  DOCX_MIME,
+  EPUB_MIME,
+  FB2_MIME,
+  ODT_MIME,
+  PDF_MIME,
+} from './formats';
 import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
 import { runParserWorker } from './workerClient';
 
@@ -12,7 +20,7 @@ export async function parseFile(
   const mimeType = detectMimeType(file);
   if (!mimeType) {
     throw new ParseError(
-      'Formato no soportado. Leeto admite EPUB, PDF con texto, FB2, DOCX, ODT, TXT, Markdown y HTML.',
+      'Formato no soportado. Leeto admite EPUB, PDF con texto, FB2, DOCX, ODT, CBZ, TXT, Markdown y HTML.',
       'INVALID_FORMAT',
     );
   }
@@ -46,11 +54,17 @@ export async function parseFile(
       : parseOdt(request, onProgress);
   }
 
+  if (mimeType === CBZ_MIME) {
+    const { parseCbz } = await import('./cbz');
+    return parseCbz(request, onProgress);
+  }
+
   const { parseText } = await import('./text');
   return parseText(request, onProgress);
 }
 
 export {
+  CBZ_MIME,
   detectMimeType,
   DOCX_MIME,
   EPUB_MIME,

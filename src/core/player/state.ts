@@ -129,11 +129,18 @@ export function getActiveWordIndex(state: PlayerState): number {
 export function getProgressPercentage(state: PlayerState, totalWordCount: number): number {
   const clip = state.clips[state.clipIndex];
   if (!clip) return 0;
+  const duration = getClipDuration(state);
+  const fraction = duration > 0 ? clamp(state.elapsedMs / duration, 0, 1) : 0;
+
+  // Libros sin texto (CBZ): el progreso avanza por páginas, no por palabras.
+  if (totalWordCount <= 0) {
+    const percentage = ((state.clipIndex + fraction) / state.clips.length) * 100;
+    return Math.round(clamp(percentage, 0, 100) * 10) / 10;
+  }
+
   const wordsBefore = state.clips
     .slice(0, state.clipIndex)
     .reduce((sum, item) => sum + item.wordCount, 0);
-  const duration = getClipDuration(state);
-  const fraction = duration > 0 ? clamp(state.elapsedMs / duration, 0, 1) : 0;
   const currentWords = clip.wordCount * fraction;
   return estimatePercentage(totalWordCount, wordsBefore + currentWords);
 }
