@@ -30,6 +30,7 @@ export function usePlayer(book: LeetoBook) {
   settingsRef.current = settings;
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedRef = useRef<string>();
+  const appliedProgressAtRef = useRef<number>();
 
   const flush = useCallback(() => {
     if (saveTimerRef.current) {
@@ -69,12 +70,16 @@ export function usePlayer(book: LeetoBook) {
   // Restaura el subtítulo guardado. Es idempotente: una escritura propia nunca
   // debe recargar el clip (eso reiniciaba el playhead y cortaba la voz).
   useEffect(() => {
+    // Un cambio remoto mientras se reproduce no debe mover el playhead ni cortar la voz.
+    if (stateRef.current.status === 'playing') return;
     const savedKey = progress ? `${progress.blockId}:${progress.segmentIndex ?? 0}` : 'new';
     if (progress && lastSavedRef.current === savedKey) return;
+    if (progress && appliedProgressAtRef.current === progress.updatedAt) return;
     const clipIndex = progress ? findClipIndex(clips, progress) : 0;
     const current = stateRef.current;
     if (current.clips.length > 0 && current.clipIndex === clipIndex) return;
     const currentSettings = settingsRef.current;
+    appliedProgressAtRef.current = progress?.updatedAt;
     dispatch({
       type: 'load',
       clips,
@@ -83,9 +88,9 @@ export function usePlayer(book: LeetoBook) {
       imageDurationMs: currentSettings.imageDurationMs ?? 6000,
       clipIndex,
       elapsedMs: 0,
-      status: current.status === 'playing' ? 'playing' : 'paused',
+      status: 'paused',
     });
-  }, [clips, progress?.blockId, progress?.segmentIndex]);
+  }, [clips, progress?.blockId, progress?.segmentIndex, progress?.updatedAt]);
 
   useEffect(() => {
     dispatch({ type: 'setWpm', wpm: settings.wpm });
