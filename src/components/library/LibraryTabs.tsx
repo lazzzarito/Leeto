@@ -2,6 +2,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import {
   countBooksByStatus,
   filterBooks,
+  filterBooksByFavorite,
   filterBooksByStatus,
   filterQuotes,
   groupByAuthor,
@@ -63,6 +64,7 @@ export default function LibraryTabs({
   const visibleBooks = filterBooks(books, query);
   const visibleReading = filterBooksByStatus(visibleBooks, progressByBook, 'reading');
   const visibleFinished = filterBooksByStatus(visibleBooks, progressByBook, 'finished');
+  const visibleFavorites = filterBooksByFavorite(visibleBooks);
   const visibleQuotes = filterQuotes(quotes, query);
 
   return (
@@ -76,6 +78,9 @@ export default function LibraryTabs({
         </Tabs.Trigger>
         <Tabs.Trigger value="finished" className={TRIGGER_CLASS}>
           Leídos ({statusCounts.finished})
+        </Tabs.Trigger>
+        <Tabs.Trigger value="favorites" className={TRIGGER_CLASS}>
+          Favoritos ({visibleFavorites.length})
         </Tabs.Trigger>
         <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
           Todos ({books.length})
@@ -107,6 +112,16 @@ export default function LibraryTabs({
         ) : (
           <NoResults
             message={query ? undefined : 'Todavía no has terminado ningún libro.'}
+          />
+        )}
+      </Tabs.Content>
+
+      <Tabs.Content value="favorites" className="focus-visible:outline-none">
+        {visibleFavorites.length > 0 ? (
+          <BookGrid books={visibleFavorites} onEdit={onEdit} onDelete={onDelete} />
+        ) : (
+          <NoResults
+            message={query ? undefined : 'Marca tus libros favoritos desde el menú de cada portada.'}
           />
         )}
       </Tabs.Content>

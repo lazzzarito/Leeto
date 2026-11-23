@@ -1,9 +1,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { BookOpenText, Clock3, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { BookOpenText, Clock3, MoreHorizontal, Pencil, Star, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Marquee from '@/components/ui/Marquee';
 import { cn } from '@/lib/cn';
+import { booksRepo } from '@/core/db/repositories';
 import { useSettings } from '@/core/db/settings';
 import { useAssetUrl } from '@/hooks/useAssetUrl';
 import { useBookProgress } from '@/hooks/useLibrary';
@@ -80,8 +81,11 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
         </div>
 
         <div className="mt-3 space-y-0.5">
-          <h3 className="text-sm font-medium" title={book.title}>
+          <h3 className="flex items-center gap-1.5 text-sm font-medium" title={book.title}>
             <Marquee text={book.title} />
+            {book.favorite && (
+              <Star className="text-primary size-3.5 shrink-0 fill-current" aria-label="Favorito" />
+            )}
           </h3>
           <p className="text-muted-foreground truncate text-xs" title={book.author}>
             {book.author}
@@ -128,6 +132,16 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
             sideOffset={4}
             className="bg-popover text-popover-foreground z-50 min-w-40 rounded-lg border border-border p-1 shadow-lg"
           >
+            <DropdownMenu.Item
+              className={MENU_ITEM_CLASS}
+              onSelect={() => void booksRepo.toggleFavorite(book.id)}
+            >
+              <Star
+                className={cn('size-4', book.favorite && 'text-primary fill-current')}
+                aria-hidden="true"
+              />
+              {book.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            </DropdownMenu.Item>
             <DropdownMenu.Item
               className={MENU_ITEM_CLASS}
               onSelect={() => onEdit(book)}

@@ -20,16 +20,19 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       title="Configuración"
       description="Preferencias guardadas solo en este dispositivo."
     >
-      <div className="space-y-8 pb-8">
-        <section aria-labelledby="settings-theme-heading" className="space-y-3">
+      <div className="space-y-6 pb-8">
+        <section
+          aria-labelledby="settings-theme-heading"
+          className="space-y-4 rounded-xl border border-border bg-card p-4"
+        >
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 id="settings-theme-heading" className="text-base font-medium">
-                Tema de lectura
+                Apariencia
               </h2>
               <p className="text-muted-foreground text-sm">
                 {themeMode === 'system'
-                  ? `Automático según tu dispositivo (${theme === 'oled' ? 'oscuro' : 'claro'}).`
+                  ? `Tema automático según tu dispositivo (${theme === 'oled' ? 'oscuro' : 'claro'}).`
                   : 'Tema fijado manualmente.'}
               </p>
             </div>

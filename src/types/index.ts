@@ -57,6 +57,7 @@ export interface LeetoBook {
   mimeType: string; // application/epub+zip | application/pdf
   saga?: string;
   volumeNumber?: number;
+  favorite?: boolean;
   chapters: LeetoChapter[];
   toc?: TocEntry[];
   totalWordCount: number;

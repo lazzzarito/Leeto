@@ -3,6 +3,7 @@ import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
 import {
   countBooksByStatus,
   filterBooks,
+  filterBooksByFavorite,
   filterBooksByStatus,
   filterQuotes,
   groupByAuthor,
@@ -106,6 +107,15 @@ describe('vistas de biblioteca', () => {
     expect(filterBooksByStatus(books, byBook, 'reading').map((item) => item.id)).toEqual(['a']);
     expect(filterBooksByStatus(books, byBook, 'finished').map((item) => item.id)).toEqual(['b']);
     expect(countBooksByStatus(byBook)).toEqual({ reading: 1, finished: 1 });
+  });
+
+  it('filtra solo los libros marcados como favoritos', () => {
+    const favorites = [books[0]!, books[2]!].map((item) => ({ ...item, favorite: true }));
+
+    expect(filterBooksByFavorite([...favorites, books[1]!]).map((item) => item.id)).toEqual([
+      'a',
+      'c',
+    ]);
   });
 
   it('resuelve el capítulo de una cita', () => {

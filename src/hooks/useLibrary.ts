@@ -17,6 +17,11 @@ export function useBookCount(): number {
   return useLiveQuery(() => db.books.count(), [], 0);
 }
 
+/** Número de favoritos; solo se recalcula cuando cambia la biblioteca. */
+export function useFavoriteCount(): number {
+  return useLiveQuery(() => db.books.filter((book) => book.favorite === true).count(), [], 0);
+}
+
 export function useBookProgress(bookId?: string): ReadingProgress | undefined {
   return useLiveQuery(() => (bookId ? db.progress.get(bookId) : undefined), [bookId]);
 }

@@ -26,7 +26,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newId } from '@/lib/ids';
 import type { LeetoBook } from '@/types';
 
-const TABS = ['reading', 'finished', 'all', 'authors', 'sagas', 'quotes'] as const;
+const TABS = ['reading', 'finished', 'favorites', 'all', 'authors', 'sagas', 'quotes'] as const;
 
 function hasFiles(event: DragEvent): boolean {
   return Array.from(event.dataTransfer.types).includes('Files');

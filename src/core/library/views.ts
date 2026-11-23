@@ -35,6 +35,10 @@ export function countBooksByStatus(progressByBook: Map<string, ReadingProgress>)
   return counts;
 }
 
+export function filterBooksByFavorite(books: LeetoBook[]): LeetoBook[] {
+  return books.filter((book) => book.favorite === true);
+}
+
 /** Normaliza acentos y mayúsculas para búsquedas tolerantes. */
 export function normalizeSearchText(value: string): string {
   return value

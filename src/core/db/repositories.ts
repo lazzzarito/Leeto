@@ -6,6 +6,10 @@ export const booksRepo = {
   get: (id: string) => db.books.get(id),
   put: (book: LeetoBook) => db.books.put(book),
   bulkPut: (books: LeetoBook[]) => db.books.bulkPut(books),
+  toggleFavorite: async (id: string) => {
+    const book = await db.books.get(id);
+    if (book) await db.books.put({ ...book, favorite: !book.favorite });
+  },
   delete: (id: string) => db.books.delete(id),
 };
 

@@ -1,10 +1,10 @@
-import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Users } from 'lucide-react';
+import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Star, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import { useSettings } from '@/core/db/settings';
 import { countBooksByStatus } from '@/core/library/views';
-import { useBookCount, useProgressByBook } from '@/hooks/useLibrary';
+import { useBookCount, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
 import { cn } from '@/lib/cn';
 import { greetingForName } from '@/lib/greeting';
@@ -12,6 +12,7 @@ import { greetingForName } from '@/lib/greeting';
 const NAV_ITEMS = [
   { value: 'reading', label: 'Leyendo', Icon: BookOpenText },
   { value: 'finished', label: 'Leídos', Icon: BookCheck },
+  { value: 'favorites', label: 'Favoritos', Icon: Star },
   { value: 'all', label: 'Todos', Icon: Library },
   { value: 'authors', label: 'Autores', Icon: Users },
   { value: 'sagas', label: 'Sagas', Icon: Layers },
@@ -26,6 +27,7 @@ export default function AppShell() {
   const activeTab = searchParams.get('tab') ?? 'all';
   const { userName } = useSettings();
   const bookCount = useBookCount();
+  const favoriteCount = useFavoriteCount();
   const statusCounts = countBooksByStatus(useProgressByBook());
   const greeting = greetingForName(userName);
   const [compact, setCompact] = useState(false);
@@ -65,6 +67,7 @@ export default function AppShell() {
   const navCount = (value: (typeof NAV_ITEMS)[number]['value']): number | undefined => {
     if (value === 'reading') return statusCounts.reading;
     if (value === 'finished') return statusCounts.finished;
+    if (value === 'favorites') return favoriteCount;
     if (value === 'all') return bookCount;
     return undefined;
   };

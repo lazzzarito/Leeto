@@ -517,6 +517,8 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         settings={settings}
+        book={book}
+        voices={tts.voices}
       />
 
       <TocDrawer

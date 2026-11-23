@@ -81,14 +81,17 @@ export default function SyncSettings() {
   };
 
   return (
-    <section aria-labelledby="sync-heading" className="space-y-4 border-t border-border pt-6">
+    <section
+      aria-labelledby="sync-heading"
+      className="space-y-5 rounded-xl border border-border bg-card p-4"
+    >
       <div>
         <h2 id="sync-heading" className="text-base font-medium">
-          Sincronización local-first
+          Sincronización
         </h2>
         <p className="text-muted-foreground text-sm">
-          Progreso, citas y referencias en un archivo JSON. Nunca se reemplaza el estado global: se
-          fusiona registro a registro y se guarda un backup antes de escribir.
+          Progreso, citas y referencias en un archivo JSON. Se fusiona registro a registro y se guarda
+          un backup antes de escribir.
         </p>
       </div>
 
@@ -101,7 +104,7 @@ export default function SyncSettings() {
         Activar sincronización automática
       </label>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-2">
         <label className="block">
           <span className="text-muted-foreground mb-1 block text-xs font-medium">Proveedor</span>
           <select
@@ -191,7 +194,7 @@ export default function SyncSettings() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
         <button
           type="button"
           onClick={() => void handleSync()}
