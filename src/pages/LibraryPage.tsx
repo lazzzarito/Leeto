@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Library, UploadCloud } from 'lucide-react';
+import { UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
@@ -138,16 +138,7 @@ export default function LibraryPage() {
       {booksLoading ? (
         <LibrarySkeleton />
       ) : books.length === 0 ? (
-        <section aria-label="Biblioteca vacía" className="space-y-4">
-          <div className="text-center">
-            <div className="bg-muted mx-auto mb-3 flex size-12 items-center justify-center rounded-full">
-              <Library className="text-muted-foreground size-5" aria-hidden="true" />
-            </div>
-            <h2 className="text-lg font-medium">No hay libros</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Importa tu primer libro: {BOOK_FORMAT_LABEL}.
-            </p>
-          </div>
+        <section aria-label="Biblioteca vacía">
           <Dropzone onFiles={(files) => void importFiles(files)} />
         </section>
       ) : (

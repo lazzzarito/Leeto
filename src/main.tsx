@@ -16,9 +16,6 @@ ReactDOM.createRoot(container).render(
   </React.StrictMode>,
 );
 
-// La portada inline desaparece cuando React ya pintó la nuestra.
-requestAnimationFrame(() => document.getElementById('boot-splash')?.remove());
-
 // Solo en producción: en dev el SW cachearía módulos calientes y rompería HMR.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {

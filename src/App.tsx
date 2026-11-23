@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import Onboarding from '@/components/onboarding/Onboarding';
-import Preloader from '@/components/ui/Preloader';
 import { ensureSettings, updateSettings, useSettings, useSettingsLoaded } from '@/core/db/settings';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router';
@@ -12,21 +11,23 @@ export default function App() {
   useTheme();
   const settingsReady = useSettingsLoaded();
   const { onboardingCompleted } = useSettings();
-  const [booted, setBooted] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
+  const ready = settingsReady || timedOut;
 
   useEffect(() => {
     void ensureSettings();
   }, []);
 
-  useEffect(() => {
-    if (settingsReady) setBooted(true);
-  }, [settingsReady]);
-
   // Si IndexedDB no está disponible, la app sigue abriéndose.
   useEffect(() => {
-    const timer = window.setTimeout(() => setBooted(true), MAX_SPLASH_MS);
+    const timer = window.setTimeout(() => setTimedOut(true), MAX_SPLASH_MS);
     return () => window.clearTimeout(timer);
   }, []);
+
+  // La portada inline se retira en el mismo commit en que React ya tiene contenido.
+  useLayoutEffect(() => {
+    if (ready) document.getElementById('boot-splash')?.remove();
+  }, [ready]);
 
   const finishOnboarding = useCallback((name: string) => {
     void updateSettings({ userName: name, onboardingCompleted: true });
@@ -34,8 +35,7 @@ export default function App() {
 
   return (
     <>
-      <Preloader visible={!booted} />
-      {booted && !onboardingCompleted && <Onboarding onFinish={finishOnboarding} />}
+      {ready && !onboardingCompleted && <Onboarding onFinish={finishOnboarding} />}
       <RouterProvider router={router} />
     </>
   );

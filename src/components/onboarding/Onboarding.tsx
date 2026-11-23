@@ -122,7 +122,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         {step === 0 && (
           <div className="mx-auto w-full max-w-md text-center">
             <div className="relative mx-auto mb-8 flex size-28 items-center justify-center">
-              <span className="preloader-ring border-primary/25 border-t-primary absolute inset-0 rounded-full border-2" />
+              <span className="onboard-ring border-primary/25 border-t-primary absolute inset-0 rounded-full border-2" />
               <span className="bg-background border-primary/30 flex size-16 items-center justify-center rounded-2xl border shadow-xl shadow-black/20">
                 <img
                   src="/icons/icon-192.webp"
