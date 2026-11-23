@@ -21,12 +21,12 @@ import {
   pickBookDirectory,
 } from '@/core/import/folder';
 import { useImport } from '@/hooks/useImport';
-import { useBooks, useBooksLoading, useQuotes } from '@/hooks/useLibrary';
+import { useBooks, useBooksLoading, useProgressByBook, useQuotes } from '@/hooks/useLibrary';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newId } from '@/lib/ids';
 import type { LeetoBook } from '@/types';
 
-const TABS = ['all', 'authors', 'sagas', 'quotes'] as const;
+const TABS = ['reading', 'finished', 'all', 'authors', 'sagas', 'quotes'] as const;
 
 function hasFiles(event: DragEvent): boolean {
   return Array.from(event.dataTransfer.types).includes('Files');
@@ -36,6 +36,7 @@ export default function LibraryPage() {
   const books = useBooks();
   const booksLoading = useBooksLoading();
   const quotes = useQuotes();
+  const progressByBook = useProgressByBook();
   const settings = useSettings();
   const savedSettings = useLiveQuery(() => getSettings(), [], settings);
   const roots = savedSettings.scanRoots ?? [];
@@ -150,6 +151,7 @@ export default function LibraryPage() {
         <LibraryTabs
           books={books}
           quotes={quotes}
+          progressByBook={progressByBook}
           query={query}
           value={tab}
           onValueChange={(value) => setParam('tab', value)}

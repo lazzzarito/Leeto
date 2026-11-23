@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { LeetoBook, SavedQuote } from '@/types';
+import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
 import {
+  countBooksByStatus,
   filterBooks,
+  filterBooksByStatus,
   filterQuotes,
   groupByAuthor,
   groupBySaga,
@@ -84,6 +86,26 @@ describe('vistas de biblioteca', () => {
     expect(authors[0]?.label).toBe('Ana Autora');
     expect(authors.at(-1)?.label).toBe('Autor desconocido');
     expect(groupBySaga([...books, book({ id: 'e', title: 'Anónimo' })])[2]?.label).toBe('Sin saga');
+  });
+
+  it('separa libros en lectura y leídos según su progreso', () => {
+    const progress = (bookId: string, percentage: number): ReadingProgress => ({
+      bookId,
+      chapterIndex: 0,
+      blockId: 'b1',
+      percentage,
+      updatedAt: 0,
+      deviceId: 'dispositivo',
+    });
+    const byBook = new Map([
+      ['a', progress('a', 42)],
+      ['b', progress('b', 100)],
+      ['c', progress('c', 0)],
+    ]);
+
+    expect(filterBooksByStatus(books, byBook, 'reading').map((item) => item.id)).toEqual(['a']);
+    expect(filterBooksByStatus(books, byBook, 'finished').map((item) => item.id)).toEqual(['b']);
+    expect(countBooksByStatus(byBook)).toEqual({ reading: 1, finished: 1 });
   });
 
   it('resuelve el capítulo de una cita', () => {

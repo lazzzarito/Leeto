@@ -1,9 +1,38 @@
-import type { LeetoBook, SavedQuote } from '@/types';
+import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
 
 export interface BookGroup {
   key: string;
   label: string;
   books: LeetoBook[];
+}
+
+export type ReadingStatus = 'reading' | 'finished';
+
+/** El progreso se guarda redondeado a un decimal; 100 % marca el final. */
+const FINISHED_PERCENTAGE = 99.5;
+
+export function getReadingStatus(progress?: ReadingProgress): ReadingStatus | undefined {
+  const percentage = progress?.percentage ?? 0;
+  if (percentage >= FINISHED_PERCENTAGE) return 'finished';
+  if (percentage > 0) return 'reading';
+  return undefined;
+}
+
+export function filterBooksByStatus(
+  books: LeetoBook[],
+  progressByBook: Map<string, ReadingProgress>,
+  status: ReadingStatus,
+): LeetoBook[] {
+  return books.filter((book) => getReadingStatus(progressByBook.get(book.id)) === status);
+}
+
+export function countBooksByStatus(progressByBook: Map<string, ReadingProgress>): Record<ReadingStatus, number> {
+  const counts: Record<ReadingStatus, number> = { reading: 0, finished: 0 };
+  for (const progress of progressByBook.values()) {
+    const status = getReadingStatus(progress);
+    if (status) counts[status] += 1;
+  }
+  return counts;
 }
 
 /** Normaliza acentos y mayúsculas para búsquedas tolerantes. */

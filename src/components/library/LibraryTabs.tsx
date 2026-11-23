@@ -1,12 +1,20 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { filterBooks, filterQuotes, groupByAuthor, groupBySaga } from '@/core/library/views';
-import type { LeetoBook, SavedQuote } from '@/types';
+import {
+  countBooksByStatus,
+  filterBooks,
+  filterBooksByStatus,
+  filterQuotes,
+  groupByAuthor,
+  groupBySaga,
+} from '@/core/library/views';
+import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
 import BookCard from './BookCard';
 import QuoteList from './QuoteList';
 
 interface LibraryTabsProps {
   books: LeetoBook[];
   quotes: SavedQuote[];
+  progressByBook: Map<string, ReadingProgress>;
   query: string;
   value: string;
   onValueChange: (value: string) => void;
@@ -15,14 +23,14 @@ interface LibraryTabsProps {
 }
 
 const TRIGGER_CLASS =
-  'bg-muted/60 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex h-9 w-full items-center justify-center rounded-full px-2 text-xs font-medium transition-colors sm:text-sm';
+  'bg-muted/60 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-xs font-medium transition-colors sm:text-sm';
 
 const GRID_CLASS = 'grid auto-rows-[8px] grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
 
-function NoResults() {
+function NoResults({ message = 'No hay resultados para esta búsqueda.' }: { message?: string }) {
   return (
     <p className="text-muted-foreground rounded-xl border border-border bg-card px-6 py-10 text-center text-sm">
-      No hay resultados para esta búsqueda.
+      {message}
     </p>
   );
 }
@@ -44,21 +52,31 @@ function BookGrid({
 export default function LibraryTabs({
   books,
   quotes,
+  progressByBook,
   query,
   value,
   onValueChange,
   onEdit,
   onDelete,
 }: LibraryTabsProps) {
+  const statusCounts = countBooksByStatus(progressByBook);
   const visibleBooks = filterBooks(books, query);
+  const visibleReading = filterBooksByStatus(visibleBooks, progressByBook, 'reading');
+  const visibleFinished = filterBooksByStatus(visibleBooks, progressByBook, 'finished');
   const visibleQuotes = filterQuotes(quotes, query);
 
   return (
     <Tabs.Root value={value} onValueChange={onValueChange} className="space-y-4">
       <Tabs.List
         aria-label="Vistas de la biblioteca"
-        className="bg-background/85 sticky top-[calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))] z-20 grid w-full grid-cols-4 gap-1.5 px-1 pt-3 pb-2.5 backdrop-blur lg:hidden"
+        className="bg-background/85 sticky top-[calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))] z-20 flex w-full gap-1.5 overflow-x-auto px-1 pt-3 pb-2.5 backdrop-blur lg:hidden"
       >
+        <Tabs.Trigger value="reading" className={TRIGGER_CLASS}>
+          Leyendo ({statusCounts.reading})
+        </Tabs.Trigger>
+        <Tabs.Trigger value="finished" className={TRIGGER_CLASS}>
+          Leídos ({statusCounts.finished})
+        </Tabs.Trigger>
         <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
           Todos ({books.length})
         </Tabs.Trigger>
@@ -72,6 +90,26 @@ export default function LibraryTabs({
           Citas ({quotes.length})
         </Tabs.Trigger>
       </Tabs.List>
+
+      <Tabs.Content value="reading" className="focus-visible:outline-none">
+        {visibleReading.length > 0 ? (
+          <BookGrid books={visibleReading} onEdit={onEdit} onDelete={onDelete} />
+        ) : (
+          <NoResults
+            message={query ? undefined : 'Todavía no hay libros en lectura.'}
+          />
+        )}
+      </Tabs.Content>
+
+      <Tabs.Content value="finished" className="focus-visible:outline-none">
+        {visibleFinished.length > 0 ? (
+          <BookGrid books={visibleFinished} onEdit={onEdit} onDelete={onDelete} />
+        ) : (
+          <NoResults
+            message={query ? undefined : 'Todavía no has terminado ningún libro.'}
+          />
+        )}
+      </Tabs.Content>
 
       <Tabs.Content value="all" className="focus-visible:outline-none">
         {visibleBooks.length > 0 ? (

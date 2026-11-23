@@ -1,14 +1,17 @@
-import { Layers, Library, Quote, Settings2, Users } from 'lucide-react';
+import { BookCheck, BookOpenText, Layers, Library, Quote, Settings2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import SettingsDialog from '@/components/settings/SettingsDialog';
 import { useSettings } from '@/core/db/settings';
-import { useBookCount } from '@/hooks/useLibrary';
+import { countBooksByStatus } from '@/core/library/views';
+import { useBookCount, useProgressByBook } from '@/hooks/useLibrary';
 import { SyncProvider } from '@/hooks/useSyncContext';
 import { cn } from '@/lib/cn';
 import { greetingForName } from '@/lib/greeting';
 
 const NAV_ITEMS = [
+  { value: 'reading', label: 'Leyendo', Icon: BookOpenText },
+  { value: 'finished', label: 'Leídos', Icon: BookCheck },
   { value: 'all', label: 'Todos', Icon: Library },
   { value: 'authors', label: 'Autores', Icon: Users },
   { value: 'sagas', label: 'Sagas', Icon: Layers },
@@ -23,6 +26,7 @@ export default function AppShell() {
   const activeTab = searchParams.get('tab') ?? 'all';
   const { userName } = useSettings();
   const bookCount = useBookCount();
+  const statusCounts = countBooksByStatus(useProgressByBook());
   const greeting = greetingForName(userName);
   const [compact, setCompact] = useState(false);
 
@@ -56,6 +60,13 @@ export default function AppShell() {
     if (open) next.set('settings', '1');
     else next.delete('settings');
     setSearchParams(next, { replace: !open });
+  };
+
+  const navCount = (value: (typeof NAV_ITEMS)[number]['value']): number | undefined => {
+    if (value === 'reading') return statusCounts.reading;
+    if (value === 'finished') return statusCounts.finished;
+    if (value === 'all') return bookCount;
+    return undefined;
   };
 
   const tabHref = (value: string) => {
@@ -99,25 +110,28 @@ export default function AppShell() {
             <p className="text-muted-foreground px-2 pb-1 text-[11px] font-medium tracking-wide uppercase">
               Biblioteca
             </p>
-            {NAV_ITEMS.map(({ value, label, Icon }) => (
-              <Link
-                key={value}
-                to={tabHref(value)}
-                aria-current={activeTab === value ? 'page' : undefined}
-                className={cn(
-                  'text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors',
-                  activeTab === value && 'bg-primary/10 text-foreground font-medium',
-                )}
-              >
-                <Icon className="size-4" aria-hidden="true" />
-                {label}
-                {value === 'all' && (
-                  <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px] tabular-nums">
-                    {bookCount}
-                  </span>
-                )}
-              </Link>
-            ))}
+            {NAV_ITEMS.map(({ value, label, Icon }) => {
+              const count = navCount(value);
+              return (
+                <Link
+                  key={value}
+                  to={tabHref(value)}
+                  aria-current={activeTab === value ? 'page' : undefined}
+                  className={cn(
+                    'text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors',
+                    activeTab === value && 'bg-primary/10 text-foreground font-medium',
+                  )}
+                >
+                  <Icon className="size-4" aria-hidden="true" />
+                  {label}
+                  {count !== undefined && (
+                    <span className="bg-muted text-muted-foreground ml-auto rounded-full px-2 py-0.5 text-[11px] tabular-nums">
+                      {count}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="mt-auto space-y-1">
