@@ -1,20 +1,19 @@
 /* Service worker del shell de Leeto: cache-first para assets, network-first para navegación. */
-const CACHE = 'leeto-shell-v1';
-const SHELL = [
-  '/',
-  '/index.html',
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/icon-maskable-512.png',
-  '/manifest.webmanifest',
-];
+const CACHE = 'leeto-shell-' + (self.__CACHE_VERSION__ || 'dev');
+const PRECACHE = self.__PRECACHE__ || [];
+const INDEX = '/index.html';
+
+function store(request, response) {
+  if (!response.ok || response.type !== 'basic') return;
+  const copy = response.clone();
+  void caches.open(CACHE).then((cache) => cache.put(request, copy));
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(SHELL))
+      .then((cache) => Promise.allSettled(PRECACHE.map((path) => cache.add(path))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -45,26 +44,21 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          void caches.open(CACHE).then((cache) => cache.put('/index.html', copy));
+          store(INDEX, response);
           return response;
         })
-        .catch(() => caches.match('/index.html')),
+        .catch(() => caches.match(INDEX, { ignoreVary: true })),
     );
     return;
   }
 
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((response) => {
-          if (response.ok && response.type === 'basic') {
-            const copy = response.clone();
-            void caches.open(CACHE).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        }),
-    ),
+    caches.match(request, { ignoreVary: true }).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        store(request, response);
+        return response;
+      });
+    }),
   );
 });
