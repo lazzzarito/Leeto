@@ -2,6 +2,11 @@ import type { ReadingProgress, SavedQuote, SyncEnvelope } from '@/types';
 
 type LibraryRef = NonNullable<SyncEnvelope['libraryRefs']>[string];
 
+/** Orden por code point: no depende del idioma ni de la versión de ICU del dispositivo. */
+function compareText(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 export interface MergeResult {
   envelope: SyncEnvelope;
   progress: ReadingProgress[];
@@ -16,7 +21,7 @@ export function stableStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
   const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-    a.localeCompare(b),
+    compareText(a, b),
   );
   return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`).join(',')}}`;
 }
@@ -43,7 +48,7 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
 function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
   if (a.updatedAt !== b.updatedAt) return a.updatedAt - b.updatedAt;
   // Desempate determinista especificado en §7.2.
-  return a.deviceId.localeCompare(b.deviceId);
+  return compareText(a.deviceId, b.deviceId);
 }
 
 function compareQuotes(a: SavedQuote, b: SavedQuote): number {
@@ -52,12 +57,12 @@ function compareQuotes(a: SavedQuote, b: SavedQuote): number {
   const aDeleted = a.deletedAt ?? 0;
   const bDeleted = b.deletedAt ?? 0;
   if (aDeleted !== bDeleted) return aDeleted - bDeleted;
-  return stableStringify(a).localeCompare(stableStringify(b));
+  return compareText(stableStringify(a), stableStringify(b));
 }
 
 function compareRefs(a: LibraryRef, b: LibraryRef): number {
   if (a.updatedAt !== b.updatedAt) return a.updatedAt - b.updatedAt;
-  return a.fileName.localeCompare(b.fileName);
+  return compareText(a.fileName, b.fileName);
 }
 
 /** Merge por registro: nunca reemplaza el sobre global. Conmutativo en su contenido. */

@@ -1,6 +1,6 @@
 import { db } from '@/core/db/db';
 import type { SyncEnvelope } from '@/types';
-import { buildEnvelope } from './envelope';
+import { buildEnvelope, isValidProgress, isValidQuote } from './envelope';
 import { mergeEnvelopes, type MergeResult } from './merge';
 
 /** Estado local completo, serializado al sobre portable. */
@@ -15,9 +15,11 @@ export async function loadLocalEnvelope(deviceId: string, updatedAt = Date.now()
 
 /** Persiste el resultado del merge en una sola transacción (tombstones incluidos). */
 export async function applyMergeResult(result: MergeResult): Promise<void> {
+  const progress = result.progress.filter(isValidProgress);
+  const quotes = result.quotes.filter(isValidQuote);
   await db.transaction('rw', db.progress, db.quotes, async () => {
-    if (result.progress.length) await db.progress.bulkPut(result.progress);
-    if (result.quotes.length) await db.quotes.bulkPut(result.quotes);
+    if (progress.length) await db.progress.bulkPut(progress);
+    if (quotes.length) await db.quotes.bulkPut(quotes);
   });
 }
 

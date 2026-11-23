@@ -18,6 +18,7 @@ import {
   liveQuotes,
   mergeEnvelopes,
   prepareForWrite,
+  stableStringify,
 } from './merge';
 
 function progress(bookId: string, deviceId: string, updatedAt: number): ReadingProgress {
@@ -88,6 +89,26 @@ describe('sobre de sincronización', () => {
     expect(() => parseEnvelope('{')).toThrow(/JSON válido/);
     expect(() => parseEnvelope('{"schemaVersion":2}')).toThrow(/inválido|no soportada/);
   });
+
+  it('rechaza registros sin clave primaria o con fechas inválidas', () => {
+    const broken = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 100)] }, 100);
+    broken.progress.book_1 = { ...progress('book_1', 'dev_A', 100), bookId: '' };
+    expect(() => parseEnvelope(serializeEnvelope(broken))).toThrow(/inválido/);
+
+    const badDate = envelope('dev_A', { quotes: [quote('q_1', 100)] }, 100);
+    badDate.quotes.q_1 = { ...quote('q_1', 100), updatedAt: Number.NaN };
+    expect(() => parseEnvelope(serializeEnvelope(badDate))).toThrow(/inválido/);
+
+    const badRef = envelope('dev_A', {}, 100);
+    badRef.libraryRefs = { book_1: { id: 'book_1', fileName: null as never, fileSize: 1, updatedAt: 100 } };
+    expect(() => parseEnvelope(serializeEnvelope(badRef))).toThrow(/inválido/);
+  });
+
+  it('rechaza relojes de dispositivo no numéricos', () => {
+    const broken = envelope('dev_A', {}, 100);
+    broken.devices.dev_B = null as never;
+    expect(() => parseEnvelope(serializeEnvelope(broken))).toThrow(/inválido/);
+  });
 });
 
 describe('merge por registro', () => {
@@ -136,6 +157,10 @@ describe('merge por registro', () => {
   it('no marca cambios si el remoto es idéntico', () => {
     const same = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 100)] }, 100);
     expect(mergeEnvelopes(same, same).changed).toBe(false);
+  });
+
+  it('ordena las claves por code point, sin depender del idioma del dispositivo', () => {
+    expect(stableStringify({ a: 1, Z: 2, Á: 3 })).toBe('{"Z":2,"a":1,"Á":3}');
   });
 
   it('prepara la escritura con el dispositivo actual sin retroceder timestamps', () => {
@@ -198,5 +223,18 @@ describe('aplicación local del merge', () => {
     expect(await db.progress.get('book_2')).toMatchObject({ percentage: 42 });
     expect(await db.quotes.get('q_1')).toMatchObject({ deletedAt: 200 });
     expect(await db.quotes.get('q_2')).toMatchObject({ excerpt: 'Fragmento' });
+  });
+
+  it('descarta registros malformados antes de escribir en IndexedDB', async () => {
+    const remote = {
+      ...envelope('dev_B', {}, 200),
+      progress: { roto: { bookId: '', updatedAt: 200 } },
+      quotes: { rota: {} },
+    } as unknown as SyncEnvelope;
+    const result = mergeEnvelopes(await loadLocalEnvelope('dev_A', 100), remote);
+
+    await expect(applyMergeResult(result)).resolves.toBeUndefined();
+    expect(await db.progress.count()).toBe(0);
+    expect(await db.quotes.count()).toBe(0);
   });
 });
