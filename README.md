@@ -37,13 +37,14 @@
 
 ## La primera apertura
 
-La primera vez, Leeto te recibe con un pequeño recorrido y te pregunta tu nombre.
-Desde entonces, arriba de todo verás un saludo que cambia con el día:
-**«Buenos días, Juan»**, **«Buenas tardes, Laura»** o **«Buenas noches, Pepe»**. ☀️🌆🌙
+La primera vez, Leeto te recibe con un recorrido de dos pasos: bienvenida y gestos.
+No pide nombre ni permisos especiales: solo abres los archivos que tú eliges, y tu progreso se queda en este dispositivo. Después, pulsa **Añadir** para cargar tus libros.
 
-| La bienvenida | Tus gestos | Tu nombre |
-| :---: | :---: | :---: |
-| <img src="docs/screens/01-onboarding-bienvenida.png" alt="Pantalla de bienvenida" width="220"> | <img src="docs/screens/02-onboarding-gestos.png" alt="Gestos del lector" width="220"> | <img src="docs/screens/03-onboarding-nombre.png" alt="Nombre para personalizar el saludo" width="220"> |
+Bajo el logo verás siempre la versión y el canal, por ejemplo **v0.1.0 · Beta**.
+
+| La bienvenida | Tus gestos |
+| :---: | :---: |
+| <img src="docs/screens/01-onboarding-bienvenida.png" alt="Pantalla de bienvenida" width="220"> | <img src="docs/screens/02-onboarding-gestos.png" alt="Gestos del lector" width="220"> |
 
 ---
 
@@ -70,13 +71,22 @@ Tus libros, tu progreso y tus citas viven en tu dispositivo. Si decides sincroni
 usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 > 📴 **Offline de verdad.** Una vez abierta, la app sigue funcionando aunque te quedes sin conexión.
+> En Android el APK se compila con `allowBackup="false"`, así que ni la biblioteca ni el progreso se envían a la nube.
+
+---
+
+## 🤖 App de Android
+
+En la web de Android aparece un aviso cerrable para descargar el APK; también está en **Ajustes → App de Android**. El archivo se sirve como estático desde `public/downloads/` con un nombre que incluye versión y canal, por ejemplo `Leeto-0.1.0-beta.apk`.
+
+Dentro de la APK, la voz usa el `TextToSpeech` nativo y un servicio en primer plano: la reproducción continúa al salir de la app y la notificación del sistema ofrece anterior, play/pausa, siguiente y cierre. El header muestra un pequeño indicador centrado mientras se escucha.
 
 ---
 
 ## 🚀 Empieza en tres pasos
 
-1. **Abre Leeto** y dinos cómo te llamas. 👋
-2. **Añade libros** con «Añadir» (archivos sueltos, una carpeta completa o raíces guardadas) o arrástralos a la pantalla. 📥
+1. **Abre Leeto** y desliza por la bienvenida y los gestos. 👋
+2. **Añade libros** con «Añadir» (archivos sueltos o raíces guardadas) o arrástralos a la pantalla. 📥
 3. **Pulsa portada y lee.** El resto lo haces deslizando. 🎬
 
 <br>

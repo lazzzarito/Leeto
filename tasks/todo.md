@@ -430,10 +430,11 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Skeletons de tarjetas, pestañas, lector y diálogos con la forma del contenido real.
 - [x] Movimiento reducido desactiva las animaciones nuevas.
 
-### T35: Onboarding y saludo
-- [x] Recorrido de tres pasos con gestos animados y petición de nombre.
-- [x] El nombre se guarda localmente y aparece como saludo bajo el logo del header.
-- [x] Omitir y Escape permiten salir sin nombre.
+### T35: Onboarding y versión
+- [x] Recorrido de dos pasos (bienvenida y gestos), sin petición de nombre.
+- [x] Bajo el logo del header solo la versión y el canal: `v0.1.0 · Beta`.
+- [x] Omitir y Escape permiten salir del recorrido.
+- [x] `userName` y `greetingForName` eliminados del código.
 
 ### T36: Biblioteca y acabado visual
 - [x] Garabatos dispersos, rotados y de tamaños variados (tipo WhatsApp).
@@ -444,3 +445,13 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] QA real en Edge a 390×844 y 1440×900 sin errores de consola.
 - [x] Importar → recargar → portada; tema automático; gestos; índice; PWA offline.
 - [x] Code-split de vendors (sin avisos de chunk) y README ilustrado.
+
+### T38: Lectura, iconos y audio en segundo plano
+- [x] Icono SVG y assets web/Android generados desde `public/icons/icon.png`.
+- [x] Títulos con elipsis, tooltip y pausa del marquee; indicador `Capítulo N · fragmento X de Y`.
+- [x] Notas al pie al final de cada capítulo y números de página eliminados (EPUB y PDF).
+- [x] Reproductor global: la voz sigue al navegar y el header muestra un notch.
+- [x] Servicio nativo con MediaSession y notificación con anterior/play/pausa/siguiente/cierre.
+- [x] Permisos de notificación y reproducción en segundo plano; `allowBackup="false"`.
+- [x] Aviso cerrable y opción en Ajustes para descargar el APK desde la web de Android.
+- [x] Nombre del APK con versión y canal: `Leeto-0.1.0-beta.apk`.

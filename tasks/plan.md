@@ -78,7 +78,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 ### Fase 7 — Primera impresión y pulido visual (completada)
 - T33: Tema automático: modo `system/manual`, seguimiento reactivo de `prefers-color-scheme` y control en ajustes.
 - T34: Preloader animado de arranque y skeletons acordes a biblioteca, lector, tarjetas y diálogos.
-- T35: Onboarding de primer uso con gestos animados, nombre y saludo personalizado en el header.
+- T35: Onboarding de primer uso con gestos animados y versión/canal en el header, sin nombre.
 - T36: Fondo de garabatos dispersos, pills de pestañas a ancho completo, header sticky compacto y marquee en títulos.
 - T37: QA real en navegador (390×844 y escritorio), PWA offline, code-split y README de presentación.
 
