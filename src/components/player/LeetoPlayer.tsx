@@ -52,6 +52,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     seekTo,
     saveQuote,
     tts,
+    audioError,
   } = usePlayerContext();
   const settings = useSettings();
   const navigate = useNavigate();
@@ -529,9 +530,9 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         </Suspense>
       )}
 
-      {tts.lastError && (
+      {(tts.lastError ?? audioError) && (
         <p role="alert" className="sr-only">
-          {tts.lastError}
+          {tts.lastError ?? audioError}
         </p>
       )}
     </div>
