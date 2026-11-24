@@ -10,3 +10,7 @@ export const APP_LABEL = __APP_LABEL__;
 export const APK_FILENAME = __APK_FILENAME__;
 export const APK_URL = `/downloads/${APK_FILENAME}`;
 export const IS_BETA = APP_CHANNEL === 'beta';
+
+export const APK_RELEASE_TAG = `v${APP_VERSION}${IS_BETA ? '-beta' : ''}`;
+export const APK_GITHUB_URL =
+  `https://github.com/lazzzarito/Leeto/releases/download/${APK_RELEASE_TAG}/${APK_FILENAME}`;

@@ -1,6 +1,6 @@
 import { Download, X } from 'lucide-react';
 import { useState } from 'react';
-import { APK_FILENAME, APK_URL, APP_LABEL, IS_BETA } from '@/lib/buildInfo';
+import { APK_FILENAME, APK_GITHUB_URL, APK_URL, APP_LABEL, IS_BETA } from '@/lib/buildInfo';
 import { isAndroidWeb } from '@/lib/platform';
 
 const DISMISS_KEY = `leeto:apk-notice:${APP_LABEL}`;
@@ -41,14 +41,25 @@ export default function ApkDownloadNotice() {
         <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
           Instala la app de Android {APP_LABEL} y escucha tus libros en segundo plano.
         </p>
-        <a
-          href={APK_URL}
-          download={APK_FILENAME}
-          className="text-primary mt-2 inline-flex items-center gap-1.5 text-xs font-medium underline underline-offset-4"
-        >
-          Descargar APK {IS_BETA ? 'beta ' : ''}
-          <span className="font-normal">{APK_FILENAME}</span>
-        </a>
+        <p className="text-muted-foreground mt-1 text-[11px]">{APK_FILENAME}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium">
+          <a
+            href={APK_URL}
+            download={APK_FILENAME}
+            className="text-primary inline-flex items-center gap-1.5 underline underline-offset-4"
+          >
+            <Download className="size-3" aria-hidden="true" />
+            Descargar APK{IS_BETA ? ' beta' : ''}
+          </a>
+          <a
+            href={APK_GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary inline-flex items-center gap-1.5 underline underline-offset-4"
+          >
+            Descargar desde GitHub
+          </a>
+        </div>
       </div>
       <button
         type="button"

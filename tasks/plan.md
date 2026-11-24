@@ -86,7 +86,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 ### Fase 8 — Audio nativo y APK (completada)
 - T38: Reproductor global, notas limpias, iconos derivados de `icon.png` y aviso de descarga de APK.
-- T39: Servicio foreground con MediaSession, compilación firmada y publicación de la APK con versión/canal.
+- T39: Servicio foreground con MediaSession, compilación firmada y publicación de la APK con versión/canal en el sitio y en GitHub Releases.
 
 **Checkpoint F8:** 144 tests en verde, `assembleRelease` firmado, `apksigner verify` correcto y APK servida desde `dist/downloads/`.
 

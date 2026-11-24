@@ -462,3 +462,4 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Firma release con keystore local fuera del repo; `apksigner verify` y `aapt dump badging` correctos.
 - [x] `Leeto-0.1.0-beta.apk` publicada en `public/downloads/` y copiada a `Leeto-release.apk` en la raíz.
 - [x] README y tareas actualizados con el proceso de build y verificación.
+- [x] APK publicada también en GitHub Releases (`v0.1.0-beta`); enlaces añadidos al aviso y a Ajustes.

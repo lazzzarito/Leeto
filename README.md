@@ -77,7 +77,7 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 ## 🤖 App de Android
 
-En la web de Android aparece un aviso cerrable para descargar el APK; también está en **Ajustes → App de Android**. El archivo se sirve como estático desde `public/downloads/` con un nombre que incluye versión y canal, por ejemplo `Leeto-0.1.0-beta.apk`.
+En la web de Android aparece un aviso cerrable para descargar el APK; también está en **Ajustes → App de Android**. El archivo se sirve como estático desde `public/downloads/` y también se publica en [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.0-beta). El nombre siempre incluye versión y canal: `Leeto-0.1.0-beta.apk` en beta, `Leeto-0.1.0.apk` en la versión normal.
 
 Dentro de la APK, la voz usa el `TextToSpeech` nativo y un servicio en primer plano: la reproducción continúa al salir de la app y la notificación del sistema ofrece anterior, play/pausa, siguiente y cierre. El header muestra un pequeño indicador centrado mientras se escucha.
 
