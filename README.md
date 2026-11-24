@@ -56,7 +56,7 @@ Bajo el logo verás siempre la versión y el canal, por ejemplo **v0.1.0 · Beta
 - **💬 Citas al instante.** Guarda el fragmento exacto que estás leyendo con un toque y una animación de «captura».
 - **🧭 Índice de verdad.** La tabla de contenidos de tu EPUB o PDF se respeta tal cual; en FB2, TXT, Markdown y HTML se genera a partir de sus encabezados.
 - **🎧 Escucha si quieres.** Activa la voz local y sigue el mismo ritmo visual. Si no quieres oír nada, también funciona perfecto.
-- **🌙 Se adapta a ti.** Sigue automáticamente el tema claro u oscuro de tu dispositivo, o elige uno de los cinco estilos disponibles.
+- **🌙 Se adapta a ti.** Sigue automáticamente el tema claro u oscuro de tu dispositivo, o elige uno de los cuatro estilos disponibles.
 
 <div align="center">
 <img src="docs/screens/07-ajustes-escritorio.png" alt="Ajustes de Leeto" width="100%">
@@ -82,6 +82,12 @@ En Android puedes descargar la APK desde [GitHub Releases](https://github.com/la
 La voz sigue sonando aunque salgas de la app. En la notificación puedes pausar, cambiar de fragmento o cerrar la lectura, y en el header verás un pequeño indicador mientras escuchas.
 
 El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.0-beta.apk**.
+
+Para compilar la APK desde el código fuente usa JDK 21 y Android SDK 36. La firma de release
+requiere `~/.leeto-keys/leeto-release.properties` con `storeFile`, `storePassword`, `keyAlias` y
+`keyPassword`; `./gradlew assembleRelease` falla explícitamente si falta esa configuración, así
+nunca se publica una APK sin firmar. El `versionCode` se calcula desde `package.json` y el canal
+(`beta` usa el número siguiente al estable).
 
 ---
 

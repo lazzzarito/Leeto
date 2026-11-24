@@ -1,6 +1,6 @@
 // Modelo de dominio de Leeto (alineado con leeto.md v2.1, sección 6.1).
 
-export type ReadingTheme = 'paper' | 'amber' | 'sepia' | 'eink' | 'oled';
+export type ReadingTheme = 'paper' | 'sepia' | 'graphite' | 'oled';
 
 export type PlaybackState =
   | 'idle'
@@ -84,6 +84,7 @@ export interface ReadingProgress {
   percentage: number; // 0..100
   updatedAt: number; // epoch ms UTC
   deviceId: string;
+  deletedAt?: number; // tombstone para sync; el libro se borró en este dispositivo
 }
 
 export interface SavedQuote {

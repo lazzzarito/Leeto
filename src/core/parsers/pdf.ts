@@ -3,6 +3,7 @@ import type { TextItem } from 'pdfjs-dist/types/src/display/api';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { LeetoChapter, TocEntry } from '@/types';
 import { newId } from '@/lib/ids';
+import { PARSE_LIMITS } from './limits';
 import { countWords, makeBlockIdFactory } from './normalize';
 import {
   ParseError,
@@ -293,6 +294,9 @@ export async function parsePdf(
     if (pdf.numPages === 0) {
       throw new ParseError('El PDF no contiene páginas.', 'INVALID_FORMAT');
     }
+    if (pdf.numPages > PARSE_LIMITS.maxPdfPages) {
+      throw new ParseError('El PDF tiene demasiadas páginas para importar.', 'UNKNOWN');
+    }
 
     const pages: Array<{ lines: TextLine[]; height: number }> = [];
     let totalCharacters = 0;
@@ -309,6 +313,9 @@ export async function parsePdf(
       const items = content.items.filter(isTextItem);
       const text = items.map((item) => item.str).join('');
       totalCharacters += text.trim().length;
+      if (totalCharacters > PARSE_LIMITS.maxBookCharacters) {
+        throw new ParseError('El PDF contiene demasiado texto para importar.', 'UNKNOWN');
+      }
       pages.push({
         lines: collectLines(items),
         height: page.getViewport({ scale: 1 }).height,

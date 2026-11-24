@@ -4,11 +4,12 @@ import { cn } from '@/lib/cn';
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }
 
-export default function SearchBar({ value, onChange }: SearchBarProps) {
+export default function SearchBar({ value, onChange, className }: SearchBarProps) {
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className={cn('relative min-w-0 flex-1', className)}>
       <Search
         className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2"
         aria-hidden="true"
@@ -17,7 +18,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Buscar Libro..."
+        placeholder="Buscar"
         aria-label="Buscar en la biblioteca"
         className={cn(
           'bg-card border-border placeholder:text-muted-foreground h-10 w-full rounded-lg border pl-9 text-sm shadow-sm outline-none focus-visible:ring-2 [&::-webkit-search-cancel-button]:appearance-none',

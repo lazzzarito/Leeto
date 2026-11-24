@@ -16,7 +16,6 @@ import { usePlayerContext } from '@/core/player/PlayerProvider';
 import { getClipDuration } from '@/core/player/state';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
-import { shareText } from '@/lib/share';
 import Marquee from '@/components/ui/Marquee';
 import type { LeetoBook } from '@/types';
 import BlockView from './BlockView';
@@ -68,6 +67,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const longPressFiredRef = useRef(false);
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tapToggleTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [tocOpen, setTocOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -97,26 +97,11 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     showNotice(quote ? 'Cita guardada' : 'Este bloque no tiene texto para citar');
   }, [flashQuote, saveQuote, showNotice]);
 
-  const handleShare = useCallback(async () => {
-    if (!clip) return;
-    const caption = clip.block.type === 'image' ? (clip.block.caption ?? '') : '';
-    const source = [book.title, book.author, chapter?.title].filter(Boolean).join(' · ');
-    const text = `“${clip.text || caption}”\n\n— ${source}`;
-    const result = await shareText(text, book.title);
-    if (result === 'cancelled') return;
-    showNotice(
-      result === 'copied'
-        ? 'Fragmento copiado al portapapeles'
-        : result === 'shared'
-          ? 'Fragmento enviado'
-          : 'No se pudo compartir',
-    );
-  }, [book.author, book.title, chapter?.title, clip, showNotice]);
+
 
   const openToc = useCallback(() => setTocOpen(true), []);
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const handleQuoteClick = useCallback(() => void handleQuote(), [handleQuote]);
-  const handleShareClick = useCallback(() => void handleShare(), [handleShare]);
   const handleTocSeek = useCallback((index: number) => seekTo(index), [seekTo]);
   const toggleTts = useCallback(() => {
     void updateSettings({ ttsEnabled: !settings.ttsEnabled });
@@ -140,6 +125,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current);
+      if (tapToggleTimerRef.current) clearTimeout(tapToggleTimerRef.current);
     },
     [],
   );
@@ -176,9 +162,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           break;
         case 'f':
         case 'F':
-          void containerRef.current
-            ?.requestFullscreen?.()
-            .catch(() => showNotice('Pantalla completa no disponible'));
+          if (document.fullscreenElement) {
+            void document.exitFullscreen().catch(() => showNotice('No se pudo salir de pantalla completa'));
+          } else {
+            void containerRef.current
+              ?.requestFullscreen?.()
+              .catch(() => showNotice('Pantalla completa no disponible'));
+          }
           break;
         case 'q':
         case 'Q':
@@ -201,7 +191,20 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     }
   }, []);
 
+  const cancelTapToggle = useCallback(() => {
+    if (tapToggleTimerRef.current) {
+      clearTimeout(tapToggleTimerRef.current);
+      tapToggleTimerRef.current = undefined;
+    }
+  }, []);
+
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    const target = event.target;
+    const el = target instanceof Element ? target : (target as Node | null)?.parentElement;
+    if (el?.closest('button, a, input, select, textarea, [role="dialog"], [data-player-action="true"]')) {
+      touchStartRef.current = undefined;
+      return;
+    }
     const touch = event.touches[0];
     if (!touch) return;
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
@@ -216,6 +219,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
 
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
     cancelLongPress();
+    const target = event.target;
+    const el = target instanceof Element ? target : (target as Node | null)?.parentElement;
+    if (el?.closest('button, a, input, select, textarea, [role="dialog"], [data-player-action="true"]')) {
+      touchStartRef.current = undefined;
+      lastGestureRef.current = Date.now();
+      return;
+    }
     const start = touchStartRef.current;
     const touch = event.changedTouches[0];
     touchStartRef.current = undefined;
@@ -224,25 +234,35 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     lastGestureRef.current = Date.now();
     if (longPressFiredRef.current) {
       longPressFiredRef.current = false;
+      cancelTapToggle();
       return;
     }
 
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
     if (Math.abs(dy) > SWIPE_THRESHOLD_PX && Math.abs(dy) > Math.abs(dx)) {
+      cancelTapToggle();
       if (dy < 0) next();
       else previous();
       return;
     }
-    if (Math.abs(dx) > SWIPE_THRESHOLD_PX) return;
+    if (Math.abs(dx) > SWIPE_THRESHOLD_PX) {
+      cancelTapToggle();
+      return;
+    }
 
     const now = Date.now();
+    cancelTapToggle();
     if (now - lastTapRef.current < DOUBLE_TAP_MS) {
-      void handleQuote();
+      // El doble toque captura la cita sin alternar antes la reproducción.
       lastTapRef.current = 0;
+      void handleQuote();
     } else {
-      toggle();
       lastTapRef.current = now;
+      tapToggleTimerRef.current = setTimeout(() => {
+        tapToggleTimerRef.current = undefined;
+        toggle();
+      }, DOUBLE_TAP_MS);
     }
   };
 
@@ -251,7 +271,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     if (Date.now() - lastGestureRef.current < 700) return;
     if (
       event.target instanceof Element &&
-      event.target.closest('button, a, input, select, textarea, [role="dialog"]')
+      event.target.closest('button, a, input, select, textarea, [role="dialog"], [data-player-action="true"]')
     ) {
       return;
     }
@@ -399,7 +419,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             onTouchStart={(event) => event.stopPropagation()}
             onTouchEnd={(event) => event.stopPropagation()}
             aria-label="Reproducir"
-            className="absolute inset-0 z-[25] flex items-center justify-center"
+            className="absolute inset-0 z-[10] flex items-center justify-center"
           >
             <span className="bg-black/35 border-white/25 flex size-16 items-center justify-center rounded-full border backdrop-blur-sm">
               <Play className="text-reel size-8 fill-current" aria-hidden="true" />
@@ -470,7 +490,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             quoteCaptured={quoteCaptured}
             onQuote={handleQuoteClick}
             onToc={openToc}
-            onShare={handleShareClick}
             onSettings={openSettings}
             onToggleTts={toggleTts}
           />
@@ -478,14 +497,14 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
       </div>
 
       {clip && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-20 flex justify-center px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] z-20 flex justify-center px-4">
           <div className="w-full max-w-md text-center md:max-w-2xl">
             <Marquee
               text={book.title}
               animate={!reducedMotion}
               className="text-reel text-sm font-medium"
             />
-            <p className="text-reel-muted mt-0.5 text-[11px]">
+            <p className="text-reel-muted mt-1.5 text-[11px]">
               Capítulo {clip.chapterIndex + 1} ·{' '}
               {clip.block.type === 'text'
                 ? `fragmento ${clip.segmentIndex + 1} de ${clip.segmentCount}`

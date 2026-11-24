@@ -10,6 +10,41 @@ export function getInitialTheme(): ReadingTheme {
   return 'paper';
 }
 
+const VALID_THEMES = new Set<ReadingTheme>(['paper', 'sepia', 'graphite', 'oled']);
+const LEGACY_THEME_MAP: Record<string, ReadingTheme> = { amber: 'sepia', eink: 'paper' };
+
+function bounded(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.min(max, Math.max(min, value))
+    : fallback;
+}
+
+/** Normaliza registros antiguos o parciales antes de usarlos en la UI. */
+export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
+  const merged = { ...DEFAULT_SETTINGS, ...stored, id: 'singleton' as const };
+  const theme = LEGACY_THEME_MAP[merged.readingTheme] ?? merged.readingTheme;
+  return {
+    ...merged,
+    deviceId: merged.deviceId || DEFAULT_SETTINGS.deviceId,
+    readingTheme: VALID_THEMES.has(theme) ? theme : DEFAULT_SETTINGS.readingTheme,
+    themeMode: merged.themeMode === 'manual' ? 'manual' : 'system',
+    fontSize: bounded(merged.fontSize, 14, 32, DEFAULT_SETTINGS.fontSize),
+    lineHeight: bounded(merged.lineHeight, 1.2, 2.2, DEFAULT_SETTINGS.lineHeight),
+    wpm: bounded(merged.wpm, 60, 600, DEFAULT_SETTINGS.wpm),
+    playbackSpeed: bounded(merged.playbackSpeed, 0.5, 2, DEFAULT_SETTINGS.playbackSpeed),
+    focusDimIntensity: bounded(merged.focusDimIntensity, 0, 1, DEFAULT_SETTINGS.focusDimIntensity),
+    imageDurationMs: bounded(merged.imageDurationMs, 1000, 30_000, DEFAULT_SETTINGS.imageDurationMs),
+    reducedMotion:
+      merged.reducedMotion === 'on' || merged.reducedMotion === 'off'
+        ? merged.reducedMotion
+        : 'system',
+    syncProvider:
+      merged.syncProvider === 'webdav' || merged.syncProvider === 'local-folder'
+        ? merged.syncProvider
+        : 'webdav',
+  };
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   id: 'singleton',
   deviceId: getOrCreateDeviceId(),
@@ -32,7 +67,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 /** Devuelve los ajustes persistidos o, si no existen, los valores por defecto. */
 export async function getSettings(): Promise<AppSettings> {
-  return (await db.settings.get('singleton')) ?? DEFAULT_SETTINGS;
+  return normalizeSettings(await db.settings.get('singleton'));
 }
 
 /** Crea el registro singleton si es la primera ejecución. */
@@ -44,7 +79,7 @@ export async function ensureSettings(): Promise<AppSettings> {
 
 export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await getSettings();
-  const next: AppSettings = { ...current, ...patch, id: 'singleton' };
+  const next: AppSettings = normalizeSettings({ ...current, ...patch });
   await db.settings.put(next);
   return next;
 }
@@ -65,10 +100,13 @@ export async function removeScanRoot(id: string): Promise<AppSettings> {
 /** Hook reactivo: devuelve defaults mientras Dexie carga el registro. */
 export function useSettings(): AppSettings {
   const stored = useLiveQuery(() => db.settings.get('singleton'), [], undefined);
-  return stored ?? DEFAULT_SETTINGS;
+  return normalizeSettings(stored);
 }
 
-/** `false` hasta que Dexie confirma que los ajustes están disponibles. */
+/** `true` cuando Dexie ya resolvió la lectura de ajustes (existan o no). */
 export function useSettingsLoaded(): boolean {
-  return useLiveQuery(() => db.settings.get('singleton'), [], undefined) !== undefined;
+  return (
+    useLiveQuery(async () => (await db.settings.get('singleton')) ?? null, [], 'loading') !==
+    'loading'
+  );
 }

@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { LeetoBook, ReadingProgress, SavedQuote, StoredAsset } from '@/types';
 import { db } from './db';
-import { deleteBookCascade, updateBookMetadata } from './delete';
+import { deleteBookCascade, restoreBookSnapshot, updateBookMetadata } from './delete';
 
 function makeBook(id: string, imageAssetId?: string): LeetoBook {
   return {
@@ -85,18 +85,30 @@ describe('gestión segura de la biblioteca', () => {
     await seed();
   });
 
-  it('elimina libro, progreso, citas y assets en cascada', async () => {
-    await deleteBookCascade('a');
+  it('elimina el libro y deja tombstones de progreso y citas para el sync', async () => {
+    const snapshot = await deleteBookCascade('a');
 
+    expect(snapshot?.book.id).toBe('a');
     expect(await db.books.get('a')).toBeUndefined();
-    expect(await db.progress.get('a')).toBeUndefined();
-    expect(await db.quotes.where('bookId').equals('a').count()).toBe(0);
+    expect(await db.progress.get('a')).toMatchObject({ bookId: 'a', deletedAt: expect.any(Number) });
+    expect(await db.quotes.get('q_a')).toMatchObject({ deletedAt: expect.any(Number) });
     expect(await db.assets.where('bookId').equals('a').count()).toBe(0);
 
     expect(await db.books.get('b')).toBeDefined();
     expect(await db.progress.get('b')).toBeDefined();
     expect(await db.quotes.get('q_b')).toBeDefined();
     expect(await db.assets.get('cover_2')).toBeDefined();
+  });
+
+  it('restaura el libro y reactiva el progreso y las citas', async () => {
+    const snapshot = await deleteBookCascade('a');
+    expect(snapshot).toBeDefined();
+    await restoreBookSnapshot(snapshot!);
+
+    expect(await db.books.get('a')).toBeDefined();
+    expect((await db.progress.get('a'))?.deletedAt).toBeUndefined();
+    expect((await db.quotes.get('q_a'))?.deletedAt).toBeUndefined();
+    expect(await db.assets.get('cover_1')).toBeDefined();
   });
 
   it('actualiza metadatos, reemplaza la portada y borra la antigua huérfana', async () => {

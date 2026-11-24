@@ -14,13 +14,19 @@ class FakeUtterance {
 
 let cancel: ReturnType<typeof vi.fn>;
 let speak: ReturnType<typeof vi.fn>;
+let pause: ReturnType<typeof vi.fn>;
+let resume: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   cancel = vi.fn();
   speak = vi.fn();
+  pause = vi.fn();
+  resume = vi.fn();
   vi.stubGlobal('speechSynthesis', {
     cancel,
     speak,
+    pause,
+    resume,
     getVoices: () => [],
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
@@ -54,6 +60,16 @@ describe('speakText', () => {
 
     session?.cancel();
     expect(cancel).toHaveBeenCalledOnce();
+  });
+
+  it('permite pausar y reanudar la misma utterance', () => {
+    const session = speakText({ text: 'Texto de prueba' });
+
+    session?.pause();
+    expect(pause).toHaveBeenCalledOnce();
+    session?.resume();
+    expect(resume).toHaveBeenCalledOnce();
+    expect(cancel).not.toHaveBeenCalled();
   });
 
   it('ignora los errores esperados al interrumpir y reporta los reales', () => {

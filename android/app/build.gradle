@@ -1,0 +1,101 @@
+import java.util.Properties
+
+apply plugin: 'com.android.application'
+
+def packageJson = new groovy.json.JsonSlurper().parse(file('../../package.json'))
+def buildChannel = System.getenv('VITE_BUILD_CHANNEL') ?: project.findProperty('buildChannel') ?: 'beta'
+def versionSuffix = buildChannel == 'stable' ? '' : '-beta'
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = file("${System.getProperty('user.home')}/.leeto-keys/leeto-release.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def hasReleaseSigning = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+    .every { keystoreProperties.getProperty(it) }
+
+// 0.1.0 -> 100; beta builds use the following number so both channels can coexist.
+def versionNumbers = (packageJson.version.tokenize('-')[0].tokenize('.') + ['0', '0', '0'])
+    .take(3).collect { it.toInteger() }
+def computedVersionCode = (versionNumbers[0] * 10000 + versionNumbers[1] * 100 + versionNumbers[2]) * 2
+    + (buildChannel == 'stable' ? 0 : 1)
+
+android {
+    namespace = "com.leeto.app"
+    compileSdk = rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+    defaultConfig {
+        applicationId "com.leeto.app"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode computedVersionCode
+        versionName "${packageJson.version}${versionSuffix}"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(keystoreProperties.getProperty('storeFile'))
+                storePassword keystoreProperties.getProperty('storePassword')
+                keyAlias keystoreProperties.getProperty('keyAlias')
+                keyPassword keystoreProperties.getProperty('keyPassword')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (hasReleaseSigning) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+tasks.register('validateReleaseSigning') {
+    group = 'verification'
+    description = 'Fails release builds unless the signing keystore is configured.'
+    doLast {
+        if (!hasReleaseSigning) {
+            throw new GradleException(
+                'Release signing is not configured. Create ~/.leeto-keys/leeto-release.properties ' +
+                'with storeFile, storePassword, keyAlias and keyPassword (see README.md).'
+            )
+        }
+    }
+}
+tasks.matching {
+    it.name.toLowerCase().startsWith('assemble') && it.name.toLowerCase().endsWith('release')
+}.configureEach { dependsOn tasks.named('validateReleaseSigning') }
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

@@ -20,15 +20,31 @@
       (function () {
         var saved = null;
         var mode = 'system';
-        var valid = ['paper', 'amber', 'sepia', 'eink', 'oled'];
+        var valid = ['paper', 'sepia', 'graphite', 'oled'];
+        var legacy = { amber: 'sepia', eink: 'paper' };
+        var bg = {
+          paper: '0 0% 100%',
+          sepia: '38 42% 93%',
+          graphite: '220 10% 12%',
+          oled: '0 0% 0%',
+        };
+        var themeColor = {
+          paper: '#ffffff',
+          sepia: '#f7ecdd',
+          graphite: '#1c1e22',
+          oled: '#000000',
+        };
+        var resolve = function (value) {
+          return legacy[value] || value;
+        };
         try {
           var raw = localStorage.getItem('leeto.theme');
           if (raw && raw.charAt(0) === '{') {
             var cached = JSON.parse(raw);
-            saved = cached.theme;
+            saved = resolve(cached.theme);
             mode = cached.mode === 'manual' ? 'manual' : 'system';
           } else if (raw) {
-            saved = raw;
+            saved = resolve(raw);
             mode = 'manual';
           }
         } catch (e) {
@@ -41,7 +57,10 @@
               ? 'oled'
               : 'paper';
         document.documentElement.dataset.readingTheme = theme;
-        document.documentElement.style.colorScheme = theme === 'oled' ? 'dark' : 'light';
+        document.documentElement.style.colorScheme =
+          theme === 'oled' || theme === 'graphite' ? 'dark' : 'light';
+        document.documentElement.style.setProperty('--boot-bg', bg[theme] || bg.paper);
+        document.querySelector('meta[name="theme-color"]').content = themeColor[theme] || themeColor.paper;
       })();
     </script>
     <meta property="og:title" content="Leeto — lector de libros" />
@@ -50,6 +69,7 @@
       content="Importa EPUB, PDF, cómics y texto, lee sin conexión y guarda tus citas en este dispositivo."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <title>Leeto — lector de EPUB, PDF y cómics</title>
   </head>
@@ -75,9 +95,26 @@
         }
       })();
     </script>
-    <div id="boot-splash" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:hsl(var(--background));color:hsl(var(--foreground));font-family:system-ui,sans-serif">
-      <img src="/icons/icon-192.webp" alt="" width="72" height="72" style="width:72px;height:72px;border-radius:18px">
-      <p style="margin:16px 0 0;font-size:1.5rem;letter-spacing:.25em">Leeto</p>
+    <style>
+      @keyframes leeto-boot-spin { to { transform: rotate(360deg); } }
+      @keyframes leeto-boot-float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.05); } }
+      @keyframes leeto-boot-rise { from { opacity:0; transform: translateY(14px); letter-spacing:.5em; } to { opacity:1; transform: translateY(0); letter-spacing:.25em; } }
+      @keyframes leeto-boot-fade { from { opacity:0 } to { opacity:1 } }
+      #boot-splash .boot-doodle{position:absolute;inset:0;background-image:url('/doodles.svg');background-size:420px 420px;background-repeat:repeat;opacity:.22;pointer-events:none}
+      [data-reading-theme='oled'] #boot-splash .boot-doodle,[data-reading-theme='graphite'] #boot-splash .boot-doodle{filter:invert(1);opacity:.12}
+      @media (prefers-reduced-motion: reduce) { #boot-splash * { animation: none !important; } }
+    </style>
+    <div id="boot-splash" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:hsl(var(--boot-bg, var(--background)));color:hsl(var(--foreground));font-family:system-ui,sans-serif;animation:leeto-boot-fade 240ms ease-out both">
+      <div class="boot-doodle" aria-hidden="true"></div>
+      <div style="position:relative;display:flex;width:8rem;height:8rem;align-items:center;justify-content:center">
+        <span style="position:absolute;inset:0;border-radius:9999px;border:2px solid hsl(var(--primary)/.25);border-top-color:hsl(var(--primary));animation:leeto-boot-spin 2.4s linear infinite"></span>
+        <span style="position:absolute;inset:.75rem;border-radius:9999px;border:2px solid hsl(var(--primary)/.1);border-bottom-color:hsl(var(--primary)/.6);animation:leeto-boot-spin 3.4s linear infinite reverse"></span>
+        <span style="position:absolute;inset:1.75rem;border-radius:9999px;background:hsl(var(--primary)/.1);filter:blur(24px)"></span>
+        <span style="display:flex;width:3.5rem;height:3.5rem;align-items:center;justify-content:center;border-radius:1rem;border:1px solid hsl(var(--primary)/.3);background:hsl(var(--background));box-shadow:0 10px 15px -3px rgb(0 0 0/.2);animation:leeto-boot-float 1.8s ease-in-out infinite">
+          <img src="/icons/icon-192.webp" alt="" width="44" height="44" style="width:44px;height:44px;border-radius:12px;object-fit:contain">
+        </span>
+      </div>
+      <p style="margin:1.25rem 0 0;font-size:.75rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;animation:leeto-boot-rise 500ms ease-out both">Leeto</p>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

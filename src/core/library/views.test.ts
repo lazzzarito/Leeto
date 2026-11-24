@@ -102,11 +102,12 @@ describe('vistas de biblioteca', () => {
       ['a', progress('a', 42)],
       ['b', progress('b', 100)],
       ['c', progress('c', 0)],
+      ['huérfano', progress('huérfano', 50)],
     ]);
 
     expect(filterBooksByStatus(books, byBook, 'reading').map((item) => item.id)).toEqual(['a']);
     expect(filterBooksByStatus(books, byBook, 'finished').map((item) => item.id)).toEqual(['b']);
-    expect(countBooksByStatus(byBook)).toEqual({ reading: 1, finished: 1 });
+    expect(countBooksByStatus(books, byBook)).toEqual({ reading: 1, finished: 1 });
   });
 
   it('filtra solo los libros marcados como favoritos', () => {

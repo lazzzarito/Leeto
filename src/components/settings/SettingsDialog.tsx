@@ -33,7 +33,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
               </h2>
               <p className="text-muted-foreground text-sm">
                 {themeMode === 'system'
-                  ? `Tema automático según tu dispositivo (${theme === 'oled' ? 'oscuro' : 'claro'}).`
+                  ? `Tema automático según tu dispositivo (${theme === 'oled' || theme === 'graphite' ? 'oscuro' : 'claro'}). En Android 12+ usa la paleta dinámica cuando está disponible.`
                   : 'Tema fijado manualmente.'}
               </p>
             </div>
@@ -50,14 +50,14 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
             >
               <span
                 className={cn(
-                  'bg-background absolute top-0.5 size-5 rounded-full shadow transition-transform',
-                  themeMode === 'system' ? 'translate-x-5.5' : 'translate-x-0.5',
+                  'bg-background absolute top-0.5 left-0.5 size-5 rounded-full shadow transition-transform duration-200',
+                  themeMode === 'system' ? 'translate-x-[22px]' : 'translate-x-0',
                 )}
               />
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {themes.map((option) => {
               const selected = option.id === theme;
               return (

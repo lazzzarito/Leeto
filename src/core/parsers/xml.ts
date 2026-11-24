@@ -40,5 +40,11 @@ export function makeXmlParser(): XMLParser {
     removeNSPrefix: true,
     parseTagValue: false,
     trimValues: true,
+    // Entidades permitidas, con límites explícitos contra expansiones anidadas.
+    processEntities: {
+      maxTotalExpansions: 1000,
+      maxExpandedLength: 100_000,
+      maxEntityCount: 100,
+    },
   });
 }

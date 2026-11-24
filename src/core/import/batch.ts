@@ -1,5 +1,3 @@
-import type { ImportToast } from '@/hooks/useImport';
-
 export interface ImportBatchSummary {
   total: number;
   imported: number;
@@ -7,8 +5,14 @@ export interface ImportBatchSummary {
   failedFiles: { name: string; error: string }[];
 }
 
+export interface BatchNotice {
+  kind: 'success' | 'info' | 'error';
+  title: string;
+  detail?: string;
+}
+
 /** Un solo aviso al terminar un lote, con el resultado y los fallos. */
-export function describeImportBatch(summary: ImportBatchSummary): Omit<ImportToast, 'id'> {
+export function describeImportBatch(summary: ImportBatchSummary): BatchNotice {
   const failed = summary.failedFiles.length;
   const ok = summary.imported + summary.duplicates;
 

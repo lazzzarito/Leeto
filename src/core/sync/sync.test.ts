@@ -85,9 +85,19 @@ describe('sobre de sincronización', () => {
     expect(restored).toEqual(original);
   });
 
-  it('rechaza JSON inválido y versiones no soportadas', () => {
+  it('round-trip conserva el segmentIndex numérico del progreso actual', () => {
+    const original = envelope('dev_A', {
+      progress: [{ ...progress('book_1', 'dev_A', 100), segmentIndex: 3 }],
+    });
+    const restored = parseEnvelope(serializeEnvelope(original));
+    expect(restored.progress.book_1?.segmentIndex).toBe(3);
+    expect(parseEnvelope(serializeEnvelope(original))).toEqual(original);
+  });
+
+  it('rechaza JSON inválido, versiones no soportadas y sobrees demasiado grandes', () => {
     expect(() => parseEnvelope('{')).toThrow(/JSON válido/);
     expect(() => parseEnvelope('{"schemaVersion":2}')).toThrow(/inválido|no soportada/);
+    expect(() => parseEnvelope('x'.repeat(10 * 1024 * 1024 + 1))).toThrow(/demasiado grande/);
   });
 
   it('rechaza registros sin clave primaria o con fechas inválidas', () => {

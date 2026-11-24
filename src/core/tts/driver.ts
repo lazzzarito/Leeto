@@ -5,6 +5,8 @@ export interface TtsBoundary {
 
 export interface TtsSession {
   cancel(): void;
+  pause(): void;
+  resume(): void;
 }
 
 /** `cancel()` al cambiar de fragmento provoca estos errores esperados del navegador. */
@@ -60,7 +62,11 @@ export function speakText(options: SpeakOptions): TtsSession | undefined {
     };
 
     window.speechSynthesis.speak(utterance);
-    return { cancel: () => window.speechSynthesis.cancel() };
+    return {
+      cancel: () => window.speechSynthesis.cancel(),
+      pause: () => window.speechSynthesis.pause(),
+      resume: () => window.speechSynthesis.resume(),
+    };
   } catch (error) {
     options.onError?.(error instanceof Error ? error.message : 'No se pudo iniciar la voz');
     return undefined;

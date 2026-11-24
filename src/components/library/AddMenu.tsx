@@ -1,8 +1,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { FolderOpen, FolderSearch, Plus, Upload } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { fromFileList, isDirectoryInputSupported } from '@/core/import/folder';
 import { BOOK_ACCEPT } from '@/core/parsers/formats';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/cn';
 
 interface AddMenuProps {
@@ -14,7 +16,7 @@ interface AddMenuProps {
 }
 
 const ITEM_CLASS =
-  'flex cursor-pointer items-center gap-2 rounded-md px-2 py-2 text-sm outline-none data-[highlighted]:bg-accent';
+  'flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-left text-sm outline-none hover:bg-accent data-[highlighted]:bg-accent';
 
 export default function AddMenu({
   onFiles,
@@ -25,53 +27,93 @@ export default function AddMenu({
 }: AddMenuProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
   const canUseDirectoryInput = isDirectoryInputSupported();
   const canUseFolder = nativeFolderPicker || canUseDirectoryInput;
 
+  const pickFolder = () => {
+    if (nativeFolderPicker) onPickFolder();
+    else if (canUseDirectoryInput) folderInputRef.current?.click();
+    else fileInputRef.current?.click();
+  };
+
+  const actions = (
+    <>
+      <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); fileInputRef.current?.click(); }}>
+        <Upload className="size-4" aria-hidden="true" />
+        Archivos de libro
+      </button>
+      <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); pickFolder(); }}>
+        <FolderOpen className="size-4" aria-hidden="true" />
+        {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
+      </button>
+      <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); onOpenScan(); }}>
+        <FolderSearch className="size-4" aria-hidden="true" />
+        Escanear carpetas guardadas
+      </button>
+    </>
+  );
+
   return (
     <>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
+      {isDesktop ? (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              className={cn(
+                'border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
+                fullWidth ? 'flex w-full justify-start px-2' : 'bg-card text-foreground shadow-lg',
+              )}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Añadir
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="end"
+              sideOffset={6}
+              className="bg-popover text-popover-foreground z-[70] min-w-56 origin-[var(--radix-dropdown-menu-content-transform-origin)] rounded-lg border border-border p-1.5 shadow-xl data-[state=open]:animate-[leeto-pop-in_160ms_ease-out] data-[state=closed]:animate-[leeto-pop-out_120ms_ease-in]"
+            >
+              <DropdownMenu.Item className={ITEM_CLASS} onSelect={() => fileInputRef.current?.click()}>
+                <Upload className="size-4" aria-hidden="true" />
+                Archivos de libro
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={ITEM_CLASS} onSelect={pickFolder}>
+                <FolderOpen className="size-4" aria-hidden="true" />
+                {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
+                <FolderSearch className="size-4" aria-hidden="true" />
+                Escanear carpetas guardadas
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      ) : (
+        <>
           <button
             type="button"
-            className={cn(
-              'border-border hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium',
-              !fullWidth && 'bg-card text-foreground shadow-lg',
-              fullWidth && 'flex w-full justify-start px-2',
-            )}
+            aria-label="Añadir"
+            onClick={() => setOpen(true)}
+            className="border-border bg-card text-foreground hover:bg-muted inline-flex size-10 shrink-0 items-center justify-center rounded-lg border shadow-lg"
           >
-            <Plus className="size-4" aria-hidden="true" />
-            Añadir
+            <Plus className="size-5" aria-hidden="true" />
           </button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="end"
-            sideOffset={6}
-            className="bg-popover text-popover-foreground z-[70] min-w-56 rounded-lg border border-border p-1.5 shadow-xl"
+          <ResponsiveDialog
+            open={open}
+            onOpenChange={setOpen}
+            height="content"
+            variant="centered"
+            title="Añadir"
+            description="Importa libros desde archivos o carpetas."
           >
-            <DropdownMenu.Item className={ITEM_CLASS} onSelect={() => fileInputRef.current?.click()}>
-              <Upload className="size-4" aria-hidden="true" />
-              Archivos de libro
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              className={ITEM_CLASS}
-              onSelect={() => {
-                if (nativeFolderPicker) onPickFolder();
-                else if (canUseDirectoryInput) folderInputRef.current?.click();
-                else fileInputRef.current?.click();
-              }}
-            >
-              <FolderOpen className="size-4" aria-hidden="true" />
-              {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
-              <FolderSearch className="size-4" aria-hidden="true" />
-              Escanear carpetas guardadas
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+            <div className="space-y-1 pb-6">{actions}</div>
+          </ResponsiveDialog>
+        </>
+      )}
 
       <input
         ref={fileInputRef}
@@ -89,6 +131,7 @@ export default function AddMenu({
       />
       <input
         ref={(element) => {
+          folderInputRef.current = element;
           element?.setAttribute('webkitdirectory', '');
           element?.setAttribute('directory', '');
         }}

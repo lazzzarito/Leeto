@@ -1,3 +1,4 @@
+import { readResponseTextLimited } from './limits';
 import {
   isSecureSyncUrl,
   resolveRemoteUrl,
@@ -72,7 +73,7 @@ export function createWebDavProvider({
       const response = await request(urlFor(name), { method: 'GET' });
       assertOk(response, 'lectura', [404]);
       if (response.status === 404) return { text: null };
-      return { text: await response.text(), etag: response.headers.get('etag') ?? undefined };
+      return { text: await readResponseTextLimited(response), etag: response.headers.get('etag') ?? undefined };
     },
 
     async exists(name): Promise<boolean> {

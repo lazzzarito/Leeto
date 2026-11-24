@@ -46,6 +46,10 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
 }
 
 function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
+  const aDeleted = a.deletedAt ?? 0;
+  const bDeleted = b.deletedAt ?? 0;
+  // Un borrado local reciente no debe ser resucitado por un progreso remoto antiguo.
+  if (aDeleted !== bDeleted) return aDeleted - bDeleted;
   if (a.updatedAt !== b.updatedAt) return a.updatedAt - b.updatedAt;
   // Desempate determinista: el mismo par de registros siempre gana el mismo dispositivo.
   return compareText(a.deviceId, b.deviceId);
@@ -111,7 +115,7 @@ export function mergeEnvelopes(local: SyncEnvelope, remote: SyncEnvelope): Merge
     progress,
     quotes,
     libraryRefs,
-    changed: envelopeFingerprint(local) !== envelopeFingerprint(envelope),
+    changed: recordsFingerprint(local) !== recordsFingerprint(envelope),
   };
 }
 

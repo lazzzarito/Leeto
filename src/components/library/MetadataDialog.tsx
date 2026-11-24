@@ -168,7 +168,7 @@ export default function MetadataDialog({ book, open, onOpenChange }: MetadataDia
                 <ImagePlus className="text-muted-foreground size-5" aria-hidden="true" />
               )}
             </div>
-            <label className="border-border hover:bg-muted cursor-pointer rounded-lg border px-3 py-2 text-xs font-medium">
+            <label className="border-border hover:bg-muted focus-within:ring-ring focus-within:ring-2 focus-within:ring-offset-2 cursor-pointer rounded-lg border px-3 py-2 text-xs font-medium">
               Cambiar imagen
               <input
                 type="file"

@@ -9,7 +9,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 ## Fase 1 — Cimientos ✅
 
 ### T1: Scaffold Vite + React + TS
-**Description:** Proyecto Vite inicial con React 18 + TypeScript strict, scripts de dev/build/preview/typecheck, entry point y configuración de Capacitor inicial.
+**Description:** Proyecto Vite inicial con React 19 + TypeScript strict, scripts de dev/build/preview/typecheck, entry point y configuración de Capacitor inicial.
 **Acceptance criteria:**
 - [x] `npm run dev` levanta sin errores (smoke test HTTP 200).
 - [x] `npm run build` genera `dist/` sin errores.
@@ -20,7 +20,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 **Files:** `package.json`, `index.html`, `vite.config.ts`, `tsconfig.json`, `src/main.tsx`, `capacitor.config.ts`
 **Scope:** S (config cohesiva)
 
-### T2: Tailwind v3 + tokens + 5 temas
+### T2: Tailwind v3 + tokens + 4 temas
 **Description:** Tailwind v3 con contenido de HSL, `globals.css` con los 5 presets completos (`paper`, `amber`, `sepia`, `eink`, `oled`), fuentes Inter/serif editorial, safe areas y `components.json` para shadcn.
 **Acceptance criteria:**
 - [x] Los 5 bloques `[data-reading-theme="…"]` definen **todos** los tokens (incluidos `--reader-*`).
@@ -79,7 +79,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 **Scope:** S
 
 ### T7: Páginas placeholder + selector de tema
-**Description:** Biblioteca vacía con estado vacío claro (invitación a importar), lector placeholder y página de ajustes con selector funcional de los 5 temas.
+**Description:** Biblioteca vacía con estado vacío claro (invitación a importar), lector placeholder y página de ajustes con selector funcional de los 4 temas.
 **Acceptance criteria:**
 - [x] `/` muestra estado vacío con call-to-action de importación (aún no funcional).
 - [x] `/read/:id` muestra un placeholder informativo.
@@ -141,7 +141,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Errores por archivo no detienen la cola.
 **Verification:** implementado; requiere prueba manual en navegador.
 **Dependencies:** T9, T10
-**Files:** `src/components/library/Dropzone.tsx`, `src/components/library/ImportQueue.tsx`, `src/hooks/useImport.ts`
+**Files:** `src/components/library/Dropzone.tsx`, `src/components/library/ImportQueue.tsx`, `src/components/import/ImportProvider.tsx`
 **Scope:** M
 
 ### T12: Persistencia transaccional + object URLs
@@ -236,7 +236,7 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] `KineticText` actualiza `data-playhead`/`aria-current` de forma imperativa; `BlockView` es `memo` (sin re-render por tick).
 - [x] En pausa se levanta la atenuación y queda un marcador discreto (`data-playhead=marker`).
 - [x] Cinética off / reduced-motion → lectura estática y legible (`useReducedMotion` + CSS).
-**Verification:** implementado; requiere comprobación visual de contraste en los 5 temas.
+**Verification:** implementado; requiere comprobación visual de contraste en los 4 temas.
 **Dependencies:** T17
 **Files:** `src/components/player/KineticText.tsx`, `src/components/player/BlockView.tsx`, `src/styles/kinetic.css`, `src/hooks/useReducedMotion.ts`
 **Scope:** M
@@ -443,8 +443,8 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 
 ### T37: Verificación y presentación
 - [x] QA real en Edge a 390×844 y 1440×900 sin errores de consola.
-- [x] Importar → recargar → portada; tema automático; gestos; índice; PWA offline.
-- [x] Code-split de vendors (sin avisos de chunk) y README ilustrado.
+- [x] Importar → recargar → portada; tema automático (incluido modo manual cacheado); gestos; índice; PWA offline.
+- [x] Code-split de vendors (sin avisos de chunk), README ilustrado y cabeceras de seguridad en Vercel.
 
 ### T38: Lectura, iconos y audio en segundo plano
 - [x] Icono SVG y assets web/Android generados desde `public/icons/icon.png`.
@@ -457,9 +457,9 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Nombre del APK con versión y canal: `Leeto-0.1.0-beta.apk`.
 
 ### T39: APK firmada y distribución
-- [x] Proyecto Capacitor Android creado sin Android Studio; JDK 21 portable y espejos Maven/Gradle configurados.
-- [x] `versionName` y sufijo de canal derivados de `package.json` y `VITE_BUILD_CHANNEL`.
-- [x] Firma release con keystore local fuera del repo; `apksigner verify` y `aapt dump badging` correctos.
-- [x] `Leeto-0.1.0-beta.apk` publicada en `public/downloads/` y copiada a `Leeto-release.apk` en la raíz.
-- [x] README y tareas actualizados con el proceso de build y verificación.
-- [x] APK publicada también en GitHub Releases (`v0.1.0-beta`); enlaces añadidos al aviso y a Ajustes.
+- [x] Proyecto Capacitor Android creado sin Android Studio; repositorios Maven Central/Google y Gradle 8.14.3 por wrapper.
+- [x] `versionName`/`versionCode` y sufijo de canal derivados de `package.json` y `VITE_BUILD_CHANNEL`.
+- [x] Firma release con keystore local fuera del repo; `assembleRelease` falla explícitamente si falta la configuración.
+- [x] `Leeto-0.1.0-beta.apk` publicada en GitHub Releases (`v0.1.0-beta`); el archivo local está ignorado por Git.
+- [x] README y tareas actualizados con el proceso de build, JDK 21/SDK 36 y verificación.
+- [x] Enlaces del aviso y de Ajustes apuntan al release publicado; la contraseña WebDAV no se persiste.

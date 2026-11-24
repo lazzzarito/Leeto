@@ -12,14 +12,14 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
     --primary: 38 92% 50%;
-    --primary-foreground: 0 0% 98%;
+    --primary-foreground: 0 0% 8%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted-foreground: 240 3.8% 43%;
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
@@ -32,82 +32,56 @@
     --reel-scrim: 0 0% 0%;
   }
 
-  [data-reading-theme='amber'] {
-    --background: 42 33% 97%;
-    --foreground: 30 15% 12%;
-    --card: 42 30% 99%;
-    --card-foreground: 30 15% 12%;
-    --popover: 42 30% 99%;
-    --popover-foreground: 30 15% 12%;
-    --primary: 32 95% 44%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 38 30% 92%;
-    --secondary-foreground: 30 15% 15%;
-    --muted: 38 25% 92%;
-    --muted-foreground: 30 10% 40%;
-    --accent: 38 40% 90%;
-    --accent-foreground: 30 15% 15%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 35 20% 84%;
-    --input: 35 20% 84%;
-    --ring: 32 95% 44%;
-    --radius: 0.75rem;
-    --reader-bg: 42 33% 97%;
-    --reader-fg: 30 18% 14%;
-    --reader-highlight: 32 95% 44%;
-  }
-
   [data-reading-theme='sepia'] {
-    --background: 37 38% 92%;
-    --foreground: 25 20% 20%;
-    --card: 37 35% 89%;
-    --card-foreground: 25 20% 20%;
-    --popover: 37 35% 89%;
-    --popover-foreground: 25 20% 20%;
-    --primary: 24 70% 40%;
-    --primary-foreground: 40 30% 96%;
-    --secondary: 35 25% 84%;
-    --secondary-foreground: 25 20% 20%;
-    --muted: 35 22% 85%;
-    --muted-foreground: 25 15% 38%;
-    --accent: 35 28% 82%;
-    --accent-foreground: 25 20% 20%;
+    --background: 38 42% 93%;
+    --foreground: 28 28% 16%;
+    --card: 38 38% 96%;
+    --card-foreground: 28 28% 16%;
+    --popover: 38 38% 96%;
+    --popover-foreground: 28 28% 16%;
+    --primary: 32 90% 40%;
+    --primary-foreground: 40 30% 8%;
+    --secondary: 35 28% 87%;
+    --secondary-foreground: 28 28% 16%;
+    --muted: 35 24% 88%;
+    --muted-foreground: 28 16% 38%;
+    --accent: 36 30% 85%;
+    --accent-foreground: 28 28% 16%;
     --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 98%;
-    --border: 30 20% 80%;
-    --input: 30 20% 80%;
-    --ring: 24 70% 40%;
+    --border: 33 22% 80%;
+    --input: 33 22% 80%;
+    --ring: 32 90% 40%;
     --radius: 0.75rem;
-    --reader-bg: 37 38% 92%;
-    --reader-fg: 25 22% 18%;
-    --reader-highlight: 24 70% 40%;
+    --reader-bg: 38 42% 93%;
+    --reader-fg: 28 30% 14%;
+    --reader-highlight: 32 90% 40%;
   }
 
-  [data-reading-theme='eink'] {
-    --background: 0 0% 94%;
-    --foreground: 0 0% 10%;
-    --card: 0 0% 97%;
-    --card-foreground: 0 0% 10%;
-    --popover: 0 0% 97%;
-    --popover-foreground: 0 0% 10%;
-    --primary: 0 0% 18%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 88%;
-    --secondary-foreground: 0 0% 12%;
-    --muted: 0 0% 88%;
-    --muted-foreground: 0 0% 32%;
-    --accent: 0 0% 86%;
-    --accent-foreground: 0 0% 12%;
-    --destructive: 0 65% 40%;
+  [data-reading-theme='graphite'] {
+    --background: 220 10% 12%;
+    --foreground: 210 10% 94%;
+    --card: 220 10% 15%;
+    --card-foreground: 210 10% 94%;
+    --popover: 220 10% 15%;
+    --popover-foreground: 210 10% 94%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 8%;
+    --secondary: 220 8% 20%;
+    --secondary-foreground: 210 10% 94%;
+    --muted: 220 8% 20%;
+    --muted-foreground: 215 8% 68%;
+    --accent: 220 8% 22%;
+    --accent-foreground: 210 10% 94%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 75%;
-    --input: 0 0% 75%;
-    --ring: 0 0% 18%;
+    --border: 220 8% 24%;
+    --input: 220 8% 24%;
+    --ring: 38 92% 50%;
     --radius: 0.75rem;
-    --reader-bg: 0 0% 94%;
-    --reader-fg: 0 0% 8%;
-    --reader-highlight: 0 0% 20%;
+    --reader-bg: 220 10% 12%;
+    --reader-fg: 210 10% 94%;
+    --reader-highlight: 38 92% 50%;
   }
 
   [data-reading-theme='oled'] {
@@ -193,7 +167,7 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-muted-foreground/40 ring-offset-2 ring-offset-background;
+    @apply outline-none ring-2 ring-foreground ring-offset-2 ring-offset-background;
   }
 }
 
@@ -226,6 +200,14 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  .library-pills-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .library-pills-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .text-reel {
     color: hsl(var(--reel-fg));
   }
@@ -254,23 +236,49 @@
 
   /* En el lector el foco no debe parecer un aviso ámbar sobre el fondo oscuro. */
   .reel-surface :focus-visible {
-    --tw-ring-color: rgb(255 255 255 / 0.55);
-    --tw-ring-offset-color: transparent;
+    --tw-ring-color: rgb(255 255 255 / 0.9);
+    --tw-ring-offset-color: rgb(0 0 0 / 0.85);
   }
 
   /* Fondo de la biblioteca: garabatos dispersos, rotados y de tamaños variados. */
   .library-doodle-bg {
+    background-color: hsl(var(--background));
+  }
+
+  .library-doodle-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: url('/doodles.svg');
     background-repeat: repeat;
     background-size: 620px 620px;
     background-position: -40px -30px;
-    opacity: 0.16;
+    opacity: 0.28;
   }
 
-  [data-reading-theme='oled'] .library-doodle-bg {
+  [data-reading-theme='oled'] .library-doodle-bg::before,
+  [data-reading-theme='graphite'] .library-doodle-bg::before {
     filter: invert(1);
     opacity: 0.16;
   }
+}
+
+@keyframes leeto-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes leeto-fade-out { from { opacity: 1 } to { opacity: 0 } }
+@keyframes leeto-sheet-up { from { transform: translateY(24px); opacity: 0.96 } to { transform: translateY(0); opacity: 1 } }
+@keyframes leeto-sheet-down { from { transform: translateY(0); opacity: 1 } to { transform: translateY(24px); opacity: 0.96 } }
+@keyframes leeto-sheet-right-in { from { transform: translateX(24px); opacity: 0.98 } to { transform: translateX(0); opacity: 1 } }
+@keyframes leeto-sheet-right-out { from { transform: translateX(0); opacity: 1 } to { transform: translateX(24px); opacity: 0.98 } }
+@keyframes leeto-scale-in { from { opacity: 0; transform: translate(-50%, -48%) scale(0.96) } to { opacity: 1; transform: translate(-50%, -50%) scale(1) } }
+@keyframes leeto-scale-out { from { opacity: 1; transform: translate(-50%, -50%) scale(1) } to { opacity: 0; transform: translate(-50%, -48%) scale(0.96) } }
+@keyframes leeto-pop-in { from { opacity: 0; transform: scale(0.96) } to { opacity: 1; transform: scale(1) } }
+@keyframes leeto-pop-out { from { opacity: 1; transform: scale(1) } to { opacity: 0; transform: scale(0.96) } }
+@keyframes leeto-toast-countdown { from { stroke-dashoffset: var(--toast-circumference) } to { stroke-dashoffset: 0 } }
+
+.toast-countdown {
+  animation-name: leeto-toast-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 /* Respeto al sistema: se eliminan movimientos continuos. La cinética del lector

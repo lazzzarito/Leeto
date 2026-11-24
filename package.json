@@ -3,14 +3,18 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Leeto — lector dinámico local-first para EPUB y PDF",
+  "description": "Leeto - lector dinámico local-first para EPUB y PDF",
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
@@ -41,6 +45,7 @@
     "fake-indexeddb": "^6.2.8",
     "jsdom": "^31.0.1",
     "postcss": "^8.4.49",
+    "sharp": "^0.35.5",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.7.2",
     "vite": "^8.3.8",

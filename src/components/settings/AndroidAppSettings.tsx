@@ -1,5 +1,5 @@
 import { Download, ExternalLink } from 'lucide-react';
-import { APK_FILENAME, APK_GITHUB_URL, APK_URL, APP_LABEL } from '@/lib/buildInfo';
+import { APK_FILENAME, APK_RELEASES_URL, APK_URL, APP_LABEL } from '@/lib/buildInfo';
 import { isAndroidWeb } from '@/lib/platform';
 
 /** Opción de instalación solo en la web de Android. */
@@ -23,25 +23,25 @@ export default function AndroidAppSettings() {
       <div className="flex flex-wrap gap-2">
         <a
           href={APK_URL}
-          download={APK_FILENAME}
+          target="_blank"
+          rel="noreferrer"
           className="bg-primary text-primary-foreground inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm font-medium"
         >
           <Download className="size-4" aria-hidden="true" />
           Descargar {APK_FILENAME}
         </a>
         <a
-          href={APK_GITHUB_URL}
+          href={APK_RELEASES_URL}
           target="_blank"
           rel="noreferrer"
           className="border-border hover:bg-muted inline-flex h-10 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium"
         >
           <ExternalLink className="size-4" aria-hidden="true" />
-          Descargar desde GitHub
+          Ver release en GitHub
         </a>
       </div>
       <p className="text-muted-foreground text-xs">
-        El mismo archivo se publica en GitHub Releases y en este sitio; en ambos casos el nombre
-        incluye la versión y el canal.
+        La descarga apunta al release oficial de GitHub; el nombre incluye la versión y el canal.
       </p>
     </section>
   );

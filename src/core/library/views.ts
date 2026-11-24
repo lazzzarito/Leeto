@@ -26,9 +26,14 @@ export function filterBooksByStatus(
   return books.filter((book) => getReadingStatus(progressByBook.get(book.id)) === status);
 }
 
-export function countBooksByStatus(progressByBook: Map<string, ReadingProgress>): Record<ReadingStatus, number> {
+export function countBooksByStatus(
+  books: LeetoBook[],
+  progressByBook: Map<string, ReadingProgress>,
+): Record<ReadingStatus, number> {
   const counts: Record<ReadingStatus, number> = { reading: 0, finished: 0 };
-  for (const progress of progressByBook.values()) {
+  const ids = new Set(books.map((book) => book.id));
+  for (const [bookId, progress] of progressByBook) {
+    if (!ids.has(bookId)) continue;
     const status = getReadingStatus(progress);
     if (status) counts[status] += 1;
   }

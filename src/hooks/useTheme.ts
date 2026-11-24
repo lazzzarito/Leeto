@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { updateSettings, useSettings, useSettingsLoaded } from '@/core/db/settings';
 import { readThemeCache, writeThemeCache } from '@/core/theme/cache';
+import { applyDynamicPalette, clearDynamicPalette, getDynamicPalette, listenDynamicPalette, themeForDynamicPalette, type DynamicPalette } from '@/core/theme/dynamic';
 import { READING_THEMES } from '@/core/theme/themes';
 import type { ReadingTheme } from '@/types';
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
+const THEME_COLORS: Record<ReadingTheme, string> = {
+  paper: '#ffffff',
+  sepia: '#f7ecdd',
+  graphite: '#1c1e22',
+  oled: '#000000',
+};
 
 function prefersDark(): boolean {
   return typeof window !== 'undefined' && window.matchMedia(DARK_QUERY).matches;
@@ -18,25 +25,54 @@ export function useTheme() {
   const { readingTheme, themeMode } = useSettings();
   const settingsLoaded = useSettingsLoaded();
   const [systemDark, setSystemDark] = useState(prefersDark);
-  const mode = themeMode ?? 'system';
-  const cached = readThemeCache();
-  const storedTheme =
-    settingsLoaded || cached?.mode !== 'manual' ? readingTheme : (cached?.theme ?? readingTheme);
-  const theme: ReadingTheme = mode === 'system' ? (systemDark ? 'oled' : 'paper') : storedTheme;
+  const [dynamicPalette, setDynamicPalette] = useState<DynamicPalette | null>(null);
+  const cached = useMemo(() => readThemeCache(), []);
+  // Antes de que Dexie responda, respeta la elección manual cacheada por el script inicial.
+  const mode = settingsLoaded ? (themeMode ?? 'system') : (cached?.mode ?? 'system');
+  const storedTheme = settingsLoaded ? readingTheme : (cached?.theme ?? readingTheme);
+  const dynamicTheme = themeForDynamicPalette(dynamicPalette);
+  const theme: ReadingTheme =
+    mode === 'system' ? (dynamicTheme ?? (systemDark ? 'oled' : 'paper')) : storedTheme;
 
   useEffect(() => {
+    if (mode !== 'system' || typeof window === 'undefined') return;
     const media = window.matchMedia(DARK_QUERY);
     const update = () => setSystemDark(media.matches);
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, []);
+  }, [mode]);
+
+  useEffect(() => {
+    if (mode !== 'system') {
+      setDynamicPalette(null);
+      return;
+    }
+    let active = true;
+    void getDynamicPalette().then((palette) => {
+      if (active) setDynamicPalette(palette);
+    });
+    const unsubPromise = listenDynamicPalette((palette) => {
+      if (active) setDynamicPalette(palette);
+    });
+    return () => {
+      active = false;
+      void unsubPromise.then((unsub) => unsub()).catch(() => undefined);
+    };
+  }, [mode]);
 
   useEffect(() => {
     document.documentElement.dataset.readingTheme = theme;
-    document.documentElement.style.colorScheme = theme === 'oled' ? 'dark' : 'light';
+    const dark = theme === 'oled' || theme === 'graphite';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
+    if (mode === 'system' && dynamicPalette?.available) {
+      applyDynamicPalette(dynamicPalette);
+    } else {
+      clearDynamicPalette();
+    }
     if (settingsLoaded) writeThemeCache(theme, mode);
-  }, [theme, mode, settingsLoaded]);
+  }, [theme, mode, settingsLoaded, dynamicPalette]);
 
   const setTheme = useCallback((next: ReadingTheme) => {
     document.documentElement.dataset.readingTheme = next;
@@ -45,8 +81,13 @@ export function useTheme() {
   }, []);
 
   const setThemeMode = useCallback((next: 'system' | 'manual') => {
-    void updateSettings({ themeMode: next });
-  }, []);
+    if (next === 'manual') {
+      writeThemeCache(theme, 'manual');
+      void updateSettings({ themeMode: 'manual', readingTheme: theme });
+      return;
+    }
+    void updateSettings({ themeMode: 'system' });
+  }, [theme]);
 
   return { theme, setTheme, themeMode: mode, setThemeMode, themes: READING_THEMES };
 }

@@ -5,7 +5,27 @@ coverage/
 *.local
 .DS_Store
 *.tsbuildinfo
-android/
+
+# Secrets (only the public site URL is committed)
+.env
+.env.*
+!.env.production
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+
+# Capacitor native - version source, ignore local/build output
+android/.gradle/
+android/.idea/
+android/build/
+android/**/build/
+android/app/.cxx/
+android/local.properties
+android/captures/
+android/**/*.iml
+android/*.iml
 ios/
+
 public/downloads/*.apk
 /*.apk

@@ -14,6 +14,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { updateSettings } from '@/core/db/settings';
 import { clearWebDavPassword, getWebDavPassword, saveWebDavPassword } from '@/core/sync/credentials';
 import { getSyncDirectory, isLocalFolderSupported, pickSyncDirectory } from '@/core/sync/localFolder';
+import { readFileTextLimited } from '@/core/sync/limits';
 import { isSecureSyncUrl } from '@/core/sync/provider';
 import { useSettings } from '@/core/db/settings';
 import { isSyncConfigured } from '@/hooks/useSync';
@@ -32,6 +33,7 @@ export default function SyncSettings() {
   const [password, setPassword] = useState(getWebDavPassword);
   const [folderName, setFolderName] = useState(getSyncDirectory()?.name);
   const [pendingText, setPendingText] = useState<string>();
+  const [importError, setImportError] = useState<string>();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>();
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -54,8 +56,14 @@ export default function SyncSettings() {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    setPendingText(await file.text());
-    setConfirmAction('import');
+    try {
+      setPendingText(await readFileTextLimited(file));
+      setImportError(undefined);
+      setConfirmAction('import');
+    } catch (error) {
+      setPendingText(undefined);
+      setImportError(error instanceof Error ? error.message : 'No se pudo leer el archivo');
+    }
   };
 
   const handleConfirm = async () => {
@@ -196,41 +204,43 @@ export default function SyncSettings() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-        <button
-          type="button"
-          onClick={() => void handleSync()}
-          disabled={syncing || !configured}
-          className="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm disabled:opacity-60"
-        >
-          {syncing ? (
-            <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          Sincronizar ahora
-        </button>
-        <button type="button" onClick={() => void exportJson()} className={BUTTON_CLASS}>
-          <Download className="size-4" aria-hidden="true" />
-          Exportar JSON
-        </button>
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className={BUTTON_CLASS}
-        >
-          <Upload className="size-4" aria-hidden="true" />
-          Importar JSON
-        </button>
-        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(event) => void handleFile(event)} />
-        <button
-          type="button"
-          onClick={() => setConfirmAction('restore')}
-          className={BUTTON_CLASS}
-        >
-          <ArchiveRestore className="size-4" aria-hidden="true" />
-          Restaurar backup
-        </button>
+      <div className="border-t border-border pt-4">
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => void handleSync()}
+            disabled={syncing || !configured}
+            className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm disabled:opacity-60"
+          >
+            {syncing ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="size-4" aria-hidden="true" />
+            )}
+            Sincronizar ahora
+          </button>
+          <button type="button" onClick={() => void exportJson()} className={`${BUTTON_CLASS} w-full justify-center`}>
+            <Download className="size-4" aria-hidden="true" />
+            Exportar JSON
+          </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className={`${BUTTON_CLASS} w-full justify-center`}
+          >
+            <Upload className="size-4" aria-hidden="true" />
+            Importar JSON
+          </button>
+          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(event) => void handleFile(event)} />
+          <button
+            type="button"
+            onClick={() => setConfirmAction('restore')}
+            className={`${BUTTON_CLASS} w-full justify-center`}
+          >
+            <ArchiveRestore className="size-4" aria-hidden="true" />
+            Restaurar backup
+          </button>
+        </div>
         {password && (
           <button
             type="button"
@@ -238,12 +248,19 @@ export default function SyncSettings() {
               clearWebDavPassword();
               setPassword('');
             }}
-            className="text-muted-foreground text-xs underline"
+            className="text-muted-foreground mt-2 w-full text-xs underline"
           >
             Olvidar contraseña
           </button>
         )}
       </div>
+
+      {importError && (
+        <p role="alert" className="text-destructive flex items-center gap-2 text-sm">
+          <AlertTriangle className="size-4" aria-hidden="true" />
+          {importError}
+        </p>
+      )}
 
       {status.message && (
         <p
@@ -268,8 +285,8 @@ export default function SyncSettings() {
 
       <Dialog.Root open={Boolean(confirmAction)} onOpenChange={(open) => !open && setConfirmAction(undefined)}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />
-          <Dialog.Content className="bg-card text-card-foreground fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border p-5 shadow-xl">
+          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-[leeto-fade-in_180ms_ease-out] data-[state=closed]:animate-[leeto-fade-out_140ms_ease-in]" />
+          <Dialog.Content className="bg-card text-card-foreground fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border p-5 shadow-xl data-[state=open]:animate-[leeto-scale-in_200ms_ease-out] data-[state=closed]:animate-[leeto-scale-out_150ms_ease-in]">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <Dialog.Title className="text-lg font-medium">

@@ -1,6 +1,7 @@
 import { BookOpen, Quote, Share2, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNotifications } from '@/components/notifications/NotificationProvider';
 import { quoteChapterTitle } from '@/core/library/views';
 import { formatQuoteShareText, softDeleteQuote } from '@/core/player/quotes';
 import { notifyLocalSyncChange } from '@/core/sync/scheduler';
@@ -19,13 +20,7 @@ const ICON_BUTTON_CLASS =
 export default function QuoteList({ quotes, books, query }: QuoteListProps) {
   const [removing, setRemoving] = useState<string>();
   const [sharing, setSharing] = useState<string>();
-  const [notice, setNotice] = useState<string>();
-
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(undefined), 3000);
-    return () => clearTimeout(timer);
-  }, [notice]);
+  const { push } = useNotifications();
 
   if (quotes.length === 0) {
     return (
@@ -61,34 +56,22 @@ export default function QuoteList({ quotes, books, query }: QuoteListProps) {
       const text = formatQuoteShareText(book, quote, quoteChapterTitle(book, quote.chapterIndex));
       const result = await shareText(text, book?.title ?? 'Cita de Leeto');
       if (result === 'cancelled') return;
-      setNotice(
-        result === 'copied'
-          ? 'Cita copiada al portapapeles'
-          : result === 'shared'
-            ? 'Cita compartida'
-            : 'No se pudo compartir',
-      );
+      if (result === 'copied') push({ kind: 'success', title: 'Cita copiada al portapapeles', durationMs: 3000 });
+      if (result === 'shared') push({ kind: 'success', title: 'Cita compartida', durationMs: 3000 });
+      if (result === 'unsupported') push({ kind: 'error', title: 'No se pudo compartir', durationMs: 3000 });
     } finally {
       setSharing(undefined);
     }
   };
 
   return (
-    <div className="space-y-3">
-      {notice && (
-        <p
-          role="status"
-          className="bg-primary/10 text-primary rounded-lg px-3 py-2 text-xs font-medium"
-        >
-          {notice}
-        </p>
-      )}
-      <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div className="w-full max-w-full min-w-0 space-y-3 overflow-x-hidden">
+      <ul className="grid w-full min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {quotes.map((quote) => {
           const book = bookById.get(quote.bookId);
           const chapter = quoteChapterTitle(book, quote.chapterIndex);
           return (
-            <li key={quote.id} className="min-w-0 rounded-xl border border-border bg-card p-4">
+            <li key={quote.id} className="min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card p-4">
               <div className="flex min-w-0 items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-1.5">
                   <BookOpen className="text-primary size-3.5 shrink-0" aria-hidden="true" />
@@ -126,7 +109,7 @@ export default function QuoteList({ quotes, books, query }: QuoteListProps) {
                   </button>
                 </div>
               </div>
-              <blockquote className="font-reading mt-3 break-words whitespace-normal text-sm italic">
+              <blockquote className="font-reading mt-3 break-words [overflow-wrap:anywhere] whitespace-normal text-sm italic">
                 “{quote.excerpt}”
               </blockquote>
               {quote.note && (

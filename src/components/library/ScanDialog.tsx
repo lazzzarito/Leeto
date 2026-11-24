@@ -177,10 +177,10 @@ export default function ScanDialog({
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Libros encontrados</h3>
             <ul className="space-y-1">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <li key={item.key} className="hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5">
                   <input
-                    id={item.key}
+                    id={`scan-item-${index}`}
                     type="checkbox"
                     checked={item.selected}
                     onChange={(event) =>
@@ -191,7 +191,7 @@ export default function ScanDialog({
                       )
                     }
                   />
-                  <label htmlFor={item.key} className="min-w-0 flex-1 truncate text-sm">
+                  <label htmlFor={`scan-item-${index}`} className="min-w-0 flex-1 truncate text-sm">
                     {item.path}
                   </label>
                 </li>

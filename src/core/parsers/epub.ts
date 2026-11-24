@@ -1,6 +1,7 @@
 import JSZip from 'jszip';
 import { newId } from '@/lib/ids';
 import type { LeetoBlock, TocEntry } from '@/types';
+import { PARSE_LIMITS } from './limits';
 import {
   decodeEntities,
   extractImageReferences,
@@ -253,6 +254,9 @@ export async function parseEpub(
       }
       return existingId;
     }
+    if (assets.length >= PARSE_LIMITS.maxAssetsPerBook) {
+      throw new ParseError('El EPUB contiene demasiadas imágenes para importar.', 'UNKNOWN');
+    }
     const file = zip.file(path);
     if (!file) return undefined;
     const bytes = new Uint8Array(await file.async('uint8array'));
@@ -301,6 +305,9 @@ export async function parseEpub(
     }
   };
   registerTitles(rawToc);
+  if (rawToc.length > PARSE_LIMITS.maxTocNodes) {
+    throw new ParseError('El EPUB tiene un índice demasiado extenso.', 'UNKNOWN');
+  }
 
   const spineItems = nodeArray(spine.itemref)
     .map((ref) => manifest.get(attributeOf(ref, 'idref')))
@@ -309,11 +316,16 @@ export async function parseEpub(
       (item) => /xhtml|html/i.test(item.mediaType) || /\.x?html$/i.test(item.href),
     );
 
+  if (spineItems.length > PARSE_LIMITS.maxEpubSpineItems) {
+    throw new ParseError('El EPUB tiene demasiados capítulos para importar.', 'UNKNOWN');
+  }
+
   const nextBlockId = makeBlockIdFactory(1);
   const chapters: ParseResult['chapters'] = [];
   const chapterIndexByPath = new Map<string, number>();
   const chapterHtmlByPath = new Map<string, string>();
   let totalWordCount = 0;
+  let parsedBlockCount = 0;
   const total = Math.max(1, spineItems.length);
 
   for (const [index, item] of spineItems.entries()) {
@@ -328,6 +340,9 @@ export async function parseEpub(
     });
 
     const html = decodeZipText(await file.async('uint8array'));
+    if (html.length > PARSE_LIMITS.maxHtmlCharsPerChapter) {
+      throw new ParseError('Un capítulo del EPUB es demasiado extenso.', 'UNKNOWN');
+    }
 
     onProgress({ stage: 'extracting-assets', percent: 70, message: 'Extrayendo imágenes' });
     for (const reference of extractImageReferences(html)) {
@@ -341,6 +356,10 @@ export async function parseEpub(
     );
     // Las notas viajan al final del capítulo como bloques de texto normales.
     blocks.push(...notes);
+    parsedBlockCount += blocks.length;
+    if (parsedBlockCount > PARSE_LIMITS.maxBlocksPerBook) {
+      throw new ParseError('El EPUB contiene demasiados bloques para importar.', 'UNKNOWN');
+    }
     totalWordCount += blocks.reduce(
       (sum, block) => sum + (block.type === 'text' ? block.wordCount : 0),
       0,
@@ -358,6 +377,9 @@ export async function parseEpub(
 
   if (chapters.length === 0) {
     throw new ParseError('El EPUB no contiene capítulos legibles.', 'INVALID_FORMAT');
+  }
+  if (chapters.length > PARSE_LIMITS.maxEpubSpineItems) {
+    throw new ParseError('El EPUB tiene demasiados capítulos para importar.', 'UNKNOWN');
   }
 
   onProgress({ stage: 'normalizing', percent: 92, message: 'Normalizando bloques' });

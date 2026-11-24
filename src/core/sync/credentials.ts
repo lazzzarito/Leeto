@@ -1,26 +1,14 @@
-const PASSWORD_KEY = 'leeto.webdav.password';
+let password = '';
 
-/** La contraseña WebDAV vive solo en la sesión; el resto de la configuración va a Dexie. */
-export function saveWebDavPassword(password: string): void {
-  try {
-    sessionStorage.setItem(PASSWORD_KEY, password);
-  } catch {
-    // Sin sessionStorage: la contraseña se usa solo en memoria durante esta sesión.
-  }
+/** La contraseña WebDAV vive solo en memoria: nunca se escribe en sessionStorage. */
+export function saveWebDavPassword(value: string): void {
+  password = value;
 }
 
 export function getWebDavPassword(): string {
-  try {
-    return sessionStorage.getItem(PASSWORD_KEY) ?? '';
-  } catch {
-    return '';
-  }
+  return password;
 }
 
 export function clearWebDavPassword(): void {
-  try {
-    sessionStorage.removeItem(PASSWORD_KEY);
-  } catch {
-    // Nada que limpiar.
-  }
+  password = '';
 }

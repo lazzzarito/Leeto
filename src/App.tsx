@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { RouterProvider } from 'react-router-dom';
+import { ImportProvider } from '@/components/import/ImportProvider';
 import Onboarding from '@/components/onboarding/Onboarding';
+import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 import { ensureSettings, updateSettings, useSettings, useSettingsLoaded } from '@/core/db/settings';
 import { useTheme } from '@/hooks/useTheme';
 import { router } from '@/router';
@@ -20,7 +22,10 @@ export default function App() {
 
   // Si IndexedDB no está disponible, la app sigue abriéndose.
   useEffect(() => {
-    const timer = window.setTimeout(() => setTimedOut(true), MAX_SPLASH_MS);
+    const timer = window.setTimeout(() => {
+      setTimedOut(true);
+      document.getElementById('boot-splash')?.remove();
+    }, MAX_SPLASH_MS);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -34,9 +39,11 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      {ready && !onboardingCompleted && <Onboarding onFinish={finishOnboarding} />}
-      <RouterProvider router={router} />
-    </>
+    <NotificationProvider>
+      <ImportProvider>
+        {ready && !onboardingCompleted && <Onboarding onFinish={finishOnboarding} />}
+        <RouterProvider router={router} />
+      </ImportProvider>
+    </NotificationProvider>
   );
 }

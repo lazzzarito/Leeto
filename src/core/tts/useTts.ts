@@ -34,6 +34,7 @@ export function useTts({
   const sessionRef = useRef<TtsSession | undefined>(undefined);
   const currentKeyRef = useRef<string | undefined>(undefined);
   const spokenRef = useRef<{ index: number } | undefined>(undefined);
+  const pausedRef = useRef(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>(() => listVoices());
   const [lastError, setLastError] = useState<string | undefined>(undefined);
 
@@ -47,10 +48,30 @@ export function useTts({
   useEffect(() => {
     currentKeyRef.current = clip?.key;
     const active = enabled && status === 'playing' && Boolean(clip);
-    const consecutive = active && spokenRef.current?.index === clipIndex - 1;
-    if (!active || !consecutive) sessionRef.current?.cancel();
+    const sameClip = spokenRef.current?.index === clipIndex && Boolean(sessionRef.current);
 
-    if (!active || !clip || clip.block.type !== 'text') return;
+    if (!enabled) {
+      sessionRef.current?.cancel();
+      pausedRef.current = false;
+      return;
+    }
+
+    if (!active) {
+      if (status === 'paused' && sameClip) sessionRef.current?.pause();
+      else sessionRef.current?.cancel();
+      pausedRef.current = status === 'paused' && sameClip;
+      return;
+    }
+
+    if (sameClip) {
+      if (pausedRef.current) sessionRef.current?.resume();
+      pausedRef.current = false;
+      return;
+    }
+
+    sessionRef.current?.cancel();
+    pausedRef.current = false;
+    if (!clip || clip.block.type !== 'text') return;
 
     spokenRef.current = { index: clipIndex };
     const key = clip.key;

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
@@ -85,6 +85,7 @@ function serviceWorkerPrecache() {
         '/manifest.webmanifest',
         '/doodles.svg',
         '/icons/icon.svg',
+        '/icons/icon-monochrome.svg',
         '/icons/icon-192.png',
         '/icons/icon-192.webp',
         '/icons/icon-512.png',
@@ -93,7 +94,7 @@ function serviceWorkerPrecache() {
       ].filter((path) => existsSync(join(outDir, path.replace(/^\//, ''))));
 
       const versionSource = precache
-        .map((path) => `${path}:${statSync(join(outDir, path.replace(/^\//, ''))).size}`)
+        .map((path) => createHash('sha256').update(readFileSync(join(outDir, path.replace(/^\//, '')))).digest('hex'))
         .join('|');
       const version = createHash('sha256').update(versionSource).digest('hex').slice(0, 10);
       const source = readFileSync(swPath, 'utf8')

@@ -1,13 +1,17 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { BookOpenText, Clock3, MoreHorizontal, Pencil, Star, Trash2 } from 'lucide-react';
+import { BookCheck, BookOpenText, Clock3, MoreHorizontal, Pencil, RotateCcw, Star, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Marquee from '@/components/ui/Marquee';
+import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { cn } from '@/lib/cn';
-import { booksRepo } from '@/core/db/repositories';
+import { booksRepo, progressRepo } from '@/core/db/repositories';
 import { useSettings } from '@/core/db/settings';
+import { getReadingStatus } from '@/core/library/views';
+import { notifyLocalSyncChange } from '@/core/sync/scheduler';
 import { useAssetUrl } from '@/hooks/useAssetUrl';
 import { useBookProgress } from '@/hooks/useLibrary';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { formatFileSize, formatFileType } from '@/lib/file';
 import { estimateRemainingTime, formatDuration } from '@/lib/time';
 import type { LeetoBook } from '@/types';
@@ -48,12 +52,36 @@ function useRowSpan<T extends HTMLElement>(dependency: unknown) {
 export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
   const coverUrl = useAssetUrl(book.coverAssetId);
   const progress = useBookProgress(book.id);
-  const { wpm } = useSettings();
+  const { wpm, deviceId } = useSettings();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const [actionsOpen, setActionsOpen] = useState(false);
   const { ref, span } = useRowSpan<HTMLLIElement>(coverUrl);
 
   const percentage = progress?.percentage ?? 0;
   const consumedWords = (book.totalWordCount * percentage) / 100;
   const remaining = estimateRemainingTime(book.totalWordCount, consumedWords, wpm);
+  const status = getReadingStatus(progress);
+
+  const markAsRead = async () => {
+    const lastChapterIndex = Math.max(0, book.chapters.length - 1);
+    const lastChapter = book.chapters[lastChapterIndex];
+    const lastBlock = lastChapter?.blocks[lastChapter.blocks.length - 1];
+    await progressRepo.put({
+      bookId: book.id,
+      chapterIndex: lastChapterIndex,
+      blockId: lastBlock?.id ?? '',
+      segmentIndex: 0,
+      percentage: 100,
+      updatedAt: Date.now(),
+      deviceId,
+    });
+    notifyLocalSyncChange();
+  };
+
+  const markAsUnread = async () => {
+    await progressRepo.delete(book.id);
+    notifyLocalSyncChange();
+  };
 
   return (
     <li
@@ -116,49 +144,80 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
         </div>
       </Link>
 
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
+      {isDesktop ? (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              aria-label={`Opciones de ${book.title}`}
+              className="bg-card/90 border-border absolute top-2 right-2 flex size-8 items-center justify-center rounded-lg border opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            >
+              <MoreHorizontal className="size-4" aria-hidden="true" />
+            </button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="end"
+              sideOffset={4}
+              className="bg-popover text-popover-foreground z-50 min-w-40 origin-[var(--radix-dropdown-menu-content-transform-origin)] rounded-lg border border-border p-1 shadow-lg data-[state=open]:animate-[leeto-pop-in_160ms_ease-out] data-[state=closed]:animate-[leeto-pop-out_120ms_ease-in]"
+            >
+              <DropdownMenu.Item className={MENU_ITEM_CLASS} onSelect={() => void booksRepo.toggleFavorite(book.id)}>
+                <Star className={cn('size-4', book.favorite && 'text-primary fill-current')} aria-hidden="true" />
+                {book.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={MENU_ITEM_CLASS} onSelect={() => void (status === 'finished' ? markAsUnread() : markAsRead())}>
+                {status === 'finished' ? <RotateCcw className="size-4" aria-hidden="true" /> : <BookCheck className="size-4" aria-hidden="true" />}
+                {status === 'finished' ? 'Marcar como no leído' : 'Marcar como leído'}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={MENU_ITEM_CLASS} onSelect={() => onEdit(book)}>
+                <Pencil className="size-4" aria-hidden="true" />
+                Editar metadatos
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className={`${MENU_ITEM_CLASS} text-destructive`} onSelect={() => onDelete(book)}>
+                <Trash2 className="size-4" aria-hidden="true" />
+                Eliminar
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      ) : (
+        <>
           <button
             type="button"
             aria-label={`Opciones de ${book.title}`}
-            className="bg-card/90 border-border absolute top-2 right-2 flex size-8 items-center justify-center rounded-lg border opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            onClick={() => setActionsOpen(true)}
+            className="bg-card/90 border-border absolute top-2 right-2 flex size-8 items-center justify-center rounded-lg border"
           >
             <MoreHorizontal className="size-4" aria-hidden="true" />
           </button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="end"
-            sideOffset={4}
-            className="bg-popover text-popover-foreground z-50 min-w-40 rounded-lg border border-border p-1 shadow-lg"
+          <ResponsiveDialog
+            open={actionsOpen}
+            onOpenChange={setActionsOpen}
+            height="content"
+            variant="centered"
+            title="Acciones del libro"
           >
-            <DropdownMenu.Item
-              className={MENU_ITEM_CLASS}
-              onSelect={() => void booksRepo.toggleFavorite(book.id)}
-            >
-              <Star
-                className={cn('size-4', book.favorite && 'text-primary fill-current')}
-                aria-hidden="true"
-              />
-              {book.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              className={MENU_ITEM_CLASS}
-              onSelect={() => onEdit(book)}
-            >
-              <Pencil className="size-4" aria-hidden="true" />
-              Editar metadatos
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              className={`${MENU_ITEM_CLASS} text-destructive`}
-              onSelect={() => onDelete(book)}
-            >
-              <Trash2 className="size-4" aria-hidden="true" />
-              Eliminar
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+            <div className="space-y-1 pb-6">
+              <button type="button" className="hover:bg-accent flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm" onClick={() => { setActionsOpen(false); void booksRepo.toggleFavorite(book.id); }}>
+                <Star className={cn('size-4', book.favorite && 'text-primary fill-current')} aria-hidden="true" />
+                {book.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+              </button>
+              <button type="button" className="hover:bg-accent flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm" onClick={() => { setActionsOpen(false); void (status === 'finished' ? markAsUnread() : markAsRead()); }}>
+                {status === 'finished' ? <RotateCcw className="size-4" aria-hidden="true" /> : <BookCheck className="size-4" aria-hidden="true" />}
+                {status === 'finished' ? 'Marcar como no leído' : 'Marcar como leído'}
+              </button>
+              <button type="button" className="hover:bg-accent flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm" onClick={() => { setActionsOpen(false); onEdit(book); }}>
+                <Pencil className="size-4" aria-hidden="true" />
+                Editar metadatos
+              </button>
+              <button type="button" className="text-destructive hover:bg-accent flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm" onClick={() => { setActionsOpen(false); onDelete(book); }}>
+                <Trash2 className="size-4" aria-hidden="true" />
+                Eliminar
+              </button>
+            </div>
+          </ResponsiveDialog>
+        </>
+      )}
     </li>
   );
 }

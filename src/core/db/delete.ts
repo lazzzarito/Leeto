@@ -1,5 +1,6 @@
+import { notifyLocalSyncChange } from '@/core/sync/scheduler';
 import { newId } from '@/lib/ids';
-import type { LeetoBook, StoredAsset } from '@/types';
+import type { LeetoBook, ReadingProgress, SavedQuote, StoredAsset } from '@/types';
 import { db } from './db';
 
 export interface BookMetadataPatch {
@@ -72,16 +73,67 @@ export async function updateBookMetadata(
   });
 }
 
-/** Borra libro, progreso, citas y todos sus assets en una sola transacción. */
-export async function deleteBookCascade(bookId: string): Promise<void> {
-  await db.transaction('rw', db.books, db.progress, db.quotes, db.assets, async () => {
-    const quoteIds = await db.quotes.where('bookId').equals(bookId).primaryKeys();
-    const assetIds = await db.assets.where('bookId').equals(bookId).primaryKeys();
+export interface DeletedBookSnapshot {
+  book: LeetoBook;
+  progress?: ReadingProgress;
+  quotes: SavedQuote[];
+  assets: StoredAsset[];
+}
+
+/** Borra el libro y deja tombstones de progreso/citas para que el sync no los resucite. */
+export async function deleteBookCascade(bookId: string): Promise<DeletedBookSnapshot | undefined> {
+  const snapshot = await db.transaction('rw', db.books, db.progress, db.quotes, db.assets, async () => {
+    const book = await db.books.get(bookId);
+    if (!book) return undefined;
+    const [progress, quotes, assets] = await Promise.all([
+      db.progress.get(bookId),
+      db.quotes.where('bookId').equals(bookId).toArray(),
+      db.assets.where('bookId').equals(bookId).toArray(),
+    ]);
+    const now = Date.now();
     await Promise.all([
       db.books.delete(bookId),
-      db.progress.delete(bookId),
-      db.quotes.bulkDelete(quoteIds),
-      db.assets.bulkDelete(assetIds),
+      progress
+        ? db.progress.put({ ...progress, deletedAt: now, updatedAt: Math.max(now, progress.updatedAt) })
+        : Promise.resolve(),
+      quotes.length > 0
+        ? db.quotes.bulkPut(
+            quotes.map((quote) => ({
+              ...quote,
+              deletedAt: now,
+              updatedAt: Math.max(now, quote.updatedAt),
+            })),
+          )
+        : Promise.resolve(),
+      db.assets.bulkDelete(assets.map((asset) => asset.id)),
     ]);
+    return { book, progress, quotes, assets };
   });
+  if (snapshot) notifyLocalSyncChange();
+  return snapshot;
+}
+
+export async function restoreBookSnapshot(snapshot: DeletedBookSnapshot): Promise<void> {
+  const now = Date.now();
+  await db.transaction('rw', db.books, db.progress, db.quotes, db.assets, async () => {
+    await db.books.put({ ...snapshot.book, updatedAt: Math.max(now, snapshot.book.updatedAt) });
+    if (snapshot.progress) {
+      await db.progress.put({
+        ...snapshot.progress,
+        deletedAt: undefined,
+        updatedAt: Math.max(now, snapshot.progress.updatedAt),
+      });
+    }
+    if (snapshot.quotes.length > 0) {
+      await db.quotes.bulkPut(
+        snapshot.quotes.map((quote) => ({
+          ...quote,
+          deletedAt: undefined,
+          updatedAt: Math.max(now, quote.updatedAt),
+        })),
+      );
+    }
+    if (snapshot.assets.length > 0) await db.assets.bulkPut(snapshot.assets);
+  });
+  notifyLocalSyncChange();
 }

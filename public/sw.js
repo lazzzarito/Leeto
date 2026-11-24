@@ -47,7 +47,16 @@ self.addEventListener('fetch', (event) => {
           store(INDEX, response);
           return response;
         })
-        .catch(() => caches.match(INDEX, { ignoreVary: true })),
+        .catch(async () => {
+          const cached = await caches.match(INDEX, { ignoreVary: true });
+          return (
+            cached ??
+            new Response('Sin conexión', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+          );
+        }),
     );
     return;
   }

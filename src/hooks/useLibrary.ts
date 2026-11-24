@@ -23,13 +23,17 @@ export function useFavoriteCount(): number {
 }
 
 export function useBookProgress(bookId?: string): ReadingProgress | undefined {
-  return useLiveQuery(() => (bookId ? db.progress.get(bookId) : undefined), [bookId]);
+  const progress = useLiveQuery(() => (bookId ? db.progress.get(bookId) : undefined), [bookId]);
+  return progress?.deletedAt ? undefined : progress;
 }
 
 /** Progreso de toda la biblioteca, para las vistas Leyendo y Leídos. */
 export function useProgressByBook(): Map<string, ReadingProgress> {
   const items = useLiveQuery(() => db.progress.toArray(), [], []);
-  return useMemo(() => new Map(items.map((item) => [item.bookId, item])), [items]);
+  return useMemo(
+    () => new Map(items.filter((item) => !item.deletedAt).map((item) => [item.bookId, item])),
+    [items],
+  );
 }
 
 /** Citas vigentes (excluye tombstones), más recientes primero. */

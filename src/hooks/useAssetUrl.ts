@@ -6,10 +6,9 @@ export function useAssetUrl(assetId?: string): string | undefined {
   const [url, setUrl] = useState<string>();
 
   useEffect(() => {
-    if (!assetId) {
-      setUrl(undefined);
-      return;
-    }
+    // Evita mostrar la imagen del libro anterior mientras carga la nueva.
+    setUrl(undefined);
+    if (!assetId) return;
 
     let cancelled = false;
     let objectUrl: string | undefined;

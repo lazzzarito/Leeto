@@ -8,13 +8,13 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 ## Decisiones de arquitectura (confirmadas por la spec)
 
-- **Stack base:** Vite + React 18 + TypeScript (strict) + react-router-dom. SPA/PWA, build estático.
+- **Stack base:** Vite + React 19 + TypeScript (strict) + react-router-dom 7. SPA/PWA, build estático.
 - **Gestor de paquetes:** npm (es el único disponible en el entorno: Node 26.7 / npm 12).
 - **UI:** Tailwind CSS v3 + estilo shadcn/ui sobre primitivas Radix (`dialog`, `dropdown-menu`, `tabs`, instaladas en Fase 3) + lucide-react. Tokens HSL por tema.
 - **Persistencia:** Dexie (IndexedDB), esquematipado; singleton de `settings` con `deviceId`.
 - **Identidad:** `contentHash` SHA-256 (WebCrypto) como clave de libro.
 - **Parseo:** Web Worker de app para EPUB (jszip + fast-xml-parser, empaquetado con `?worker`). PDF usa pdfjs-dist desde el hilo principal con **su propio worker** (D5: evitar workers anidados); se carga con `import()` diferido para no engordar el bundle inicial.
-- **Temas:** 5 presets autocontenidos aplicados vía `data-reading-theme` en `<html>`.
+- **Temas:** 4 presets autocontenidos (`paper`, `sepia`, `graphite`, `oled`) aplicados vía `data-reading-theme` en `<html>`, con migración de los antiguos `amber`/`eink`.
 - **Motor:** máquina de estados + único reloj `requestAnimationFrame`; TTS como driver opcional con fallback a temporizador.
 - **Sync v1:** WebDAV + carpeta local, merge por registro con `updatedAt`/`deviceId` y tombstones. Sin backend propio.
 - **Diferido:** OCR de PDF escaneado (rechazo explícito), Drive/OneDrive (5b), cifrado E2E (diseño previsto, no prometido), Capacitor nativo (config inicial en F1, plataformas cuando se necesiten).
@@ -23,7 +23,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 ### Fase 1 — Cimientos
 - T1: Scaffold Vite + React + TS (config de build, entry point).
-- T2: Tailwind v3 + tokens + 5 temas de lectura + globals.css + components.json.
+- T2: Tailwind v3 + tokens + 4 temas de lectura + globals.css + components.json.
 - T3: Tipos de dominio + utilidades base (cn, ids, tiempo, hash) + deviceId.
 - T4: Esquema Dexie + repositorios + settings singleton.
 - T5: ThemeProvider (persistencia + apply en root + prefers-color-scheme).
@@ -88,7 +88,7 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 - T38: Reproductor global, notas limpias, iconos derivados de `icon.png` y aviso de descarga de APK.
 - T39: Servicio foreground con MediaSession, compilación firmada y publicación de la APK con versión/canal en el sitio y en GitHub Releases.
 
-**Checkpoint F8:** 144 tests en verde, `assembleRelease` firmado, `apksigner verify` correcto y APK servida desde `dist/downloads/`.
+**Checkpoint F8:** 148 tests en verde, `assembleRelease` firmado, `apksigner verify` correcto y APK publicada en GitHub Releases.
 
 ## Riesgos y mitigaciones
 

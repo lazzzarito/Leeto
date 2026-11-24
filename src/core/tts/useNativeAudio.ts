@@ -45,51 +45,62 @@ export function useNativeAudio({
   const clipsRef = useRef(clips);
   const statusRef = useRef(status);
   const suppressCommandRef = useRef(false);
+  const latestRef = useRef({ clip, wpm, speed, onBoundary, onIndexChange, onStatus, onEnded, onError });
   indexRef.current = clipIndex;
   clipsRef.current = clips;
   statusRef.current = status;
+  latestRef.current = { clip, wpm, speed, onBoundary, onIndexChange, onStatus, onEnded, onError };
 
   useEffect(() => {
     if (!available || !enabled) return;
     let alive = true;
     void nativeAudio.requestPermissions().catch(() => undefined);
 
-    void nativeAudio.addListener('stateChanged', (event) => {
-      if (!alive) return;
-      if (event.index !== indexRef.current) {
-        indexRef.current = event.index;
-        suppressCommandRef.current = true;
-        onIndexChange(event.index);
-      }
-      const mapped: 'playing' | 'paused' | undefined =
-        event.status === 'playing' || event.status === 'paused' ? event.status : undefined;
-      if (mapped && mapped !== statusRef.current) {
-        suppressCommandRef.current = true;
-        onStatus(mapped);
-      }
-      if (event.status === 'ended' && activeRef.current) onEnded();
-    });
-    void nativeAudio.addListener('boundary', (event) => {
-      if (!alive || event.index !== indexRef.current) return;
-      const activeClip = clipsRef.current[event.index] ?? clip;
-      if (!activeClip) return;
-      const duration = getTextDuration(
-        activeClip.wordCount,
-        wpm,
-        speed,
-        activeClip.block.type === 'text' && activeClip.block.heading === true,
-      );
-      onBoundary((event.wordIndex * duration) / Math.max(1, activeClip.wordCount));
-    });
-    void nativeAudio.addListener('error', (event) => {
-      if (alive) onError(event.message);
-    });
+    // Registrar una sola vez: los callbacks se leen de latestRef para no
+    // recrear los listeners en cada render. Esperamos el registro antes de
+    // limpiar para no dejar listeners huérfanos al desmontar.
+    const registrations = [
+      nativeAudio.addListener('stateChanged', (event) => {
+        if (!alive) return;
+        const { onIndexChange, onStatus, onEnded } = latestRef.current;
+        if (event.index !== indexRef.current) {
+          indexRef.current = event.index;
+          suppressCommandRef.current = true;
+          onIndexChange(event.index);
+        }
+        const mapped: 'playing' | 'paused' | undefined =
+          event.status === 'playing' || event.status === 'paused' ? event.status : undefined;
+        if (mapped && mapped !== statusRef.current) {
+          suppressCommandRef.current = true;
+          onStatus(mapped);
+        }
+        if (event.status === 'ended' && activeRef.current) onEnded();
+      }),
+      nativeAudio.addListener('boundary', (event) => {
+        if (!alive || event.index !== indexRef.current) return;
+        const { clip, wpm, speed, onBoundary } = latestRef.current;
+        const activeClip = clipsRef.current[event.index] ?? clip;
+        if (!activeClip) return;
+        const duration = getTextDuration(
+          activeClip.wordCount,
+          wpm,
+          speed,
+          activeClip.block.type === 'text' && activeClip.block.heading === true,
+        );
+        onBoundary((event.wordIndex * duration) / Math.max(1, activeClip.wordCount));
+      }),
+      nativeAudio.addListener('error', (event) => {
+        if (alive) latestRef.current.onError(event.message);
+      }),
+    ];
 
     return () => {
       alive = false;
-      void nativeAudio.removeAllListeners().catch(() => undefined);
+      void Promise.allSettled(registrations)
+        .then(() => nativeAudio.removeAllListeners())
+        .catch(() => undefined);
     };
-  }, [available, enabled, clip, wpm, speed, onBoundary, onIndexChange, onStatus, onEnded, onError]);
+  }, [available, enabled]);
 
   useEffect(() => {
     if (!available || !enabled) return;

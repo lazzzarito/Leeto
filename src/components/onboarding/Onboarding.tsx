@@ -8,7 +8,7 @@ import {
   Sparkles,
   Volume2,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 interface OnboardingProps {
@@ -39,17 +39,51 @@ const FEATURES = [
 /** Recorrido de primer uso: bienvenida y gestos del lector. */
 export default function Onboarding({ onFinish }: OnboardingProps) {
   const [step, setStep] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const siblings = Array.from(root.parentElement?.children ?? []).filter((node) => node !== root);
+    siblings.forEach((node) => node.setAttribute('inert', ''));
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    root.querySelector<HTMLElement>('button')?.focus();
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onFinish();
+      if (event.key === 'Escape') {
+        onFinish();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = Array.from(
+        root.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input, select, textarea'),
+      ).filter((node) => node.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      siblings.forEach((node) => node.removeAttribute('inert'));
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus();
+    };
   }, [onFinish]);
 
   return (
     <div
+      ref={rootRef}
+      data-onboarding
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
@@ -99,7 +133,7 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
         <button
           type="button"
           onClick={onFinish}
-          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+          className="text-muted-foreground hover:text-foreground inline-flex min-h-10 items-center px-2 text-sm transition-colors"
         >
           Omitir
         </button>

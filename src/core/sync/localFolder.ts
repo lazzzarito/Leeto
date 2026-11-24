@@ -1,3 +1,4 @@
+import { readFileTextLimited } from './limits';
 import type { SyncProvider, SyncReadResult, SyncWriteResult } from './provider';
 
 let selectedDirectory: FileSystemDirectoryHandle | undefined;
@@ -56,7 +57,7 @@ export function createLocalFolderProvider(directory: FileSystemDirectoryHandle):
   async function readFile(name: string): Promise<SyncReadResult> {
     try {
       const file = await directory.getFileHandle(name);
-      return { text: await (await file.getFile()).text() };
+      return { text: await readFileTextLimited(await file.getFile()) };
     } catch (error) {
       if (isNotFound(error)) return { text: null };
       throw describeError(error, 'leer');

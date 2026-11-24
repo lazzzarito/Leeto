@@ -1,23 +1,37 @@
 import type { LeetoBook, ReadingProgress, SavedQuote, SyncEnvelope } from '@/types';
 
+/** Límites explícitos para no confiar en el tamaño de un archivo remoto o importado. */
+export const MAX_SYNC_TEXT_LENGTH = 10 * 1024 * 1024;
+const MAX_RECORDS = 20_000;
+const MAX_ID_LENGTH = 512;
+const MAX_FIELD_LENGTH = 20_000;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isText(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0;
+function isBoundedRecord(value: unknown): value is Record<string, unknown> {
+  return isRecord(value) && Object.keys(value).length <= MAX_RECORDS;
+}
+
+function isText(value: unknown, maxLength = MAX_ID_LENGTH): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= maxLength;
 }
 
 function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function isOptionalText(value: unknown): boolean {
-  return value === undefined || typeof value === 'string';
+function isOptionalText(value: unknown, maxLength = MAX_ID_LENGTH): boolean {
+  return value === undefined || (typeof value === 'string' && value.length <= maxLength);
 }
 
 function isOptionalNumber(value: unknown): boolean {
   return value === undefined || isNumber(value);
+}
+
+function isOptionalSegmentIndex(value: unknown): boolean {
+  return value === undefined || (isNumber(value) && Number.isInteger(value) && value >= 0);
 }
 
 export function isValidProgress(value: unknown): value is ReadingProgress {
@@ -32,7 +46,8 @@ export function isValidProgress(value: unknown): value is ReadingProgress {
     value.percentage <= 100 &&
     isNumber(value.updatedAt) &&
     isText(value.deviceId) &&
-    isOptionalText(value.segmentIndex)
+    isOptionalSegmentIndex(value.segmentIndex) &&
+    isOptionalNumber(value.deletedAt)
   );
 }
 
@@ -45,7 +60,8 @@ export function isValidQuote(value: unknown): value is SavedQuote {
     value.chapterIndex >= 0 &&
     isText(value.blockId) &&
     typeof value.excerpt === 'string' &&
-    isOptionalText(value.note) &&
+    value.excerpt.length <= MAX_FIELD_LENGTH &&
+    isOptionalText(value.note, MAX_FIELD_LENGTH) &&
     isNumber(value.createdAt) &&
     isNumber(value.updatedAt) &&
     isOptionalNumber(value.deletedAt)
@@ -56,7 +72,7 @@ function isValidLibraryRef(value: unknown): boolean {
   if (!isRecord(value)) return false;
   return (
     isText(value.id) &&
-    isText(value.fileName) &&
+    isText(value.fileName, MAX_FIELD_LENGTH) &&
     isNumber(value.fileSize) &&
     value.fileSize >= 0 &&
     isNumber(value.updatedAt)
@@ -125,6 +141,9 @@ export function serializeEnvelope(envelope: SyncEnvelope): string {
 
 /** Parsea y valida la forma mínima del sobre; lanza si el JSON es inválido. */
 export function parseEnvelope(text: string): SyncEnvelope {
+  if (text.length > MAX_SYNC_TEXT_LENGTH) {
+    throw new Error('El archivo de sincronización es demasiado grande');
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -137,14 +156,14 @@ export function parseEnvelope(text: string): SyncEnvelope {
     parsed.schemaVersion !== 1 ||
     !isText(parsed.originDeviceId) ||
     !isNumber(parsed.updatedAt) ||
-    !isRecord(parsed.devices) ||
-    !isRecord(parsed.progress) ||
-    !isRecord(parsed.quotes) ||
+    !isBoundedRecord(parsed.devices) ||
+    !isBoundedRecord(parsed.progress) ||
+    !isBoundedRecord(parsed.quotes) ||
     !Object.values(parsed.devices).every(isNumber) ||
     !hasOnlyValidRecords(parsed.progress, isValidProgress) ||
     !hasOnlyValidRecords(parsed.quotes, isValidQuote) ||
     (parsed.libraryRefs !== undefined &&
-      (!isRecord(parsed.libraryRefs) ||
+      (!isBoundedRecord(parsed.libraryRefs) ||
         !hasOnlyValidRecords(parsed.libraryRefs, isValidLibraryRef)))
   ) {
     throw new Error('Sobre de sincronización inválido o de versión no soportada');

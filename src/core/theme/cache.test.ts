@@ -13,9 +13,16 @@ describe('caché del tema', () => {
   });
 
   it('interpreta la caché antigua como tema manual', () => {
-    localStorage.setItem('leeto.theme', 'amber');
+    localStorage.setItem('leeto.theme', 'graphite');
 
-    expect(readThemeCache()).toEqual({ theme: 'amber', mode: 'manual' });
+    expect(readThemeCache()).toEqual({ theme: 'graphite', mode: 'manual' });
+  });
+
+  it('migra temas antiguos a los 4 temas actuales', () => {
+    localStorage.setItem('leeto.theme', 'amber');
+    expect(readThemeCache()).toEqual({ theme: 'sepia', mode: 'manual' });
+    localStorage.setItem('leeto.theme', '{"theme":"eink","mode":"system"}');
+    expect(readThemeCache()).toEqual({ theme: 'paper', mode: 'system' });
   });
 
   it('ignora valores que no son un tema conocido', () => {

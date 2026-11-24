@@ -33,6 +33,7 @@ export function usePlayer(book?: LeetoBook) {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastSavedRef = useRef<string | undefined>(undefined);
   const appliedProgressAtRef = useRef<number | undefined>(undefined);
+  const loadedBookIdRef = useRef<string | undefined>(undefined);
 
   const flush = useCallback(() => {
     if (saveTimerRef.current) {
@@ -41,7 +42,8 @@ export function usePlayer(book?: LeetoBook) {
     }
     const current = stateRef.current;
     const clip = current.clips[current.clipIndex];
-    if (!clip || !bookId) return;
+    // Nunca escribas el clip de otro libro con el id del libro actual.
+    if (!clip || !bookId || loadedBookIdRef.current !== bookId) return;
     lastSavedRef.current = `${clip.block.id}:${clip.segmentIndex}`;
     void progressRepo.put({
       bookId,
@@ -72,16 +74,27 @@ export function usePlayer(book?: LeetoBook) {
   // Restaura el subtítulo guardado. Es idempotente: una escritura propia nunca
   // debe recargar el clip (eso reiniciaba el playhead y cortaba la voz).
   useEffect(() => {
-    // Un cambio remoto mientras se reproduce no debe mover el playhead ni cortar la voz.
-    if (stateRef.current.status === 'playing') return;
-    const savedKey = progress ? `${progress.blockId}:${progress.segmentIndex ?? 0}` : 'new';
-    if (progress && lastSavedRef.current === savedKey) return;
-    if (progress && appliedProgressAtRef.current === progress.updatedAt) return;
-    const clipIndex = progress ? findClipIndex(clips, progress) : 0;
+    const saved = progress?.bookId === bookId ? progress : undefined;
+    const switchingBook = loadedBookIdRef.current !== bookId;
+    if (switchingBook) {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = undefined;
+      lastSavedRef.current = undefined;
+      appliedProgressAtRef.current = undefined;
+      loadedBookIdRef.current = bookId;
+    } else if (stateRef.current.status === 'playing') {
+      // Un cambio remoto mientras se reproduce no debe mover el playhead ni cortar la voz.
+      return;
+    }
+
+    const savedKey = saved ? `${saved.blockId}:${saved.segmentIndex ?? 0}` : 'new';
+    if (!switchingBook && saved && lastSavedRef.current === savedKey) return;
+    if (!switchingBook && saved && appliedProgressAtRef.current === saved.updatedAt) return;
+    const clipIndex = saved ? findClipIndex(clips, saved) : 0;
     const current = stateRef.current;
-    if (current.clips.length > 0 && current.clipIndex === clipIndex) return;
+    if (!switchingBook && current.clips.length > 0 && current.clipIndex === clipIndex) return;
     const currentSettings = settingsRef.current;
-    appliedProgressAtRef.current = progress?.updatedAt;
+    appliedProgressAtRef.current = saved?.updatedAt;
     dispatch({
       type: 'load',
       clips,
@@ -92,7 +105,7 @@ export function usePlayer(book?: LeetoBook) {
       elapsedMs: 0,
       status: 'paused',
     });
-  }, [clips, progress?.blockId, progress?.segmentIndex, progress?.updatedAt]);
+  }, [bookId, clips, progress?.bookId, progress?.blockId, progress?.segmentIndex, progress?.updatedAt]);
 
   useEffect(() => {
     dispatch({ type: 'setWpm', wpm: settings.wpm });
@@ -159,7 +172,7 @@ export function usePlayer(book?: LeetoBook) {
     dispatch({ type: 'align', elapsedMs });
   }, []);
   const saveQuote = useCallback(async () => {
-    if (!book) return undefined;
+    if (!book || loadedBookIdRef.current !== book.id) return undefined;
     const clip = stateRef.current.clips[stateRef.current.clipIndex];
     const quote = clip ? await saveQuoteForClip(book, clip) : undefined;
     if (quote) notifyLocalSyncChange();

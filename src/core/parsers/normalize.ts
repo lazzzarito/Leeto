@@ -1,4 +1,6 @@
 import type { LeetoBlock } from '@/types';
+import { PARSE_LIMITS } from './limits';
+import { ParseError } from './types';
 
 const NAMED_ENTITIES: Record<string, string> = {
   amp: '&',
@@ -58,6 +60,9 @@ export function decodeEntities(text: string): string {
 
 /** Convierte HTML/XHTML tolerante a texto plano, usando saltos por bloque. */
 export function htmlToPlainText(html: string): string {
+  if (html.length > PARSE_LIMITS.maxHtmlCharsPerChapter) {
+    throw new ParseError('El documento contiene demasiado texto para importar.', 'UNKNOWN');
+  }
   return decodeEntities(
     html
       .replace(/<\s*(script|style|head)\b[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, ' ')
@@ -128,6 +133,7 @@ function extractElements(
   let open: RegExpExecArray | null;
 
   while ((open = openings.exec(html))) {
+    if (found.length >= PARSE_LIMITS.maxElementsPerDocument) break;
     const tag = open[1]!.toLowerCase();
     const attributes = open[2] ?? '';
     if (/\/\s*>$/.test(attributes) || !predicate(attributes, tag)) continue;
@@ -144,6 +150,7 @@ function extractElements(
         if (depth === 0) innerEnd = token.index;
       } else if (!/\/\s*>$/.test(token[2] ?? '')) {
         depth += 1;
+        if (depth > PARSE_LIMITS.maxHtmlNestingDepth) break;
       }
     }
     if (innerEnd === undefined) continue;

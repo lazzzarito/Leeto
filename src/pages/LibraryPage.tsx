@@ -2,18 +2,19 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
+import { cn } from '@/lib/cn';
 import AddMenu from '@/components/library/AddMenu';
 import Dropzone from '@/components/library/Dropzone';
-import ImportQueue from '@/components/library/ImportQueue';
-import ImportToasts from '@/components/library/ImportToasts';
 import LibraryTabs from '@/components/library/LibraryTabs';
 import MetadataDialog from '@/components/library/MetadataDialog';
 import ScanDialog from '@/components/library/ScanDialog';
 import SearchBar from '@/components/library/SearchBar';
+import { useNotifications } from '@/components/notifications/NotificationProvider';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { LibrarySkeleton } from '@/components/ui/Skeletons';
-import { deleteBookCascade } from '@/core/db/delete';
+import { deleteBookCascade, restoreBookSnapshot } from '@/core/db/delete';
+
 import { addScanRoot, getSettings, removeScanRoot, useSettings } from '@/core/db/settings';
 import {
   fromFileList,
@@ -21,7 +22,6 @@ import {
   pickBookDirectory,
 } from '@/core/import/folder';
 import { BOOK_FORMAT_LABEL } from '@/core/parsers/formats';
-import { useImport } from '@/hooks/useImport';
 import { useBooks, useBooksLoading, useProgressByBook, useQuotes } from '@/hooks/useLibrary';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { newId } from '@/lib/ids';
@@ -41,12 +41,11 @@ export default function LibraryPage() {
   const settings = useSettings();
   const savedSettings = useLiveQuery(() => getSettings(), [], settings);
   const roots = savedSettings.scanRoots ?? [];
-  const { jobs, toasts, importFiles, dismissToast } = useImport();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const query = searchParams.get('q') ?? '';
-  const requestedTab = searchParams.get('tab') ?? 'all';
-  const tab = (TABS as readonly string[]).includes(requestedTab) ? requestedTab : 'all';
+  const requestedTab = searchParams.get('tab');
+  const tab = requestedTab && (TABS as readonly string[]).includes(requestedTab) ? requestedTab : 'all';
 
   const [editingBookId, setEditingBookId] = useState<string>();
   const [deletingBook, setDeletingBook] = useState<LeetoBook>();
@@ -56,7 +55,14 @@ export default function LibraryPage() {
   const [actionSlot, setActionSlot] = useState<HTMLElement | null>(null);
   const [searchSlot, setSearchSlot] = useState<HTMLElement | null>(null);
   const dragDepth = useRef(0);
+  const initialTabDone = useRef(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const { push } = useNotifications();
+  const { chromeHidden, importFiles, refreshing } = useOutletContext<{
+    chromeHidden: boolean;
+    importFiles: (files: File[]) => Promise<void>;
+    refreshing?: boolean;
+  }>() ?? { chromeHidden: false, importFiles: async () => undefined, refreshing: false };
 
   useEffect(() => {
     setActionSlot(
@@ -65,11 +71,24 @@ export default function LibraryPage() {
     setSearchSlot(isDesktop ? document.getElementById('library-sidebar-search') : null);
   }, [isDesktop]);
 
+  useEffect(() => {
+    if (initialTabDone.current) return;
+    const requested = searchParams.get('tab');
+    if (requested) { initialTabDone.current = true; return; }
+    if (booksLoading) return;
+    initialTabDone.current = true;
+    const hasReading = Array.from(progressByBook.values()).some((p) => p.percentage > 0 && p.percentage < 99.5);
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', hasReading ? 'reading' : 'all');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booksLoading, progressByBook, searchParams]);
+
   const editingBook = books.find((book) => book.id === editingBookId);
 
   const setParam = (key: 'q' | 'tab', value: string) => {
     const next = new URLSearchParams(searchParams);
-    if (value && !(key === 'tab' && value === 'all')) next.set(key, value);
+    if (value) next.set(key, value);
     else next.delete(key);
     setSearchParams(next, { replace: true });
   };
@@ -77,9 +96,29 @@ export default function LibraryPage() {
   const handleDelete = async () => {
     if (!deletingBook) return;
     try {
-      await deleteBookCascade(deletingBook.id);
+      const snapshot = await deleteBookCascade(deletingBook.id);
+      const title = deletingBook.title;
       setDeletingBook(undefined);
       setError(undefined);
+      push({
+        kind: 'info',
+        title: 'Libro eliminado',
+        subtitle: title,
+        durationMs: 6000,
+        actions: snapshot
+          ? [
+              {
+                label: 'Deshacer',
+                variant: 'secondary',
+                onClick: () => {
+                  void restoreBookSnapshot(snapshot).catch((cause) => {
+                    setError(cause instanceof Error ? cause.message : 'No se pudo restaurar el libro');
+                  });
+                },
+              },
+            ]
+          : undefined,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo eliminar el libro');
     }
@@ -123,7 +162,7 @@ export default function LibraryPage() {
 
   return (
     <div
-      className="relative isolate pb-28"
+      className="relative isolate pb-8 lg:pb-4"
       onDragEnter={handleDragEnter}
       onDragOver={(event) => {
         if (hasFiles(event)) event.preventDefault();
@@ -133,9 +172,7 @@ export default function LibraryPage() {
     >
       <h1 className="sr-only">Biblioteca</h1>
 
-      <ImportQueue jobs={jobs} />
-
-      {booksLoading ? (
+      {booksLoading || refreshing ? (
         <LibrarySkeleton />
       ) : books.length === 0 ? (
         <section aria-label="Biblioteca vacía">
@@ -197,30 +234,30 @@ export default function LibraryPage() {
         height="content"
         variant="centered"
         title="Eliminar libro"
-        description="Se borrarán también su progreso, citas e imágenes."
         footer={
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDeletingBook(undefined)}
-              className="border-border hover:bg-muted rounded-lg border px-3 py-2 text-sm"
-            >
-              Cancelar
-            </button>
+          <div className="flex gap-2">
             <button
               type="button"
               onClick={() => void handleDelete()}
-              className="bg-destructive text-destructive-foreground rounded-lg px-3 py-2 text-sm font-medium"
+              className="bg-destructive text-destructive-foreground flex-1 rounded-lg px-3 py-2 text-sm font-medium"
             >
               Eliminar
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeletingBook(undefined)}
+              className="border-border hover:bg-muted flex-1 rounded-lg border px-3 py-2 text-sm"
+            >
+              Cancelar
             </button>
           </div>
         }
       >
-        <p className="text-muted-foreground pb-6 text-sm">Esta acción no se puede deshacer.</p>
+        <div className="text-muted-foreground space-y-1 pb-6 text-sm">
+          <p>Se borrarán también su progreso, citas e imágenes.</p>
+          <p>Podrás deshacerla desde la notificación durante unos segundos.</p>
+        </div>
       </ResponsiveDialog>
-
-      <ImportToasts toasts={toasts} onDismiss={dismissToast} />
 
       {searchSlot &&
         createPortal(
@@ -243,11 +280,24 @@ export default function LibraryPage() {
         )}
 
       <div
-        className={`pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 justify-center sm:inset-x-6 md:bottom-6 lg:left-[calc(16rem+1.5rem)] lg:right-6 ${isDesktop ? 'hidden' : 'flex'}`}
+        className={cn(
+          'pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 justify-center transition-transform duration-300 sm:inset-x-6 md:bottom-6 lg:left-[calc(16rem+1.5rem)] lg:right-6',
+          isDesktop ? 'hidden' : 'flex',
+          chromeHidden && 'translate-y-[calc(100%+2rem)]',
+        )}
       >
-        <div className="pointer-events-auto flex w-full items-center gap-2">
-          {!isDesktop && <SearchBar value={query} onChange={(value) => setParam('q', value)} />}
-          <div id="library-floating-actions" className="shrink-0" />
+        <div className="pointer-events-auto flex w-full items-center justify-center gap-2">
+          {!isDesktop && (
+            <SearchBar
+              value={query}
+              onChange={(value) => setParam('q', value)}
+              className={cn(
+                'transition-[width] duration-200',
+                query ? 'w-full flex-1' : 'w-[6.5rem] flex-none',
+              )}
+            />
+          )}
+          <div id="library-floating-actions" className={cn('shrink-0', !isDesktop && query && 'hidden')} />
         </div>
       </div>
     </div>
