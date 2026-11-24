@@ -81,6 +81,27 @@ En la web de Android aparece un aviso cerrable para descargar el APK; también e
 
 Dentro de la APK, la voz usa el `TextToSpeech` nativo y un servicio en primer plano: la reproducción continúa al salir de la app y la notificación del sistema ofrece anterior, play/pausa, siguiente y cierre. El header muestra un pequeño indicador centrado mientras se escucha.
 
+### Generar la APK sin Android Studio
+
+Necesitas un JDK 21 portable, el SDK de Android ya instalado y Gradle (el wrapper lo descarga desde un espejo local si hace falta). La versión y el canal salen de `package.json` y `VITE_BUILD_CHANNEL` (`beta` por defecto), así que no hay que tocar `build.gradle`.
+
+```bash
+npm install
+npm run build
+npx cap sync android
+cd android
+gradlew.bat assembleRelease --no-daemon -I mirrors.init.gradle
+```
+
+La firma se lee de `~/.leeto-keys/leeto-release.properties` (fuera del repositorio). La APK firmada queda en `android/app/build/outputs/apk/release/app-release.apk`; se copia a `public/downloads/Leeto-0.1.0-beta.apk` y a `Leeto-release.apk` en la raíz. Después vuelve a ejecutar `npm run build` para que `dist/downloads/` incluya el archivo sin meterlo dentro de la propia APK.
+
+Para verificarla:
+
+```bash
+apksigner verify --print-certs Leeto-release.apk
+aapt dump badging Leeto-release.apk
+```
+
 ---
 
 ## 🚀 Empieza en tres pasos

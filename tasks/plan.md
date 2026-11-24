@@ -84,6 +84,12 @@ El seguimiento de tareas vive en `tasks/todo.md`.
 
 **Checkpoint F7:** 93 tests en verde, build sin avisos de chunk y 19 comprobaciones de navegador sin errores de consola.
 
+### Fase 8 — Audio nativo y APK (completada)
+- T38: Reproductor global, notas limpias, iconos derivados de `icon.png` y aviso de descarga de APK.
+- T39: Servicio foreground con MediaSession, compilación firmada y publicación de la APK con versión/canal.
+
+**Checkpoint F8:** 144 tests en verde, `assembleRelease` firmado, `apksigner verify` correcto y APK servida desde `dist/downloads/`.
+
 ## Riesgos y mitigaciones
 
 | Riesgo | Impacto | Mitigación |

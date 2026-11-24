@@ -455,3 +455,10 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Permisos de notificación y reproducción en segundo plano; `allowBackup="false"`.
 - [x] Aviso cerrable y opción en Ajustes para descargar el APK desde la web de Android.
 - [x] Nombre del APK con versión y canal: `Leeto-0.1.0-beta.apk`.
+
+### T39: APK firmada y distribución
+- [x] Proyecto Capacitor Android creado sin Android Studio; JDK 21 portable y espejos Maven/Gradle configurados.
+- [x] `versionName` y sufijo de canal derivados de `package.json` y `VITE_BUILD_CHANNEL`.
+- [x] Firma release con keystore local fuera del repo; `apksigner verify` y `aapt dump badging` correctos.
+- [x] `Leeto-0.1.0-beta.apk` publicada en `public/downloads/` y copiada a `Leeto-release.apk` en la raíz.
+- [x] README y tareas actualizados con el proceso de build y verificación.
