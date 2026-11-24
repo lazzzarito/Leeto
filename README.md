@@ -71,36 +71,17 @@ Tus libros, tu progreso y tus citas viven en tu dispositivo. Si decides sincroni
 usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 > 📴 **Offline de verdad.** Una vez abierta, la app sigue funcionando aunque te quedes sin conexión.
-> En Android el APK se compila con `allowBackup="false"`, así que ni la biblioteca ni el progreso se envían a la nube.
+> En Android, tus libros y tu progreso tampoco se envían a la nube.
 
 ---
 
 ## 🤖 App de Android
 
-En la web de Android aparece un aviso cerrable para descargar el APK; también está en **Ajustes → App de Android**. El archivo se sirve como estático desde `public/downloads/` y también se publica en [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.0-beta). El nombre siempre incluye versión y canal: `Leeto-0.1.0-beta.apk` en beta, `Leeto-0.1.0.apk` en la versión normal.
+En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.0-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
 
-Dentro de la APK, la voz usa el `TextToSpeech` nativo y un servicio en primer plano: la reproducción continúa al salir de la app y la notificación del sistema ofrece anterior, play/pausa, siguiente y cierre. El header muestra un pequeño indicador centrado mientras se escucha.
+La voz sigue sonando aunque salgas de la app. En la notificación puedes pausar, cambiar de fragmento o cerrar la lectura, y en el header verás un pequeño indicador mientras escuchas.
 
-### Generar la APK sin Android Studio
-
-Necesitas un JDK 21 portable, el SDK de Android ya instalado y Gradle (el wrapper lo descarga desde un espejo local si hace falta). La versión y el canal salen de `package.json` y `VITE_BUILD_CHANNEL` (`beta` por defecto), así que no hay que tocar `build.gradle`.
-
-```bash
-npm install
-npm run build
-npx cap sync android
-cd android
-gradlew.bat assembleRelease --no-daemon -I mirrors.init.gradle
-```
-
-La firma se lee de `~/.leeto-keys/leeto-release.properties` (fuera del repositorio). La APK firmada queda en `android/app/build/outputs/apk/release/app-release.apk`; se copia a `public/downloads/Leeto-0.1.0-beta.apk` y a `Leeto-release.apk` en la raíz. Después vuelve a ejecutar `npm run build` para que `dist/downloads/` incluya el archivo sin meterlo dentro de la propia APK.
-
-Para verificarla:
-
-```bash
-apksigner verify --print-certs Leeto-release.apk
-aapt dump badging Leeto-release.apk
-```
+El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.0-beta.apk**.
 
 ---
 
@@ -113,14 +94,6 @@ aapt dump badging Leeto-release.apk
 <br>
 
 ---
-
-## Despliegue
-
-`npm run build` genera un sitio estático en `dist/`. La configuración de Vercel está en `vercel.json`: redirige las rutas SPA a `index.html` y separa la caché del service worker de la de los assets con hash.
-
-El canonical, `og:url`, `og:image`, `sitemap.xml` y `robots.txt` apuntan a `https://leeto.vercel.app/` (ver `.env.production`). Para otro dominio, cambia `VITE_SITE_URL` antes de compilar. En desarrollo, sin el plugin de build, la app calcula el canonical desde el navegador.
-
-Para instalar Leeto como aplicación necesitas servirla por HTTPS (Vercel ya lo hace) y un navegador compatible. El aviso de instalación lo muestra el navegador; la app no puede forzarlo.
 
 ## Límites
 

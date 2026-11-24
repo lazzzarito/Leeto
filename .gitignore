@@ -8,3 +8,4 @@ coverage/
 android/
 ios/
 public/downloads/*.apk
+/*.apk
