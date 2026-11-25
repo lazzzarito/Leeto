@@ -497,3 +497,19 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] La portada se reduce a 256 px en JPEG antes de cruzar el puente; el motor la decodifica con `inSampleSize` y límites de memoria.
 - [x] La notificación usa `MediaStyle` colorizado, `setLargeIcon`, `setColor` con Material You y `METADATA_KEY_ART` para pantalla de bloqueo y controles del sistema.
 - [x] Versión 0.1.3-beta (`versionCode=207`).
+
+### T45: Auditoría de ciclo de vida y estilos persistentes
+- [x] Salir del lector ya no reconfigura el motor con metadata vacía: se conservan título, idioma y portada mientras la voz sigue sonando.
+- [x] El desmontaje del WebView ya no llama a `stop()`: recrear la Activity al volver de segundo plano no pausa ni destruye el servicio.
+- [x] `useCoverDataUrl` distingue “sin libro” de “libro sin portada”, para no borrar la carátula al reentrar ni dejar una portada obsoleta al cambiar de libro.
+- [x] La deshidratación transitoria de ajustes (`ttsEnabled: false`) ya no detiene la voz: solo una transición real encendido→apagado llama a `stop()`.
+- [x] El motor conserva la cola al recrear la WebView, recupera foreground si el servicio murió y gestiona pérdida de foco con reanudación automática.
+- [x] `stopped`/`error` nativos se reflejan en el reproductor web y `onStartCommand` ya no resucita una notificación zombie tras «Siguiente» al final.
+- [x] El back del sistema delega en `window.leetoHandleBack`: cierra diálogos, vuelve de la lectura y solo sale en la biblioteca; el doble toque y Escape son coherentes.
+- [x] Tocar la notificación abre el libro que suena (id persistido en native) y se restaura la última ruta tras muerte del proceso.
+- [x] Progreso con latido cada 8 s y posición dentro del subtítulo; las escrituras tardías respetan tombstones y la reimportación avisa al sync.
+- [x] Backoff del scheduler respeta cambios locales durante un fallo; desempate de sync por posición y huella sin `undefined`.
+- [x] Importación lee el archivo una sola vez y detecta el formato por cabecera; PDF con poco texto pero válido ya no se rechaza.
+- [x] Ajustes booleanos/URLs normalizados, guardia HTTPS en WebDAV manual, color del navegador dinámico y contador de citas filtrado.
+- [x] 164 tests, typecheck, build y APK firmada v2/zipalign verificados.
+- [x] Versión 0.1.4-beta (`versionCode=209`).

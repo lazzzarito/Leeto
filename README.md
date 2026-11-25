@@ -77,13 +77,15 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 ## 🤖 App de Android
 
-En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.3-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
+En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.4-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
 
-La voz sigue sonando aunque salgas de la app. En la notificación puedes pausar, cambiar de fragmento o cerrar la lectura; muestra la portada del libro y se colorea con Material You. El gesto «atrás» del sistema vuelve a la biblioteca, igual que el botón del lector.
+La voz sigue sonando aunque salgas de la app. Recrear la Activity, tocar la notificación o volver de segundo plano ya no detiene el audio ni borra la portada, el título ni el color: el servicio conserva la cola y solo un cambio real de libro la reemplaza. La notificación muestra la portada, usa `MediaStyle` y se colorea con Material You; al tocarla se abre el libro que está sonando. Si el sistema quita el foco (llamadas u otra app), la lectura se pausa y se reanuda sola al recuperarlo.
 
-El icono del header también se tiñe con la paleta dinámica de Android 12+. En la PWA no existe acceso a Monet: solo se pueden ofrecer temas claros/oscuros y una silueta `monochrome` que el sistema decide si tiñe.
+El progreso se guarda también con periodicidad mientras suena, de modo que un cierre brusco no pierde la posición, y un borrado o «marcar como no leído» en otro dispositivo no puede ser resucitado por una escritura tardía. El gesto «atrás» del sistema cierra primero diálogos y laterales, luego vuelve de la lectura y solo sale en la biblioteca; el botón del lector y la tecla Escape siguen las mismas reglas. Tras matar el proceso se recupera la última lectura.
 
-El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.3-beta.apk**.
+El icono del header y el color del navegador también siguen la paleta dinámica de Android 12+. En la PWA no existe acceso a Monet: solo se pueden ofrecer temas claros/oscuros y una silueta `monochrome` que el sistema decide si tiñe.
+
+El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.4-beta.apk**.
 
 ---
 
