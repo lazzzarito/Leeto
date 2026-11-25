@@ -463,3 +463,9 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] `Leeto-0.1.0-beta.apk` publicada en GitHub Releases (`v0.1.0-beta`); el archivo local está ignorado por Git.
 - [x] README y tareas actualizados con el proceso de build, JDK 21/SDK 36 y verificación.
 - [x] Enlaces del aviso y de Ajustes apuntan al release publicado; la contraseña WebDAV no se persiste.
+
+### T40: Revisión de la APK publicada
+- [x] Firma v2, `zipalign` y permisos verificados en el asset de `v0.1.0-beta`.
+- [x] Detectada APK desactualizada (`versionCode=1`, assets web antiguos y `FileProvider` residual) y reemplazada por la build con `versionCode=201`.
+- [x] Corregido `LeetoThemePlugin.java` (dos métodos `color(int, int)` con la misma firma impedían compilar) y el cálculo de `versionCode` beta en `android/app/build.gradle`.
+- [x] Recompilada con JDK 21/Gradle 8.14.3, sincronizados los assets web y republicada en GitHub Releases (`sha256:ae34dfce64cb3d56c2a6e6a6e45d233f4b5d0d29bf9ca8f66e1ae11104396d3a`).

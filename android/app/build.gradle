@@ -16,8 +16,7 @@ def hasReleaseSigning = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword'
 // 0.1.0 -> 100; beta builds use the following number so both channels can coexist.
 def versionNumbers = (packageJson.version.tokenize('-')[0].tokenize('.') + ['0', '0', '0'])
     .take(3).collect { it.toInteger() }
-def computedVersionCode = (versionNumbers[0] * 10000 + versionNumbers[1] * 100 + versionNumbers[2]) * 2
-    + (buildChannel == 'stable' ? 0 : 1)
+def computedVersionCode = (versionNumbers[0] * 10000 + versionNumbers[1] * 100 + versionNumbers[2]) * 2 + (buildChannel == 'stable' ? 0 : 1)
 
 android {
     namespace = "com.leeto.app"
