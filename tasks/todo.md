@@ -490,3 +490,10 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] `usePlayer` vuelca la escritura al salir del lector, usa una sola live query para progreso y conserva el estado explícito aunque haya cambios remotos durante la reproducción.
 - [x] Material You: documentado que el themed icon es exclusivo de Android 13+; la PWA solo ofrece `monochrome`/`maskable` y temas claros/oscuros.
 - [x] Versión 0.1.2-beta (`versionCode=205`).
+
+### T44: Back nativo, icono tematizado y notificación con portada
+- [x] `MainActivity` consume el back del sistema con `OnBackPressedDispatcher` y hace `WebView.goBack()`; el botón del lector usa el mismo historial para no reabrir el lector en un gesto posterior.
+- [x] El icono del header usa la silueta `monochrome` como máscara y sigue `--primary`, incluida la paleta dinámica de Material You.
+- [x] La portada se reduce a 256 px en JPEG antes de cruzar el puente; el motor la decodifica con `inSampleSize` y límites de memoria.
+- [x] La notificación usa `MediaStyle` colorizado, `setLargeIcon`, `setColor` con Material You y `METADATA_KEY_ART` para pantalla de bloqueo y controles del sistema.
+- [x] Versión 0.1.3-beta (`versionCode=207`).
