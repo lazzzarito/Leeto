@@ -469,3 +469,16 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Detectada APK desactualizada (`versionCode=1`, assets web antiguos y `FileProvider` residual) y reemplazada por la build con `versionCode=201`.
 - [x] Corregido `LeetoThemePlugin.java` (dos métodos `color(int, int)` con la misma firma impedían compilar) y el cálculo de `versionCode` beta en `android/app/build.gradle`.
 - [x] Recompilada con JDK 21/Gradle 8.14.3, sincronizados los assets web y republicada en GitHub Releases (`sha256:ae34dfce64cb3d56c2a6e6a6e45d233f4b5d0d29bf9ca8f66e1ae11104396d3a`).
+
+### T41: Icono oficial y estabilidad del TTS nativo
+- [x] Todas las variantes web/Android y el monócromo derivan de `public/icons/icon.png`; foreground adaptativo al 60% del lienzo (66dp safe zone).
+- [x] `notifyListener()` usa una copia final del listener, limpia callbacks pendientes y el plugin libera el motor al destruirse; `fontScale` ya no recrea la Activity.
+- [x] Listeners nativos se eliminan por handle; `nativeAudio.resume()` disponible.
+
+### T42: Lectura, índice PDF y gestos
+- [x] Los bloques PDF guardan su página de origen y el outline resuelve al bloque real de esa página.
+- [x] La barra inferior del lector mantiene los cuatro botones en una sola fila hasta 320 px.
+- [x] Los gestos de pills admiten swipe horizontal/vertical desde cualquier zona (incluido Favoritos vacío) y no pelean con pull-to-refresh.
+- [x] Estado de lectura explícito persistido: abrir un libro ya no degrada "Marcar como leído"; "no leído" usa tombstone; sync aplica last-write-wins.
+- [x] Reimportar no reinicia el progreso; se vuelcan escrituras pendientes al cambiar de libro.
+- [x] Versión 0.1.1-beta (`versionCode=202`) con tests, typecheck y build verificados.
