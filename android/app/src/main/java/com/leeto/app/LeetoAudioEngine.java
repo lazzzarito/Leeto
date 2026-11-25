@@ -311,7 +311,9 @@ final class LeetoAudioEngine {
     void pause() {
         main.post(
                 () -> {
-                    resumeOnFocusGain = false;
+                    // No limpiamos resumeOnFocusGain: si JS refleja una pausa que
+                    // vino de una pérdida de foco, cancelar aquí la reanudación
+                    // dejaría la voz detenida para siempre al volver el foco.
                     pendingPlay = false;
                     pauseInternal();
                 });
@@ -406,7 +408,11 @@ final class LeetoAudioEngine {
         main.post(
                 () -> {
                     foregroundActive = false;
-                    if (!playing && !pendingPlay) abandonAudioFocus();
+                    if (playing || pendingPlay) {
+                        startForeground();
+                        return;
+                    }
+                    abandonAudioFocus();
                 });
     }
 

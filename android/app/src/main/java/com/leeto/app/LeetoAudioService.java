@@ -34,6 +34,7 @@ public class LeetoAudioService extends Service {
     private static LeetoAudioService instance;
     private MediaSession session;
     private String lastSyncKey;
+    private boolean foregroundStarted;
 
     /** Todas las actualizaciones de MediaSession y notificación se serializan en el hilo principal. */
     static void refresh() {
@@ -110,6 +111,7 @@ public class LeetoAudioService extends Service {
             return START_NOT_STICKY;
         }
         startForeground(NOTIFICATION_ID, buildNotification());
+        foregroundStarted = true;
         return START_STICKY;
     }
 
@@ -121,7 +123,8 @@ public class LeetoAudioService extends Service {
 
     @Override
     public void onDestroy() {
-        instance = null;
+        if (instance == this) instance = null;
+        foregroundStarted = false;
         MediaSession active = session;
         session = null;
         if (active != null) {
@@ -196,6 +199,9 @@ public class LeetoAudioService extends Service {
             metadata.putBitmap(android.media.MediaMetadata.METADATA_KEY_ART, engine.getCover());
         }
         active.setMetadata(metadata.build());
+        // Antes de startForeground solo actualizamos la sesión: publicar la
+        // notificación aquí provoca un notify() de primer plano incompleto.
+        if (!foregroundStarted) return;
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
         if (engine.canShowNotification()) manager.notify(NOTIFICATION_ID, buildNotification());
@@ -222,7 +228,7 @@ public class LeetoAudioService extends Service {
                 .setCategory(Notification.CATEGORY_TRANSPORT)
                 .setShowWhen(false)
                 .setOnlyAlertOnce(true)
-                .setOngoing(engine.isPlaying())
+                .setOngoing(true)
                 .setContentIntent(
                         PendingIntent.getActivity(
                                 this,
@@ -231,7 +237,6 @@ public class LeetoAudioService extends Service {
                                         .putExtra(EXTRA_BOOK_ID, engine.getBookId())
                                         .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
-                .setDeleteIntent(actionIntent(ACTION_STOP, 4))
                 .addAction(R.drawable.ic_prev, "Anterior", actionIntent(ACTION_PREV, 1))
                 .addAction(
                         engine.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play,
