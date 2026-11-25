@@ -24,6 +24,10 @@ export interface SyncStatus {
 function buildProvider(settings: AppSettings): SyncProvider {
   if (settings.syncProvider === 'webdav') {
     if (!settings.syncWebDavUrl) throw new Error('Configura la URL WebDAV antes de sincronizar');
+    // El botón manual no debe poder evadir la regla HTTPS/localhost.
+    if (!isSecureSyncUrl(settings.syncWebDavUrl)) {
+      throw new Error('La URL WebDAV debe usar HTTPS o localhost');
+    }
     return createWebDavProvider({
       baseUrl: settings.syncWebDavUrl,
       username: settings.syncWebDavUsername,

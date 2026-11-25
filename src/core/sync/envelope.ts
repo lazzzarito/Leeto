@@ -53,6 +53,7 @@ export function isValidProgress(value: unknown): value is ReadingProgress {
     isNumber(value.updatedAt) &&
     isText(value.deviceId) &&
     isOptionalSegmentIndex(value.segmentIndex) &&
+    (value.elapsedMs === undefined || (isNumber(value.elapsedMs) && value.elapsedMs >= 0)) &&
     isOptionalNumber(value.deletedAt) &&
     isOptionalStatus(value.status)
   );

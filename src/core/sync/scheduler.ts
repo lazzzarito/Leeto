@@ -74,6 +74,21 @@ export function createSyncScheduler({
   let pendingAfterRun = false;
   let failureCount = 0;
 
+  function scheduleTrigger(): void {
+    if (state.nextRetryAt && now() < state.nextRetryAt) return;
+    if (inFlight) {
+      pendingAfterRun = true;
+      return;
+    }
+    if (debounceTimer) clearTimeout(debounceTimer);
+    const elapsed = state.lastRunAt === undefined ? Infinity : now() - state.lastRunAt;
+    const delay = Math.max(debounceMs, minIntervalMs - elapsed);
+    debounceTimer = setTimeout(() => {
+      debounceTimer = undefined;
+      void execute();
+    }, delay);
+  }
+
   async function execute(): Promise<void> {
     if (inFlight) return inFlight;
     state.running = true;
@@ -98,11 +113,9 @@ export function createSyncScheduler({
         inFlight = undefined;
         if (pendingAfterRun) {
           pendingAfterRun = false;
-          // Un cambio local llegó mientras se leía el remoto: hay que publicarlo.
-          debounceTimer = setTimeout(() => {
-            debounceTimer = undefined;
-            void execute();
-          }, debounceMs);
+          // Un cambio local llegó mientras se leía el remoto: publicarlo, pero
+          // respetando el backoff si la sincronización acaba de fallar.
+          scheduleTrigger();
         }
       }
     })();
@@ -112,18 +125,7 @@ export function createSyncScheduler({
   return {
     state,
     trigger() {
-      if (state.nextRetryAt && now() < state.nextRetryAt) return;
-      if (inFlight) {
-        pendingAfterRun = true;
-        return;
-      }
-      if (debounceTimer) clearTimeout(debounceTimer);
-      const elapsed = state.lastRunAt === undefined ? Infinity : now() - state.lastRunAt;
-      const delay = Math.max(debounceMs, minIntervalMs - elapsed);
-      debounceTimer = setTimeout(() => {
-        debounceTimer = undefined;
-        void execute();
-      }, delay);
+      scheduleTrigger();
     },
     runNow() {
       if (debounceTimer) {

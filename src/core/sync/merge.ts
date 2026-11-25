@@ -23,7 +23,8 @@ export function stableStringify(value: unknown): string {
   const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
     compareText(a, b),
   );
-  return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`).join(',')}}`;
+  const present = entries.filter(([, item]) => item !== undefined);
+  return `{${present.map(([key, item]) => `${JSON.stringify(key)}:${stableStringify(item)}`).join(',')}}`;
 }
 
 /** Huella completa del sobre (incluye devices), útil para detectar cambios efectivos. */
@@ -63,6 +64,9 @@ function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
   // "terminado" no debe perder contra un porcentaje sin estado del mismo ms.
   const rank = progressRank(a) - progressRank(b);
   if (rank !== 0) return rank;
+  // Con el mismo milisegundo gana la posición más avanzada, no la que tenga
+  // el blockId menor en orden alfabético.
+  if (a.percentage !== b.percentage) return a.percentage - b.percentage;
   const content = compareText(stableStringify(a), stableStringify(b));
   if (content !== 0) return content;
   // Desempate determinista: el mismo par de registros siempre gana el mismo dispositivo.

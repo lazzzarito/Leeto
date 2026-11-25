@@ -187,6 +187,23 @@ describe('merge por registro', () => {
     }
   });
 
+  it('a igual marca de tiempo gana la posición más avanzada', () => {
+    const early = envelope(
+      'dev_Z',
+      { progress: [progress('book_1', 'dev_Z', 100, { blockId: 'a_001', percentage: 10 })] },
+      100,
+    );
+    const late = envelope(
+      'dev_A',
+      { progress: [progress('book_1', 'dev_A', 100, { blockId: 'z_099', percentage: 80 })] },
+      100,
+    );
+
+    for (const merged of [mergeEnvelopes(early, late), mergeEnvelopes(late, early)]) {
+      expect(merged.envelope.progress.book_1?.percentage).toBe(80);
+    }
+  });
+
   it('un progreso reciente gana a un tombstone antiguo (marcar como leído sobrevive)', () => {
     const local = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 300)] }, 300);
     const remote = envelope(
@@ -223,6 +240,8 @@ describe('merge por registro', () => {
 
   it('ordena las claves por code point, sin depender del idioma del dispositivo', () => {
     expect(stableStringify({ a: 1, Z: 2, Á: 3 })).toBe('{"Z":2,"a":1,"Á":3}');
+    // `undefined` no debe convertirse en null: JSON.stringify lo omite.
+    expect(stableStringify({ a: undefined, b: 1 })).toBe('{"b":1}');
   });
 
   it('prepara la escritura con el dispositivo actual sin retroceder timestamps', () => {

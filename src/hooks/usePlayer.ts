@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
-import { progressRepo } from '@/core/db/repositories';
+import { booksRepo, progressRepo } from '@/core/db/repositories';
 import { useSettings } from '@/core/db/settings';
 import { resolveReadingStatus } from '@/core/library/views';
 import { createPlayerClock } from '@/core/player/clock';
@@ -68,17 +68,26 @@ export function usePlayer(book?: LeetoBook) {
     const status = resolveReadingStatus(explicitStatusRef.current, percentage);
 
     lastSavedRef.current = `${clip.block.id}:${clip.segmentIndex}`;
-    void progressRepo
-      .put({
+    void (async () => {
+      // Un borrado/marcado como no leído en otra pestaña deja un tombstone:
+      // sobrescribirlo aquí lo resucitaba en el siguiente sync.
+      const [book, existing] = await Promise.all([
+        booksRepo.get(id),
+        progressRepo.get(id),
+      ]);
+      if (!book || existing?.deletedAt) return;
+      await progressRepo.put({
         bookId: id,
         chapterIndex: clip.chapterIndex,
         blockId: clip.block.id,
         segmentIndex: clip.segmentIndex,
         percentage,
-        updatedAt: Date.now(),
+        elapsedMs: Math.max(0, Math.round(current.elapsedMs)),
+        updatedAt: Math.max(Date.now(), (existing?.updatedAt ?? 0) + 1),
         deviceId: settingsRef.current.deviceId,
         ...(status ? { status } : {}),
-      })
+      });
+    })()
       .then(() => {
         // Avisar después de escribir evita que el sync tome una foto sin este cambio.
         notifyLocalSyncChange();
@@ -109,6 +118,9 @@ export function usePlayer(book?: LeetoBook) {
     if (!bookId) {
       // Salir del lector no puede perder la posición: el reproductor sigue vivo.
       if (saveBookIdRef.current) flush(saveBookIdRef.current);
+      // Si la voz sigue sonando, los eventos de avance del servicio deben seguir
+      // escribiendo con el id del libro que se está leyendo.
+      if (stateRef.current.status === 'playing') return;
       loadedBookIdRef.current = undefined;
       hydratedBookIdRef.current = undefined;
       saveBookIdRef.current = undefined;
@@ -159,7 +171,7 @@ export function usePlayer(book?: LeetoBook) {
       speed: currentSettings.playbackSpeed,
       imageDurationMs: currentSettings.imageDurationMs ?? 6000,
       clipIndex,
-      elapsedMs: 0,
+      elapsedMs: saved?.elapsedMs ?? 0,
       status: 'paused',
     });
   }, [
@@ -168,6 +180,7 @@ export function usePlayer(book?: LeetoBook) {
     progress?.bookId,
     progress?.blockId,
     progress?.segmentIndex,
+    progress?.elapsedMs,
     progress?.status,
     progress?.updatedAt,
     clips,
@@ -193,6 +206,17 @@ export function usePlayer(book?: LeetoBook) {
     clock.start();
     return () => clock.stop();
   }, [state.status]);
+
+  // Latido periódico: si el proceso muere antes del siguiente cambio de clip,
+  // la posición audible más reciente ya está persistida.
+  useEffect(() => {
+    if (state.status !== 'playing' || !hasPlayedRef.current) return;
+    const timer = window.setInterval(() => flush(), 8000);
+    return () => {
+      window.clearInterval(timer);
+      flush();
+    };
+  }, [flush, state.status]);
 
   useEffect(() => {
     if (state.status === 'playing') hasPlayedRef.current = true;

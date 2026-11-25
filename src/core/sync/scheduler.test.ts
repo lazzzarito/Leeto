@@ -54,7 +54,7 @@ describe('planificador de sincronización', () => {
           }),
       )
       .mockResolvedValue(undefined);
-    const scheduler = createSyncScheduler({ run, debounceMs: 100, minIntervalMs: 1000 });
+    const scheduler = createSyncScheduler({ run, debounceMs: 100, minIntervalMs: 100 });
 
     const first = scheduler.runNow();
     scheduler.trigger();
@@ -62,6 +62,31 @@ describe('planificador de sincronización', () => {
     await first;
     await vi.advanceTimersByTimeAsync(100);
 
+    expect(run).toHaveBeenCalledTimes(2);
+    scheduler.stop();
+  });
+
+  it('no publica un cambio local durante el backoff de un fallo', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    const run = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('red caída'))
+      .mockResolvedValue(undefined);
+    const scheduler = createSyncScheduler({
+      run,
+      debounceMs: 100,
+      backoff: { initialMs: 10_000, maxMs: 60_000, factor: 2 },
+    });
+    scheduler.start();
+
+    const first = scheduler.runNow();
+    scheduler.trigger(); // cambio local mientras fallaba
+    await first;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(10_000);
     expect(run).toHaveBeenCalledTimes(2);
     scheduler.stop();
   });
