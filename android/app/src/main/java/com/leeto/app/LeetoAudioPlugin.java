@@ -53,7 +53,11 @@ public class LeetoAudioPlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
-        LeetoAudioEngine.get().setListener(null);
+        LeetoAudioEngine engine = LeetoAudioEngine.get();
+        engine.setListener(null);
+        engine.clearPendingCallbacks();
+        // Si el servicio sigue reproduciendo, conserva el TTS hasta su propia parada.
+        if (!engine.isPlaying()) engine.destroy();
         super.handleOnDestroy();
     }
 

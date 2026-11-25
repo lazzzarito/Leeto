@@ -96,9 +96,13 @@ export function useNativeAudio({
 
     return () => {
       alive = false;
-      void Promise.allSettled(registrations)
-        .then(() => nativeAudio.removeAllListeners())
-        .catch(() => undefined);
+      void Promise.allSettled(registrations).then((results) => {
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            void result.value.remove().catch(() => undefined);
+          }
+        }
+      });
     };
   }, [available, enabled]);
 

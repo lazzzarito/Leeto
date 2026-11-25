@@ -1,4 +1,4 @@
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 
 export interface NativeAudioState {
   status: string;
@@ -28,10 +28,9 @@ interface LeetoAudioPlugin {
   next(): Promise<void>;
   previous(): Promise<void>;
   stop(): Promise<void>;
-  addListener(event: 'stateChanged', callback: (event: NativeAudioState) => void): Promise<void>;
-  addListener(event: 'boundary', callback: (event: NativeAudioBoundary) => void): Promise<void>;
-  addListener(event: 'error', callback: (event: { message: string }) => void): Promise<void>;
-  removeAllListeners(): Promise<void>;
+  addListener(event: 'stateChanged', callback: (event: NativeAudioState) => void): Promise<PluginListenerHandle>;
+  addListener(event: 'boundary', callback: (event: NativeAudioBoundary) => void): Promise<PluginListenerHandle>;
+  addListener(event: 'error', callback: (event: { message: string }) => void): Promise<PluginListenerHandle>;
 }
 
 const LeetoAudio = registerPlugin<LeetoAudioPlugin>('LeetoAudio');
@@ -46,9 +45,9 @@ export const nativeAudio = {
     LeetoAudio.configure(options),
   play: (index: number) => LeetoAudio.play({ index }),
   pause: () => LeetoAudio.pause(),
+  resume: () => LeetoAudio.resume(),
   next: () => LeetoAudio.next(),
   previous: () => LeetoAudio.previous(),
   stop: () => LeetoAudio.stop(),
   addListener: LeetoAudio.addListener.bind(LeetoAudio),
-  removeAllListeners: () => LeetoAudio.removeAllListeners(),
 };

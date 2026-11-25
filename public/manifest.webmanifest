@@ -46,16 +46,10 @@
       "purpose": "maskable"
     },
     {
-      "src": "/icons/icon-monochrome.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icons/icon-monochrome.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "monochrome"
-    },
-    {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }

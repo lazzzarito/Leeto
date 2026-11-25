@@ -48,8 +48,8 @@ final class LeetoAudioEngine {
     private LeetoAudioEngine() {}
 
     void init(Context context) {
-        if (app != null) return;
-        app = context.getApplicationContext();
+        if (app == null) app = context.getApplicationContext();
+        if (tts != null) return;
         tts =
                 new TextToSpeech(
                         app,
@@ -181,7 +181,12 @@ final class LeetoAudioEngine {
         stopForeground();
     }
 
+    void clearPendingCallbacks() {
+        main.removeCallbacksAndMessages(null);
+    }
+
     void destroy() {
+        clearPendingCallbacks();
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -271,7 +276,13 @@ final class LeetoAudioEngine {
     }
 
     private void notifyListener(java.util.function.Consumer<Listener> action) {
-        if (listener == null) return;
-        main.post(() -> action.accept(listener));
+        final Listener target = listener;
+        if (target == null) return;
+        main.post(
+                () -> {
+                    // El listener puede haberse desactivado mientras el runnable esperaba.
+                    if (listener == null || listener != target) return;
+                    action.accept(target);
+                });
     }
 }
