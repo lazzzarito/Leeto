@@ -15,6 +15,7 @@ interface UseNativeAudioOptions {
   speed: number;
   lang: string;
   title?: string;
+  coverDataUrl?: string;
   onBoundary: (elapsedMs: number) => void;
   onIndexChange: (index: number) => void;
   onStatus: (status: 'playing' | 'paused') => void;
@@ -33,6 +34,7 @@ export function useNativeAudio({
   speed,
   lang,
   title,
+  coverDataUrl,
   onBoundary,
   onIndexChange,
   onStatus,
@@ -126,6 +128,13 @@ export function useNativeAudio({
     // envían con play() y no deben reiniciar la cola de voz.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [available, enabled, clips, wpm, speed, lang, title]);
+
+  // La portada llega después de configurar la cola: enviarla aparte evita
+  // reiniciar el TTS cada vez que IndexedDB termina de decodificar la imagen.
+  useEffect(() => {
+    if (!available) return;
+    void nativeAudio.setCover(coverDataUrl).catch(() => undefined);
+  }, [available, coverDataUrl]);
 
   useEffect(() => {
     if (!available || enabled) return;

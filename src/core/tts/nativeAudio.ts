@@ -28,6 +28,7 @@ interface LeetoAudioPlugin {
   next(): Promise<void>;
   previous(): Promise<void>;
   stop(): Promise<void>;
+  setCover(options: { coverDataUrl?: string }): Promise<void>;
   addListener(event: 'stateChanged', callback: (event: NativeAudioState) => void): Promise<PluginListenerHandle>;
   addListener(event: 'boundary', callback: (event: NativeAudioBoundary) => void): Promise<PluginListenerHandle>;
   addListener(event: 'error', callback: (event: { message: string }) => void): Promise<PluginListenerHandle>;
@@ -49,5 +50,6 @@ export const nativeAudio = {
   next: () => LeetoAudio.next(),
   previous: () => LeetoAudio.previous(),
   stop: () => LeetoAudio.stop(),
+  setCover: (coverDataUrl?: string) => LeetoAudio.setCover({ coverDataUrl }),
   addListener: LeetoAudio.addListener.bind(LeetoAudio),
 };

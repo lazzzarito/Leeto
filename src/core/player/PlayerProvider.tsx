@@ -6,6 +6,7 @@ import { useSettings } from '@/core/db/settings';
 import { isNativeAudioAvailable } from '@/core/tts/nativeAudio';
 import { useNativeAudio } from '@/core/tts/useNativeAudio';
 import { useTts } from '@/core/tts/useTts';
+import { useCoverDataUrl } from '@/hooks/useCoverDataUrl';
 import { usePlayer } from '@/hooks/usePlayer';
 import type { LeetoBook } from '@/types';
 
@@ -29,6 +30,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   );
   const settings = useSettings();
   const player = usePlayer(book);
+  const coverDataUrl = useCoverDataUrl(book?.coverAssetId);
   const [audioError, setAudioError] = useState<string>();
 
   const onBoundary = useCallback(
@@ -53,6 +55,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     speed: player.state.speed,
     lang: book?.language || 'es-ES',
     title: book?.title,
+    coverDataUrl,
     onBoundary,
     onIndexChange,
     onStatus,

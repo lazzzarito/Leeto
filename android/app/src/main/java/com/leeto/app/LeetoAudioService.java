@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Build;
@@ -152,7 +153,9 @@ public class LeetoAudioService extends Service {
                         + "|"
                         + engine.getSubtitle()
                         + "|"
-                        + engine.getRate();
+                        + engine.getRate()
+                        + "|"
+                        + engine.getCoverGeneration();
         if (key.equals(lastSyncKey)) return;
         lastSyncKey = key;
 
@@ -174,11 +177,14 @@ public class LeetoAudioService extends Service {
                         .setExtras(extras)
                         .build();
         active.setPlaybackState(state);
-        active.setMetadata(
+        android.media.MediaMetadata.Builder metadata =
                 new android.media.MediaMetadata.Builder()
                         .putString(android.media.MediaMetadata.METADATA_KEY_TITLE, engine.getTitle())
-                        .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, engine.getSubtitle())
-                        .build());
+                        .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, engine.getSubtitle());
+        if (engine.getCover() != null) {
+            metadata.putBitmap(android.media.MediaMetadata.METADATA_KEY_ART, engine.getCover());
+        }
+        active.setMetadata(metadata.build());
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) manager.notify(NOTIFICATION_ID, buildNotification());
     }
@@ -199,6 +205,9 @@ public class LeetoAudioService extends Service {
         builder.setSmallIcon(R.drawable.ic_stat_audio)
                 .setContentTitle(engine.getTitle())
                 .setContentText(text)
+                .setColor(notificationColor())
+                .setCategory(Notification.CATEGORY_TRANSPORT)
+                .setShowWhen(false)
                 .setOnlyAlertOnce(true)
                 .setOngoing(engine.isPlaying())
                 .setContentIntent(
@@ -215,14 +224,29 @@ public class LeetoAudioService extends Service {
                         actionIntent(engine.isPlaying() ? ACTION_PAUSE : ACTION_PLAY, 2))
                 .addAction(R.drawable.ic_next, "Siguiente", actionIntent(ACTION_NEXT, 3));
 
+        if (engine.getCover() != null) builder.setLargeIcon(engine.getCover());
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Notification.MediaStyle style = new Notification.MediaStyle();
             MediaSession active = session;
             if (active != null) style.setMediaSession(active.getSessionToken());
             style.setShowActionsInCompactView(0, 1, 2);
             builder.setStyle(style);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) builder.setColorized(true);
         }
         return builder.build();
+    }
+
+    /** Color del tema del sistema (Material You) con un ámbar fijo como fallback. */
+    private int notificationColor() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            boolean dark =
+                    (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                            == Configuration.UI_MODE_NIGHT_YES;
+            return getColor(
+                    dark ? android.R.color.system_accent1_200 : android.R.color.system_accent1_600);
+        }
+        return 0xFFFFB300;
     }
 
     private PendingIntent actionIntent(String action, int requestCode) {

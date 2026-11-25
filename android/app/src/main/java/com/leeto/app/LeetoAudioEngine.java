@@ -2,6 +2,8 @@ package com.leeto.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.util.Base64;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ import java.util.Locale;
  */
 final class LeetoAudioEngine {
     private static final LeetoAudioEngine INSTANCE = new LeetoAudioEngine();
+    private static final int MAX_COVER_PX = 512;
 
     interface Listener {
         void onState(String status, int index, int count);
@@ -54,6 +58,8 @@ final class LeetoAudioEngine {
     private boolean audioFocusRequested = false;
     private float rate = 1.0f;
     private Locale locale = new Locale("es", "ES");
+    private Bitmap cover;
+    private int coverGeneration = 0;
 
     static LeetoAudioEngine get() {
         return INSTANCE;
@@ -162,6 +168,24 @@ final class LeetoAudioEngine {
     /** La Activity se destruye, pero el servicio puede seguir leyendo: no tocamos el TTS. */
     void onHostDestroyed() {
         main.post(() -> listener = null);
+    }
+
+    /** La portada se decodifica en el hilo principal con un límite de memoria acotado. */
+    void setCover(String dataUrl) {
+        main.post(
+                () -> {
+                    cover = decodeCover(dataUrl);
+                    coverGeneration += 1;
+                    LeetoAudioService.refresh();
+                });
+    }
+
+    Bitmap getCover() {
+        return cover;
+    }
+
+    int getCoverGeneration() {
+        return coverGeneration;
     }
 
     void configure(
@@ -355,6 +379,35 @@ final class LeetoAudioEngine {
             // No hay nada más que hacer si el sistema ya liberó el foco.
         }
         audioFocusRequested = false;
+    }
+
+    private Bitmap decodeCover(String dataUrl) {
+        if (dataUrl == null || dataUrl.isEmpty()) return null;
+        int comma = dataUrl.indexOf(',');
+        String payload = comma >= 0 ? dataUrl.substring(comma + 1) : dataUrl;
+        byte[] bytes;
+        try {
+            bytes = Base64.decode(payload, Base64.DEFAULT);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+        if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null;
+
+        int sample = 1;
+        while (bounds.outWidth / sample > MAX_COVER_PX || bounds.outHeight / sample > MAX_COVER_PX) {
+            sample *= 2;
+        }
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sample;
+        try {
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+        } catch (OutOfMemoryError ignored) {
+            return null;
+        }
     }
 
     private String currentText() {

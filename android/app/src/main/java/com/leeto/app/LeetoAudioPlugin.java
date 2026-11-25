@@ -89,6 +89,12 @@ public class LeetoAudioPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void setCover(PluginCall call) {
+        LeetoAudioEngine.get().setCover(call.getString("coverDataUrl"));
+        call.resolve();
+    }
+
+    @PluginMethod
     public void pause(PluginCall call) {
         LeetoAudioEngine.get().pause();
         call.resolve();
