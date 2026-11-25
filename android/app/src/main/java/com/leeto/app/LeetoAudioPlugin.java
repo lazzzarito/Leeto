@@ -53,11 +53,10 @@ public class LeetoAudioPlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
-        LeetoAudioEngine engine = LeetoAudioEngine.get();
-        engine.setListener(null);
-        engine.clearPendingCallbacks();
-        // Si el servicio sigue reproduciendo, conserva el TTS hasta su propia parada.
-        if (!engine.isPlaying()) engine.destroy();
+        // La Activity puede destruirse mientras el servicio sigue leyendo. Solo
+        // desconectamos al listener: destruir el motor aquí reiniciaba el TTS y
+        // dejaba callbacks en cola que apuntaban a un motor ya liberado.
+        LeetoAudioEngine.get().onHostDestroyed();
         super.handleOnDestroy();
     }
 

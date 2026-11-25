@@ -11,7 +11,9 @@ import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 
 import androidx.annotation.Nullable;
 
@@ -25,18 +27,26 @@ public class LeetoAudioService extends Service {
 
     private static final String CHANNEL_ID = "leeto_audio";
     private static final int NOTIFICATION_ID = 1001;
+    private static final Handler MAIN = new Handler(Looper.getMainLooper());
 
     private static LeetoAudioService instance;
     private MediaSession session;
+    private String lastSyncKey;
 
+    /** Todas las actualizaciones de MediaSession y notificación se serializan en el hilo principal. */
     static void refresh() {
-        if (instance != null) instance.sync();
+        MAIN.post(
+                () -> {
+                    LeetoAudioService service = instance;
+                    if (service != null) service.sync();
+                });
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         instance = this;
+        lastSyncKey = null;
         createChannel();
         session = new MediaSession(this, "LeetoAudio");
         session.setFlags(
@@ -82,6 +92,11 @@ public class LeetoAudioService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+        if (intent == null && !engine.isPlaying()) {
+            // Reinicio de START_STICKY sin reproducción activa: no resucitamos la notificación.
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         if (ACTION_NEXT.equals(action)) engine.next();
         if (ACTION_PREV.equals(action)) engine.previous();
         if (ACTION_PAUSE.equals(action)) engine.pause();
@@ -99,11 +114,13 @@ public class LeetoAudioService extends Service {
     @Override
     public void onDestroy() {
         instance = null;
-        if (session != null) {
-            session.setActive(false);
-            session.release();
-            session = null;
+        MediaSession active = session;
+        session = null;
+        if (active != null) {
+            active.setActive(false);
+            active.release();
         }
+        LeetoAudioEngine.get().onServiceStopped();
         super.onDestroy();
     }
 
@@ -118,11 +135,30 @@ public class LeetoAudioService extends Service {
     }
 
     private void sync() {
-        if (session == null) return;
+        MediaSession active = session;
+        if (active == null) return;
         LeetoAudioEngine engine = LeetoAudioEngine.get();
+        boolean playing = engine.isPlaying();
+        int position = engine.getIndex();
+        int count = engine.getCount();
+        String key =
+                playing
+                        + "|"
+                        + position
+                        + "|"
+                        + count
+                        + "|"
+                        + engine.getTitle()
+                        + "|"
+                        + engine.getSubtitle()
+                        + "|"
+                        + engine.getRate();
+        if (key.equals(lastSyncKey)) return;
+        lastSyncKey = key;
+
         Bundle extras = new Bundle();
-        extras.putInt("index", engine.getIndex());
-        extras.putInt("count", engine.getCount());
+        extras.putInt("index", position);
+        extras.putInt("count", count);
         PlaybackState state =
                 new PlaybackState.Builder()
                         .setActions(
@@ -132,13 +168,13 @@ public class LeetoAudioService extends Service {
                                         | PlaybackState.ACTION_SKIP_TO_PREVIOUS
                                         | PlaybackState.ACTION_STOP)
                         .setState(
-                                engine.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
+                                playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
                                 0,
                                 engine.getRate())
                         .setExtras(extras)
                         .build();
-        session.setPlaybackState(state);
-        session.setMetadata(
+        active.setPlaybackState(state);
+        active.setMetadata(
                 new android.media.MediaMetadata.Builder()
                         .putString(android.media.MediaMetadata.METADATA_KEY_TITLE, engine.getTitle())
                         .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, engine.getSubtitle())
@@ -154,9 +190,7 @@ public class LeetoAudioService extends Service {
                         ? new Notification.Builder(this, CHANNEL_ID)
                         : new Notification.Builder(this);
         String position =
-                engine.getCount() > 0
-                        ? (engine.getIndex() + 1) + "/" + engine.getCount()
-                        : "";
+                engine.getCount() > 0 ? (engine.getIndex() + 1) + "/" + engine.getCount() : "";
         String text =
                 engine.getSubtitle().isEmpty()
                         ? position
@@ -183,7 +217,8 @@ public class LeetoAudioService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             Notification.MediaStyle style = new Notification.MediaStyle();
-            if (session != null) style.setMediaSession(session.getSessionToken());
+            MediaSession active = session;
+            if (active != null) style.setMediaSession(active.getSessionToken());
             style.setShowActionsInCompactView(0, 1, 2);
             builder.setStyle(style);
         }
