@@ -77,11 +77,11 @@ usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
 
 ## 🤖 App de Android
 
-En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.1-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
+En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.2-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
 
 La voz sigue sonando aunque salgas de la app. En la notificación puedes pausar, cambiar de fragmento o cerrar la lectura, y en el header verás un pequeño indicador mientras escuchas.
 
-El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.1-beta.apk**.
+El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.2-beta.apk**. El icono de la APK puede seguir el color dinámico de Material You en Android 13+; el icono de la PWA no puede acceder a la paleta del wallpaper del sistema.
 
 Para compilar la APK desde el código fuente usa JDK 21 y Android SDK 36. La firma de release
 requiere `~/.leeto-keys/leeto-release.properties` con `storeFile`, `storePassword`, `keyAlias` y

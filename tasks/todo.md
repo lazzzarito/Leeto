@@ -481,4 +481,12 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Los gestos de pills admiten swipe horizontal/vertical desde cualquier zona (incluido Favoritos vacío) y no pelean con pull-to-refresh.
 - [x] Estado de lectura explícito persistido: abrir un libro ya no degrada "Marcar como leído"; "no leído" usa tombstone; sync aplica last-write-wins.
 - [x] Reimportar no reinicia el progreso; se vuelcan escrituras pendientes al cambiar de libro.
-- [x] Versión 0.1.1-beta (`versionCode=202`) con tests, typecheck y build verificados.
+- [x] Versión 0.1.1-beta (`versionCode=203`) con tests, typecheck y build verificados.
+
+### T43: Notificación estable, cierre aleatorio y progreso
+- [x] El motor de TTS serializa su estado en el hilo principal e ignora callbacks de utterances interrumpidas; la notificación ya no se elimina al cambiar de fragmento.
+- [x] `startForeground` es idempotente, se solicita foco de audio y se capturan las excepciones de inicio en segundo plano; `handleOnDestroy` ya no destruye el TTS mientras el servicio sigue leyendo.
+- [x] `sync()` deduplica actualizaciones de MediaSession y notificación; un cambio local durante un sync en curso reprograma una pasada.
+- [x] `usePlayer` vuelca la escritura al salir del lector, usa una sola live query para progreso y conserva el estado explícito aunque haya cambios remotos durante la reproducción.
+- [x] Material You: documentado que el themed icon es exclusivo de Android 13+; la PWA solo ofrece `monochrome`/`maskable` y temas claros/oscuros.
+- [x] Versión 0.1.2-beta (`versionCode=205`).
