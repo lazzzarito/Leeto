@@ -53,11 +53,16 @@ function buildPdfFixture(lines: string[]): Uint8Array<ArrayBuffer> {
 /** Igual que la fixture de una página, pero con varias páginas numeradas al pie. */
 type FixtureLine = string | { text: string; y: number };
 
-function buildMultiPagePdfFixture(pages: FixtureLine[][]): Uint8Array<ArrayBuffer> {
+function buildMultiPagePdfFixture(
+  pages: FixtureLine[][],
+  outline: Array<{ title: string; page: number }> = [],
+): Uint8Array<ArrayBuffer> {
   const kids = pages.map((_, index) => `${3 + index * 2} 0 R`).join(' ');
   const fontObject = 3 + pages.length * 2;
+  const outlineRootObject = fontObject + 1;
+  const outlineItemObject = (index: number) => outlineRootObject + 1 + index;
   const objects = [
-    '<< /Type /Catalog /Pages 2 0 R >>',
+    `<< /Type /Catalog /Pages 2 0 R${outline.length ? ` /Outlines ${outlineRootObject} 0 R` : ''} >>`,
     `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`,
   ];
 
@@ -78,6 +83,19 @@ function buildMultiPagePdfFixture(pages: FixtureLine[][]): Uint8Array<ArrayBuffe
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   });
   objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  if (outline.length) {
+    objects.push(
+      `<< /Type /Outlines /First ${outlineItemObject(0)} 0 R /Last ${outlineItemObject(outline.length - 1)} 0 R /Count ${outline.length} >>`,
+    );
+    outline.forEach((entry, index) => {
+      const pageObject = 3 + (entry.page - 1) * 2;
+      const previous = index > 0 ? ` /Prev ${outlineItemObject(index - 1)} 0 R` : '';
+      const next = index < outline.length - 1 ? ` /Next ${outlineItemObject(index + 1)} 0 R` : '';
+      objects.push(
+        `<< /Title (${escapePdfText(entry.title)}) /Parent ${outlineRootObject} 0 R /Dest [${pageObject} 0 R /Fit]${previous}${next} >>`,
+      );
+    });
+  }
 
   let pdf = '%PDF-1.4\n';
   const offsets: number[] = [];
@@ -136,6 +154,23 @@ describe('parsePdf', () => {
     expect(textOf(0)).not.toContain('Chapter');
     expect(textOf(0)).toContain('previo');
     expect(textOf(1)).toContain('posterior');
+  });
+
+  it('el índice apunta al bloque de la página del outline aunque no haya encabezados de capítulo', async () => {
+    const bytes = buildMultiPagePdfFixture(
+      [
+        ['Texto de la primera página con suficientes palabras para formar un párrafo.'],
+        ['Introduccion', 'Contenido de la introduccion con suficientes palabras para formar un parrafo.'],
+      ],
+      [{ title: 'Introduccion', page: 2 }],
+    );
+    const result = await parsePdf(requestFor(bytes), () => {});
+
+    expect(result.toc).toHaveLength(1);
+    const entry = result.toc?.[0];
+    expect(entry?.chapterIndex).toBe(0);
+    const block = result.chapters[0]?.blocks.find((candidate) => candidate.id === entry?.blockId);
+    expect(block?.type === 'text' && block.content).toContain('Introduccion');
   });
 
   it('elimina los números de página que cambian en el pie', async () => {

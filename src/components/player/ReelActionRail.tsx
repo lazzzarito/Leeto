@@ -15,7 +15,7 @@ interface ReelActionRailProps {
 }
 
 const PILL_CLASS =
-  'border-white/25 bg-black/25 text-reel inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-xs font-medium backdrop-blur-sm transition-colors hover:bg-black/40';
+  'border-white/25 bg-black/25 text-reel inline-flex h-10 min-w-0 flex-1 basis-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-2 text-[11px] font-medium backdrop-blur-sm transition-colors hover:bg-black/40 sm:gap-2 sm:px-3.5 sm:text-xs';
 
 const ReelActionRail = memo(function ReelActionRail({
   title,
@@ -36,7 +36,7 @@ const ReelActionRail = memo(function ReelActionRail({
       aria-label="Acciones del lector"
       data-player-action="true"
       className={cn(
-        'reel-rail-enter absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex flex-wrap items-center justify-center gap-2 px-4',
+        'reel-rail-enter absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-20 flex flex-nowrap items-center justify-center gap-1 px-2 sm:gap-2 sm:px-4',
         reducedMotion && 'reel-rail-static',
       )}
       onPointerDown={(event) => event.stopPropagation()}
@@ -49,12 +49,12 @@ const ReelActionRail = memo(function ReelActionRail({
       <button type="button" onClick={onQuote} aria-label="Guardar cita" className={cn(PILL_CLASS, 'relative overflow-hidden')}>
         <Quote className={cn('size-4', quoteCaptured && !reducedMotion && 'leeto-quote-icon')} aria-hidden="true" />
         {quoteCaptured && !reducedMotion && <span className="leeto-quote-capture" aria-hidden="true" />}
-        <span>Cita</span>
+        <span className="hidden min-[360px]:inline">Cita</span>
       </button>
 
       <button type="button" onClick={onToc} aria-label="Abrir índice" className={PILL_CLASS}>
         <List className="size-4" aria-hidden="true" />
-        <span>Índice</span>
+        <span className="hidden min-[360px]:inline">Índice</span>
       </button>
 
       <button
@@ -80,12 +80,12 @@ const ReelActionRail = memo(function ReelActionRail({
         ) : (
           <VolumeX className="size-4" aria-hidden="true" />
         )}
-        <span>Voz</span>
+        <span className="hidden min-[360px]:inline">Voz</span>
       </button>
 
       <button type="button" onClick={onSettings} aria-label={`Ajustes de lectura de ${title}`} className={PILL_CLASS}>
         <SlidersHorizontal className="size-4" aria-hidden="true" />
-        <span>Ajustes</span>
+        <span className="hidden min-[360px]:inline">Ajustes</span>
       </button>
     </aside>
   );

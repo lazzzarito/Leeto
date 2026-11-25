@@ -24,7 +24,7 @@ interface TextLine {
 
 interface Section {
   title: string;
-  paragraphs: string[];
+  paragraphs: Array<{ content: string; page: number }>;
   startPage: number;
 }
 
@@ -148,7 +148,9 @@ function buildSections(
     let pending: TextLine[] = [];
     const flush = () => {
       if (!pending.length) return;
-      current.paragraphs.push(...linesToParagraphs(pending));
+      current.paragraphs.push(
+        ...linesToParagraphs(pending).map((content) => ({ content, page: page.pageNumber })),
+      );
       pending = [];
     };
 
@@ -174,6 +176,13 @@ export async function buildPdfToc(
   resolvePage: (dest: unknown) => Promise<number | undefined>,
   chapters: LeetoChapter[],
 ): Promise<TocEntry[]> {
+  const blocksByPage = chapters.flatMap((chapter, chapterIndex) =>
+    chapter.blocks.flatMap((block) =>
+      block.type === 'text' && block.page !== undefined
+        ? [{ chapterIndex, block }]
+        : [],
+    ),
+  );
   let counter = 0;
   const walk = async (nodes: PdfOutlineNode[]): Promise<TocEntry[]> => {
     const entries: TocEntry[] = [];
@@ -195,7 +204,20 @@ export async function buildPdfToc(
       chapters.forEach((chapter, index) => {
         if ((chapter.startPage ?? 1) <= page) chapterIndex = index;
       });
-      const blockId = chapters[chapterIndex]?.blocks[0]?.id;
+      let blockId = chapters[chapterIndex]?.blocks[0]?.id;
+
+      // El outline apunta a una página, no necesariamente a un encabezado que
+      // coincida con la heurística de capítulos. Buscar el primer bloque real
+      // de esa página evita que todas las entradas caigan en el capítulo 0.
+      const exact = blocksByPage.find(({ block }) => block.page === page);
+      const later = blocksByPage
+        .filter(({ block }) => (block.page ?? 0) > page)
+        .sort((a, b) => (a.block.page ?? 0) - (b.block.page ?? 0))[0];
+      const target = exact ?? later;
+      if (target) {
+        chapterIndex = target.chapterIndex;
+        blockId = target.block.id;
+      }
       counter += 1;
       entries.push({
         id: `toc_pdf_${counter}`,
@@ -347,12 +369,13 @@ export async function parsePdf(
       title: section.title || fallbackTitle,
       startPage: section.startPage,
       blocks: section.paragraphs
-        .filter((content) => content.length > 0)
-        .map((content) => ({
+        .filter((paragraph) => paragraph.content.length > 0)
+        .map((paragraph) => ({
           id: nextBlockId(),
           type: 'text' as const,
-          content,
-          wordCount: countWords(content),
+          content: paragraph.content,
+          wordCount: countWords(paragraph.content),
+          page: paragraph.page,
         })),
     }));
 

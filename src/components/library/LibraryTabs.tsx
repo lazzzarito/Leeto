@@ -11,6 +11,7 @@ import {
   groupByAuthor,
   groupBySaga,
 } from '@/core/library/views';
+import { adjacentLibraryTab } from '@/core/library/tabGesture';
 
 import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
 import BookCard from './BookCard';
@@ -26,8 +27,6 @@ interface LibraryTabsProps {
   onEdit: (book: LeetoBook) => void;
   onDelete: (book: LeetoBook) => void;
 }
-
-const TAB_ORDER = ['reading', 'finished', 'favorites', 'all', 'authors', 'sagas', 'quotes'] as const;
 
 const TRIGGER_CLASS =
   'bg-muted/60 text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex h-9 shrink-0 items-center justify-center rounded-full px-3 text-xs font-medium transition-colors sm:text-sm';
@@ -98,7 +97,7 @@ export default function LibraryTabs({
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isDesktop) return;
     const target = event.target as HTMLElement;
-    if (target.closest('input,select,textarea,[role="dialog"],[data-no-pill-swipe="true"]')) {
+    if (target.closest('input,select,textarea,[role="dialog"]')) {
       touchStartRef.current = undefined;
       return;
     }
@@ -114,18 +113,22 @@ export default function LibraryTabs({
     touchStartRef.current = undefined;
     if (!start || !touch) return;
     const target = event.target as HTMLElement;
-    if (target.closest('input,select,textarea,[role="dialog"],[data-no-pill-swipe="true"]')) return;
+    if (target.closest('input,select,textarea,[role="dialog"]')) return;
+
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
-    if (Math.abs(dx) < 48 || Math.abs(dx) <= Math.abs(dy) * 1.15) return;
-    const index = TAB_ORDER.indexOf(value as (typeof TAB_ORDER)[number]);
-    if (index < 0) return;
-    const next = dx < 0 ? TAB_ORDER[index + 1] : TAB_ORDER[index - 1];
-    if (next) {
-      suppressClickRef.current = true;
-      window.setTimeout(() => { suppressClickRef.current = false; }, 350);
-      onValueChange(next);
+    const next = adjacentLibraryTab(value, dx, dy);
+    if (!next) return;
+
+    // Un swipe vertical desde el inicio de la lista cambia de pestaña; si la
+    // lista está desplazada, el gesto pertenece al scroll.
+    if (Math.abs(dy) > Math.abs(dx) && Math.max(0, document.scrollingElement?.scrollTop ?? window.scrollY ?? 0) > 2) {
+      return;
     }
+
+    suppressClickRef.current = true;
+    window.setTimeout(() => { suppressClickRef.current = false; }, 350);
+    onValueChange(next);
   };
 
   const handleClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -140,8 +143,10 @@ export default function LibraryTabs({
       value={value}
       onValueChange={onValueChange}
       className="space-y-4"
+      data-no-pull-refresh="true"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { touchStartRef.current = undefined; }}
       onClickCapture={handleClickCapture}
     >
       <div
@@ -154,7 +159,6 @@ export default function LibraryTabs({
       >
         <Tabs.List
           ref={tabsListRef}
-          data-no-pill-swipe="true"
           aria-label="Vistas de la biblioteca"
           className="library-pills-scrollbar bg-background flex gap-1.5 overflow-x-auto border-b border-border/50 px-4 pt-3 pb-2.5 sm:px-6"
         >

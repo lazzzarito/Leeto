@@ -17,6 +17,7 @@ export interface TextBlock {
   content: string;
   wordCount: number;
   heading?: boolean;
+  page?: number; // PDF: página de origen (1-based), usada por el índice.
 }
 
 export interface ImageBlock {
@@ -76,6 +77,8 @@ export interface StoredAsset {
   createdAt: number;
 }
 
+export type ReadingStatus = 'unread' | 'reading' | 'finished';
+
 export interface ReadingProgress {
   bookId: string;
   chapterIndex: number;
@@ -84,7 +87,8 @@ export interface ReadingProgress {
   percentage: number; // 0..100
   updatedAt: number; // epoch ms UTC
   deviceId: string;
-  deletedAt?: number; // tombstone para sync; el libro se borró en este dispositivo
+  deletedAt?: number; // tombstone para sync; el libro se borró o se marcó como no leído
+  status?: ReadingStatus; // estado explícito; el porcentaje es solo una estimación
 }
 
 export interface SavedQuote {

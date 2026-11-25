@@ -115,7 +115,7 @@ export default function AppShell() {
   const handlePullStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (reading || refreshing || getScrollTop() > 2) return;
     const target = event.target as HTMLElement;
-    if (target.closest('input, select, textarea, [role="dialog"]')) return;
+    if (target.closest('input, select, textarea, [role="dialog"], [data-no-pull-refresh="true"]')) return;
     const touch = event.touches[0];
     if (!touch) return;
     pullStartY.current = touch.clientY;
