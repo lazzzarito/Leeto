@@ -45,15 +45,26 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
   });
 }
 
+function progressRank(item: ReadingProgress): number {
+  if (item.deletedAt) return 1; // "No leído" es una acción explícita.
+  if (item.status === 'finished') return 3;
+  if (item.status === 'reading') return 2;
+  if (item.status === 'unread') return 1;
+  return 0;
+}
+
 function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
   // Last-write-wins, como las citas: un tombstone antiguo no debe ganar a un
   // progreso reciente (ni impedir re-importar/restaurar un libro borrado).
   const aTime = Math.max(a.updatedAt, a.deletedAt ?? 0);
   const bTime = Math.max(b.updatedAt, b.deletedAt ?? 0);
   if (aTime !== bTime) return aTime - bTime;
-  const aDeleted = a.deletedAt ?? 0;
-  const bDeleted = b.deletedAt ?? 0;
-  if (aDeleted !== bDeleted) return aDeleted - bDeleted;
+  // Con la misma marca de tiempo, conserva la decisión más específica: un
+  // "terminado" no debe perder contra un porcentaje sin estado del mismo ms.
+  const rank = progressRank(a) - progressRank(b);
+  if (rank !== 0) return rank;
+  const content = compareText(stableStringify(a), stableStringify(b));
+  if (content !== 0) return content;
   // Desempate determinista: el mismo par de registros siempre gana el mismo dispositivo.
   return compareText(a.deviceId, b.deviceId);
 }

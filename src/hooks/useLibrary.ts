@@ -27,13 +27,31 @@ export function useBookProgress(bookId?: string): ReadingProgress | undefined {
   return progress?.deletedAt ? undefined : progress;
 }
 
+/**
+ * Progreso y estado de carga de una sola lectura de IndexedDB.
+ * Dos live queries independientes podían devolver `loaded=true` antes que el
+ * registro, y el lector interpretaba el libro como nuevo.
+ */
+export function useBookProgressState(
+  bookId?: string,
+): { progress?: ReadingProgress; loaded: boolean } {
+  return useLiveQuery(
+    async () => {
+      if (!bookId) return { loaded: true };
+      const record = await db.progress.get(bookId);
+      return {
+        progress: record?.deletedAt ? undefined : record,
+        loaded: true,
+      };
+    },
+    [bookId],
+    { loaded: false },
+  );
+}
+
 /** `false` mientras IndexedDB no ha respondido si existe progreso para el libro. */
 export function useBookProgressLoaded(bookId?: string): boolean {
-  const count = useLiveQuery<number>(
-    () => (bookId ? db.progress.where('bookId').equals(bookId).count() : 0),
-    [bookId],
-  );
-  return count !== undefined;
+  return useBookProgressState(bookId).loaded;
 }
 
 /** Progreso de toda la biblioteca, para las vistas Leyendo y Leídos. */

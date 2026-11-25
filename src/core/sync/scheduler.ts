@@ -71,6 +71,7 @@ export function createSyncScheduler({
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let inFlight: Promise<void> | undefined;
+  let pendingAfterRun = false;
   let failureCount = 0;
 
   async function execute(): Promise<void> {
@@ -95,6 +96,14 @@ export function createSyncScheduler({
       } finally {
         state.running = false;
         inFlight = undefined;
+        if (pendingAfterRun) {
+          pendingAfterRun = false;
+          // Un cambio local llegó mientras se leía el remoto: hay que publicarlo.
+          debounceTimer = setTimeout(() => {
+            debounceTimer = undefined;
+            void execute();
+          }, debounceMs);
+        }
       }
     })();
     return inFlight;
@@ -104,6 +113,10 @@ export function createSyncScheduler({
     state,
     trigger() {
       if (state.nextRetryAt && now() < state.nextRetryAt) return;
+      if (inFlight) {
+        pendingAfterRun = true;
+        return;
+      }
       if (debounceTimer) clearTimeout(debounceTimer);
       const elapsed = state.lastRunAt === undefined ? Infinity : now() - state.lastRunAt;
       const delay = Math.max(debounceMs, minIntervalMs - elapsed);
@@ -133,6 +146,7 @@ export function createSyncScheduler({
       if (retryTimer) clearInterval(retryTimer);
       debounceTimer = undefined;
       retryTimer = undefined;
+      pendingAfterRun = false;
     },
   };
 }

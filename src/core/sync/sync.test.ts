@@ -170,6 +170,23 @@ describe('merge por registro', () => {
     expect(mergeEnvelopes(high, low).envelope.progress.book_1.deviceId).toBe('dev_Z');
   });
 
+  it('a igual marca de tiempo conserva el estado explícito frente al porcentaje', () => {
+    const finished = envelope(
+      'dev_A',
+      { progress: [progress('book_1', 'dev_A', 100, { status: 'finished' })] },
+      100,
+    );
+    const partial = envelope(
+      'dev_Z',
+      { progress: [progress('book_1', 'dev_Z', 100, { percentage: 12 })] },
+      100,
+    );
+
+    for (const merged of [mergeEnvelopes(finished, partial), mergeEnvelopes(partial, finished)]) {
+      expect(merged.envelope.progress.book_1?.status).toBe('finished');
+    }
+  });
+
   it('un progreso reciente gana a un tombstone antiguo (marcar como leído sobrevive)', () => {
     const local = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 300)] }, 300);
     const remote = envelope(

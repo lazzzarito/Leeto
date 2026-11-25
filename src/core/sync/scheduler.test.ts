@@ -42,6 +42,30 @@ describe('planificador de sincronización', () => {
     expect(run).toHaveBeenCalledTimes(2);
   });
 
+  it('reprograma un cambio local que llega durante una sincronización en curso', async () => {
+    vi.useFakeTimers();
+    let resolveRun: () => void = () => undefined;
+    const run = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveRun = resolve;
+          }),
+      )
+      .mockResolvedValue(undefined);
+    const scheduler = createSyncScheduler({ run, debounceMs: 100, minIntervalMs: 1000 });
+
+    const first = scheduler.runNow();
+    scheduler.trigger();
+    resolveRun();
+    await first;
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(run).toHaveBeenCalledTimes(2);
+    scheduler.stop();
+  });
+
   it('aplica backoff y limpia el error al recuperarse', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));

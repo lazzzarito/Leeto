@@ -13,7 +13,7 @@ import {
   playerReducer,
 } from '@/core/player/state';
 import { findClipIndex } from '@/core/player/resolve';
-import { useBookProgress, useBookProgressLoaded } from '@/hooks/useLibrary';
+import { useBookProgressState } from '@/hooks/useLibrary';
 import type { LeetoBook, ReadingStatus } from '@/types';
 
 const SAVE_DEBOUNCE_MS = 300;
@@ -23,8 +23,7 @@ export function usePlayer(book?: LeetoBook) {
   const settings = useSettings();
   const bookId = book?.id;
   const totalWordCount = book?.totalWordCount ?? 0;
-  const progress = useBookProgress(bookId ?? '');
-  const progressLoaded = useBookProgressLoaded(bookId);
+  const { progress, loaded: progressLoaded } = useBookProgressState(bookId);
   const [state, dispatch] = useReducer(playerReducer, undefined, createInitialState);
   const clips = useMemo(() => buildClips(book?.chapters ?? []), [book?.chapters]);
 
@@ -40,6 +39,9 @@ export function usePlayer(book?: LeetoBook) {
   const appliedProgressAtRef = useRef<number | undefined>(undefined);
   const loadedBookIdRef = useRef<string | undefined>(undefined);
   const hydratedBookIdRef = useRef<string | undefined>(undefined);
+  // El reproductor es global: al salir del lector `bookId` desaparece, pero la
+  // escritura pendiente debe seguir apuntando al libro que se estaba leyendo.
+  const saveBookIdRef = useRef<string | undefined>(undefined);
   const loadedWordCountRef = useRef(totalWordCount);
   const explicitStatusRef = useRef<ReadingStatus | undefined>(undefined);
   const hasPlayedRef = useRef(false);
@@ -53,7 +55,7 @@ export function usePlayer(book?: LeetoBook) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = undefined;
     }
-    const id = targetBookId ?? bookIdRef.current;
+    const id = targetBookId ?? saveBookIdRef.current ?? bookIdRef.current;
     const current = stateRef.current;
     const clip = current.clips[current.clipIndex];
     if (!clip || !id) return;
@@ -77,11 +79,14 @@ export function usePlayer(book?: LeetoBook) {
         deviceId: settingsRef.current.deviceId,
         ...(status ? { status } : {}),
       })
+      .then(() => {
+        // Avisar después de escribir evita que el sync tome una foto sin este cambio.
+        notifyLocalSyncChange();
+      })
       .catch(() => {
         // Si falla IDB, permitir reintentar en el siguiente flush.
         lastSavedRef.current = undefined;
       });
-    notifyLocalSyncChange();
   }, []);
 
   const scheduleSave = useCallback(() => {
@@ -102,8 +107,11 @@ export function usePlayer(book?: LeetoBook) {
   // debe recargar el clip (eso reiniciaba el playhead y cortaba la voz).
   useEffect(() => {
     if (!bookId) {
+      // Salir del lector no puede perder la posición: el reproductor sigue vivo.
+      if (saveBookIdRef.current) flush(saveBookIdRef.current);
       loadedBookIdRef.current = undefined;
       hydratedBookIdRef.current = undefined;
+      saveBookIdRef.current = undefined;
       hasPlayedRef.current = false;
       return;
     }
@@ -121,12 +129,16 @@ export function usePlayer(book?: LeetoBook) {
       lastSavedRef.current = undefined;
       appliedProgressAtRef.current = undefined;
       hasPlayedRef.current = false;
+      explicitStatusRef.current = undefined;
       loadedBookIdRef.current = bookId;
-    } else if (stateRef.current.status === 'playing') {
+    }
+    // El estado explícito se conserva incluso si un cambio remoto llega mientras
+    // se reproduce; antes se leía después del `return` y se perdía.
+    if (saved?.status) explicitStatusRef.current = saved.status;
+    if (!switchingBook && stateRef.current.status === 'playing') {
       // Un cambio remoto mientras se reproduce no debe mover el playhead ni cortar la voz.
       return;
     }
-    explicitStatusRef.current = saved?.status;
 
     const savedKey = saved ? `${saved.blockId}:${saved.segmentIndex ?? 0}` : 'new';
     if (!switchingBook && saved && lastSavedRef.current === savedKey) return;
@@ -139,6 +151,7 @@ export function usePlayer(book?: LeetoBook) {
     lastSavedRef.current = savedKey;
     loadedWordCountRef.current = totalWordCount;
     hydratedBookIdRef.current = bookId;
+    saveBookIdRef.current = bookId;
     dispatch({
       type: 'load',
       clips,

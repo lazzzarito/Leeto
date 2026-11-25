@@ -120,6 +120,7 @@ describe('vistas de biblioteca', () => {
     expect(resolveReadingStatus('finished', 96.8)).toBe('finished');
     expect(resolveReadingStatus('reading', 100)).toBe('finished');
     expect(resolveReadingStatus(undefined, 42)).toBe('reading');
+    expect(resolveReadingStatus('unread', 100)).toBeUndefined();
     expect(resolveReadingStatus(undefined, 0)).toBeUndefined();
     expect(getReadingStatus({ ...finished, deletedAt: 123 })).toBeUndefined();
   });
