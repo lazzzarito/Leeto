@@ -65,7 +65,11 @@ export function useTheme() {
     document.documentElement.dataset.readingTheme = theme;
     const dark = theme === 'oled' || theme === 'graphite';
     document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLORS[theme]);
+    const chromeColor =
+      mode === 'system' && dynamicPalette?.available && dynamicPalette.surface
+        ? dynamicPalette.surface
+        : THEME_COLORS[theme];
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', chromeColor);
     if (mode === 'system' && dynamicPalette?.available) {
       applyDynamicPalette(dynamicPalette);
     } else {

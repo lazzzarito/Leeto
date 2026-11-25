@@ -181,7 +181,7 @@ export default function LibraryTabs({
             Sagas
           </Tabs.Trigger>
           <Tabs.Trigger value="quotes" className={TRIGGER_CLASS}>
-            Citas ({quotes.length})
+            Citas ({visibleQuotes.length})
           </Tabs.Trigger>
         </Tabs.List>
       </div>

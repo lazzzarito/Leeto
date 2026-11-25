@@ -28,6 +28,28 @@ describe('detectMimeType', () => {
     expect(detectMimeType({ name: 'comic.CBZ', type: '' })).toBe(CBZ_MIME);
   });
 
+  it('prefiere la cabecera del archivo cuando contradice la extensión', () => {
+    const encoder = new TextEncoder();
+    expect(
+      detectMimeType(
+        { name: 'renombrado.epub', type: EPUB_MIME },
+        encoder.encode('%PDF-1.7 contenido'),
+      ),
+    ).toBe(PDF_MIME);
+    expect(
+      detectMimeType(
+        { name: 'sin-extension', type: '' },
+        encoder.encode('PK\u0003\u0004 ... META-INF/container.xml ...'),
+      ),
+    ).toBe(EPUB_MIME);
+    expect(
+      detectMimeType(
+        { name: 'libro.bin', type: '' },
+        encoder.encode('<?xml?><FictionBook>'),
+      ),
+    ).toBe(FB2_MIME);
+  });
+
   it('acepta el MIME cuando no hay extensión reconocida', () => {
     expect(detectMimeType({ name: 'sin-extension', type: TXT_MIME })).toBe(TXT_MIME);
     expect(detectMimeType({ name: 'otro.bin', type: 'application/octet-stream' })).toBeUndefined();

@@ -49,7 +49,26 @@ export function isBookFile(name: string): boolean {
   return BOOK_EXTENSION.test(name);
 }
 
-export function detectMimeType(file: Pick<File, 'name' | 'type'>): string | undefined {
+/** Cabeceras de los formatos binarios; la extensión se usa solo como reserva. */
+export function sniffMimeType(bytes: Uint8Array): string | undefined {
+  const head = new TextDecoder().decode(bytes.subarray(0, Math.min(bytes.length, 8192)));
+  if (head.startsWith('%PDF')) return PDF_MIME;
+  if (head.startsWith('PK')) {
+    if (head.includes('META-INF/container.xml')) return EPUB_MIME;
+    if (head.includes('word/document.xml')) return DOCX_MIME;
+    if (head.includes('META-INF/manifest.xml')) return ODT_MIME;
+    return CBZ_MIME;
+  }
+  if (head.includes('<FictionBook')) return FB2_MIME;
+  return undefined;
+}
+
+export function detectMimeType(
+  file: Pick<File, 'name' | 'type'>,
+  bytes?: Uint8Array,
+): string | undefined {
+  const sniffed = bytes ? sniffMimeType(bytes) : undefined;
+  if (sniffed) return sniffed;
   const name = file.name.toLowerCase();
   const dot = name.lastIndexOf('.');
   const extension = dot >= 0 ? name.slice(dot + 1) : '';

@@ -19,6 +19,11 @@ function bounded(value: unknown, min: number, max: number, fallback: number): nu
     : fallback;
 }
 
+const bool = (value: unknown, fallback: boolean): boolean =>
+  typeof value === 'boolean' ? value : fallback;
+const text = (value: unknown, fallback?: string): string | undefined =>
+  typeof value === 'string' ? value : fallback;
+
 /** Normaliza registros antiguos o parciales antes de usarlos en la UI. */
 export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
   const merged = { ...DEFAULT_SETTINGS, ...stored, id: 'singleton' as const };
@@ -34,6 +39,20 @@ export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
     playbackSpeed: bounded(merged.playbackSpeed, 0.5, 2, DEFAULT_SETTINGS.playbackSpeed),
     focusDimIntensity: bounded(merged.focusDimIntensity, 0, 1, DEFAULT_SETTINGS.focusDimIntensity),
     imageDurationMs: bounded(merged.imageDurationMs, 1000, 30_000, DEFAULT_SETTINGS.imageDurationMs),
+    kineticTextEnabled: bool(merged.kineticTextEnabled, DEFAULT_SETTINGS.kineticTextEnabled),
+    ttsEnabled: bool(merged.ttsEnabled, DEFAULT_SETTINGS.ttsEnabled),
+    syncEnabled: bool(merged.syncEnabled, DEFAULT_SETTINGS.syncEnabled),
+    onboardingCompleted:
+      typeof merged.onboardingCompleted === 'boolean'
+        ? merged.onboardingCompleted
+        : undefined,
+    ttsVoiceURI:
+      typeof merged.ttsVoiceURI === 'string' ? merged.ttsVoiceURI : undefined,
+    syncWebDavUrl: text(merged.syncWebDavUrl, DEFAULT_SETTINGS.syncWebDavUrl),
+    syncWebDavUsername: text(merged.syncWebDavUsername, DEFAULT_SETTINGS.syncWebDavUsername),
+    scanRoots: Array.isArray(merged.scanRoots)
+      ? merged.scanRoots
+      : (DEFAULT_SETTINGS.scanRoots ?? []),
     reducedMotion:
       merged.reducedMotion === 'on' || merged.reducedMotion === 'off'
         ? merged.reducedMotion

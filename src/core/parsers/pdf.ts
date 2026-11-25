@@ -345,7 +345,9 @@ export async function parsePdf(
       page.cleanup();
     }
 
-    if (totalCharacters / pdf.numPages < 40) {
+    // Libros cortos, poesía o PDF con ilustraciones tienen poco texto por página
+    // y son perfectamente válidos: solo rechazamos los que no tienen texto alguno.
+    if (totalCharacters === 0) {
       throw new ParseError(
         'Este PDF parece escaneado; la versión actual no incluye OCR.',
         'SCANNED_PDF',

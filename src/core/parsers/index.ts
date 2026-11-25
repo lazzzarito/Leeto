@@ -8,7 +8,13 @@ import {
   ODT_MIME,
   PDF_MIME,
 } from './formats';
-import { ParseError, type ParseProgress, type ParseRequest, type ParseResult } from './types';
+import {
+  ParseError,
+  type ByteArray,
+  type ParseProgress,
+  type ParseRequest,
+  type ParseResult,
+} from './types';
 import { runParserWorker } from './workerClient';
 
 /** Hash + parseo: EPUB en worker, PDF con PDF.js y texto en el hilo principal. */
@@ -16,8 +22,12 @@ export async function parseFile(
   file: File,
   onProgress: (progress: ParseProgress) => void,
   contentHash?: string,
+  preloadedBytes?: ByteArray,
 ): Promise<ParseResult> {
-  const mimeType = detectMimeType(file);
+  // El importador ya leyó el archivo para calcular el hash: releerlo duplicaba
+  // el pico de memoria con libros grandes en WebViews móviles.
+  const bytes: ByteArray = preloadedBytes ?? new Uint8Array(await file.arrayBuffer());
+  const mimeType = detectMimeType(file, bytes);
   if (!mimeType) {
     throw new ParseError(
       'Formato no soportado. Leeto admite EPUB, PDF con texto, FB2, DOCX, ODT, CBZ, TXT, Markdown y HTML.',
@@ -25,7 +35,6 @@ export async function parseFile(
     );
   }
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
   const request: ParseRequest = {
     contentHash: contentHash ?? (await hashBytes(bytes)),
     fileName: file.name,

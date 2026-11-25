@@ -3,7 +3,8 @@ import { describeImportBatch, type ImportBatchSummary } from '@/core/import/batc
 import { isDuplicate, persistParseResult } from '@/core/db/import';
 import { parseFile, type ParseProgress } from '@/core/parsers';
 import type { ParseStage } from '@/core/parsers/types';
-import { hashFile } from '@/lib/hash';
+import { notifyLocalSyncChange } from '@/core/sync/scheduler';
+import { hashBytes } from '@/lib/hash';
 import { newId } from '@/lib/ids';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
 
@@ -72,7 +73,8 @@ export function ImportProvider({ children }: { children: ReactNode }) {
       setJobs((previous) => [...previous, { id, fileName: file.name, status: 'queued', progress: 0 }]);
       try {
         patchJob(id, { status: 'hashing', progress: 2 });
-        const contentHash = await hashFile(file);
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const contentHash = await hashBytes(bytes);
         if (await isDuplicate(contentHash)) {
           if (batched) { summary.duplicates += 1; completeJob(id, { status: 'duplicate', progress: 100 }); }
           else finishJob(id, { status: 'duplicate', progress: 100 }, { kind: 'info', title: 'Ya estaba en la biblioteca', detail: file.name });
@@ -80,9 +82,11 @@ export function ImportProvider({ children }: { children: ReactNode }) {
         }
         patchJob(id, { status: 'parsing', progress: 5 });
         const onProgress = (progress: ParseProgress) => patchJob(id, { status: 'parsing', progress: progress.percent, stage: progress.stage });
-        const result = await parseFile(file, onProgress, contentHash);
+        const result = await parseFile(file, onProgress, contentHash, bytes);
         patchJob(id, { status: 'saving', progress: 97 });
         await persistParseResult(result);
+        // Reimportar puede revivir un tombstone; el sync debe enterarse ya.
+        notifyLocalSyncChange();
         if (batched) { summary.imported += 1; completeJob(id, { status: 'imported', progress: 100, stage: 'done' }); }
         else finishJob(id, { status: 'imported', progress: 100, stage: 'done' }, { kind: 'success', title: 'Libro importado', detail: result.title || file.name });
       } catch (error) {
