@@ -2,110 +2,140 @@
 
 <picture>
   <source srcset="docs/logo.webp" type="image/webp">
-  <img src="docs/logo.png" alt="Leeto — lee a tu ritmo" width="100%">
+  <img src="docs/logo.png" alt="Leeto — vuelve a disfrutar leer" width="100%">
 </picture>
 
 # Leeto
 
-### Lee tus libros a tu ritmo, sin cuenta ni nube de por medio.
+### Tu próxima lectura, sin distracciones.
 
-**Leeto** abre EPUB, PDF, FB2, DOCX, ODT, CBZ y archivos de texto. El texto se ilumina mientras avanza, las imágenes aparecen en su momento y la biblioteca se queda en tu dispositivo.
+**Leeto** es un lector bonito, ligero y tuyo. Abre tus libros, sigue el texto con una guía suave y retoma justo donde lo dejaste, incluso cuando cierras la app.
 
 <br>
 
-`📚 EPUB + PDF + FB2 + DOCX/ODT + CBZ + TXT/MD/HTML`　`🔒 100 % local`　`📴 Funciona sin internet`　`🎧 Voz opcional`　`🌙 Tema automático`
+`📚 EPUB · PDF · cómics · texto`　`🔒 Solo en tu dispositivo`　`📴 Sin internet`　`🎧 Con voz si quieres`　`🌙 Se adapta a ti`
+
+<br>
+
+[**Descargar para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta)
 
 </div>
 
 ---
 
-## ✨ Así se siente
+## Una forma más tranquila de leer
 
-| 📚 Tu biblioteca | 🎬 El lector | 🧭 Tu índice |
+Leeto no intenta parecer una biblioteca complicada. Abres un libro, deslizas y lees. El texto te acompaña, las imágenes respiran y tu progreso se guarda solo.
+
+<div align="center">
+
+| Tu biblioteca, siempre lista | Lectura a pantalla completa | Un índice que sí te ubica |
 | :---: | :---: | :---: |
-| <img src="docs/screens/05-biblioteca-con-libros-movil.png" alt="Biblioteca de Leeto en móvil" width="230"> | <img src="docs/screens/08-lector-movil.png" alt="Lector a pantalla completa" width="230"> | <img src="docs/screens/10-indice.png" alt="Índice jerárquico" width="230"> |
-| Portadas, progreso y tiempo restante de un vistazo. | Desliza y el texto sigue el ritmo contigo. | Capítulos y secciones reales, sin perderte nunca. |
+| <img src="docs/screens/11-biblioteca-material-you.png" alt="Biblioteca de Leeto en móvil" width="230"> | <img src="docs/screens/12-lector-material-you.png" alt="Lector de Leeto en móvil" width="230"> | <img src="docs/screens/13-indice-progreso.png" alt="Índice de lectura en Leeto" width="230"> |
+| Portadas claras, progreso visible y todo a mano. | El texto avanza contigo, sin romper tu ritmo. | Salta a la sección exacta y mira por dónde vas. |
+
+</div>
 
 <br>
 
 <div align="center">
-<img src="docs/screens/06-biblioteca-escritorio.png" alt="Leeto en escritorio con barra lateral" width="100%">
-<br><sub>Una misma app: móvil, tablet y escritorio. 🖥️📱</sub>
+<img src="docs/screens/06-biblioteca-escritorio.png" alt="Leeto en escritorio" width="100%">
+<br><sub>Se ve igual de bien en móvil, tablet y escritorio.</sub>
 </div>
 
 ---
 
-## La primera apertura
+## Lo que hace especial a Leeto
 
-La primera vez, Leeto te recibe con un recorrido de dos pasos: bienvenida y gestos.
-No pide nombre ni permisos especiales: solo abres los archivos que tú eliges, y tu progreso se queda en este dispositivo. Después, pulsa **Añadir** para cargar tus libros.
+### 🎬 Leer se siente fluido
+El texto se ilumina suavemente mientras avanzas. No tienes que pelear con la página: solo seguir la historia.
 
-Bajo el logo verás siempre la versión y el canal, por ejemplo **v0.1.0 · Beta**.
+### 👆 Gestos naturales
+Desliza para pasar al siguiente fragmento. Cuando quieres volver, vuelves. Cuando quieres seguir, Leeto ya está ahí.
 
-| La bienvenida | Tus gestos |
-| :---: | :---: |
-| <img src="docs/screens/01-onboarding-bienvenida.png" alt="Pantalla de bienvenida" width="220"> | <img src="docs/screens/02-onboarding-gestos.png" alt="Gestos del lector" width="220"> |
+### 🧭 Nunca pierdes el hilo
+El índice te muestra capítulos, secciones y tu avance actual, para que siempre sepas dónde estás.
+
+<div align="center">
+<img src="docs/screens/09-lector-siguiente.png" alt="Siguiente fragmento en Leeto" width="230">
+<br><sub>Cada fragmento aparece limpio, cómodo y listo para seguir.</sub>
+</div>
+
+### 💬 Guarda lo que te marcó
+¿Una frase que no quieres olvidar? Guárdala como cita en un toque y vuelve a ella cuando quieras.
+
+### 🎧 Escucha cuando te venga mejor
+Activa la voz y deja que Leeto te acompañe mientras caminas, descansas o tienes las manos ocupadas.
+
+### 🌙 Se adapta a tu momento
+Claro de día, oscuro de noche, o con el estilo que mejor te siente. Leeto se acomoda a ti.
 
 ---
 
-## Qué incluye
+## Empieza en segundos
 
-- **🎬 Lectura en clips.** El texto se muestra completo y una suave luz guía la palabra activa. No hay saltos raros ni animaciones que distraigan.
-- **👆 Desliza y sigue.** Sube o baja para cambiar de fragmento. La lectura continúa, no se reinicia.
-- **🖼️ Imágenes con calma.** Aparecen arriba, con su pie debajo y un movimiento muy sutil, como una película tranquila. En los CBZ el progreso avanza página a página.
-- **💬 Citas al instante.** Guarda el fragmento exacto que estás leyendo con un toque y una animación de «captura».
-- **🧭 Índice de verdad.** La tabla de contenidos de tu EPUB o PDF se respeta tal cual; en FB2, TXT, Markdown y HTML se genera a partir de sus encabezados.
-- **🎧 Escucha si quieres.** Activa la voz local y sigue el mismo ritmo visual. Si no quieres oír nada, también funciona perfecto.
-- **🌙 Se adapta a ti.** Sigue automáticamente el tema claro u oscuro de tu dispositivo, o elige uno de los cuatro estilos disponibles.
+No hay cuentas que crear ni formularios eternos. Abres Leeto, eliges tus libros y empiezas a leer.
+
+<div align="center">
+
+| Bienvenida simple | Gestos claros desde el inicio |
+| :---: | :---: |
+| <img src="docs/screens/01-onboarding-bienvenida.png" alt="Bienvenida de Leeto" width="220"> | <img src="docs/screens/02-onboarding-gestos.png" alt="Gestos de Leeto" width="220"> |
+
+</div>
+
+1. **Abre Leeto.** Te recibe con una bienvenida rápida y clara.
+2. **Añade tus libros.** Elige archivos desde tu dispositivo o arrástralos.
+3. **Empieza a leer.** Tu progreso se queda guardado automáticamente.
+
+---
+
+## Tus libros, tus citas, tu espacio
+
+Leeto está pensado para que leer vuelva a sentirse personal.
+
+- **Sin cuenta.** Entras y lees.
+- **Sin anuncios.** Nada compite con tu libro.
+- **Sin nube obligatoria.** Tu biblioteca vive en tu dispositivo.
+- **Sin conexión, sin problema.** Cuando ya abriste Leeto, puedes seguir leyendo.
+
+> Tu biblioteca es tuya. Leeto solo está ahí para ayudarte a disfrutarla.
+
+---
+
+## En Android, te acompaña a todas partes
+
+Lleva tus libros en el bolsillo y sigue leyendo como prefieras: en pantalla, con voz o retomando justo donde lo dejaste.
+
+- Descarga la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta).
+- Instálala en tu Android y abre tus libros al instante.
+- Si escuchas con voz, puedes salir de la app y seguir con el audio desde la notificación.
 
 <div align="center">
 <img src="docs/screens/07-ajustes-escritorio.png" alt="Ajustes de Leeto" width="100%">
+<br><sub>Ajusta la lectura a tu gusto: ritmo, tema, voz y más.</sub>
 </div>
 
 ---
 
-## 🔐 Tu biblioteca es tuya
+## Formatos que puedes abrir
 
-No hay cuentas, no hay anuncios y no hay servidores de Leeto guardando tus cosas.
-Tus libros, tu progreso y tus citas viven en tu dispositivo. Si decides sincronizar,
-usas **tu propio** WebDAV o una carpeta que tú elijas. Tú mandas. 🗝️
+Leeto abre los formatos más comunes para que no tengas que andar convirtiendo todo:
 
-> 📴 **Offline de verdad.** Una vez abierta, la app sigue funcionando aunque te quedes sin conexión.
-> En Android, tus libros y tu progreso tampoco se envían a la nube.
+**EPUB · PDF · FB2 · DOCX · ODT · CBZ · TXT · MD · HTML**
 
----
-
-## 🤖 App de Android
-
-En Android puedes descargar la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.4-beta) o desde el aviso que aparece en la web. Se instala directamente, sin cuenta ni tienda.
-
-La voz sigue sonando aunque salgas de la app. Recrear la Activity, tocar la notificación o volver de segundo plano ya no detiene el audio ni borra la portada, el título ni el color: el servicio conserva la cola y solo un cambio real de libro la reemplaza. La notificación muestra la portada, usa `MediaStyle` y se colorea con Material You; al tocarla se abre el libro que está sonando. Si el sistema quita el foco (llamadas u otra app), la lectura se pausa y se reanuda sola al recuperarlo.
-
-El progreso se guarda también con periodicidad mientras suena, de modo que un cierre brusco no pierde la posición, y un borrado o «marcar como no leído» en otro dispositivo no puede ser resucitado por una escritura tardía. El gesto «atrás» del sistema cierra primero diálogos y laterales, luego vuelve de la lectura y solo sale en la biblioteca; el botón del lector y la tecla Escape siguen las mismas reglas. Tras matar el proceso se recupera la última lectura.
-
-El icono del header y el color del navegador también siguen la paleta dinámica de Android 12+. En la PWA no existe acceso a Monet: solo se pueden ofrecer temas claros/oscuros y una silueta `monochrome` que el sistema decide si tiñe.
-
-El nombre del archivo incluye siempre la versión y el canal, por ejemplo **Leeto-0.1.4-beta.apk**.
+<sub>Algunos PDF escaneados necesitan texto reconocible para poder seguir la lectura palabra por palabra. Los formatos MOBI, AZW3 y DJVU no son compatibles por ahora.</sub>
 
 ---
-
-## 🚀 Empieza en tres pasos
-
-1. **Abre Leeto** y desliza por la bienvenida y los gestos. 👋
-2. **Añade libros** con «Añadir» (archivos sueltos o raíces guardadas) o arrástralos a la pantalla. 📥
-3. **Pulsa portada y lee.** El resto lo haces deslizando. 🎬
-
-<br>
-
----
-
-## Límites
-
-- Los PDF escaneados necesitan OCR: sin texto seleccionable no se puede seguir la lectura palabra por palabra.
-- MOBI, AZW3 y DJVU no son compatibles. Convierte esos archivos a EPUB o PDF antes de importarlos.
 
 <div align="center">
 
-Hecho con ❤️‍🔥 por [1azarito](https://1azarito.vercel.app)
+### ¿Listo para volver a leer con gusto?
+
+[**Descargar Leeto para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta)
+
+<br>
+
+Hecho con cariño por [1azarito](https://1azarito.vercel.app)
 
 </div>
