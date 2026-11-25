@@ -142,7 +142,7 @@ export default function LibraryTabs({
     <Tabs.Root
       value={value}
       onValueChange={onValueChange}
-      className="space-y-4"
+      className="min-h-[calc(100dvh-5rem)] space-y-4 lg:min-h-0"
       data-no-pull-refresh="true"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
+import StoriesBar from '@/components/player/StoriesBar';
 import type { PlayerClip } from '@/core/player/state';
 import {
   ensureToc,
@@ -17,6 +18,7 @@ interface TocDrawerProps {
   toc?: TocEntry[];
   clips: PlayerClip[];
   activeClipIndex: number;
+  percentage?: number;
   onSeek: (clipIndex: number) => void;
 }
 
@@ -27,12 +29,14 @@ export default function TocDrawer({
   toc,
   clips,
   activeClipIndex,
+  percentage = 0,
   onSeek,
 }: TocDrawerProps) {
   const entries = useMemo(() => ensureToc({ chapters, toc }), [chapters, toc]);
+  const activeClip = clips[activeClipIndex];
   const activePath = useMemo(
-    () => findActiveTocPath(entries, clips[activeClipIndex]),
-    [entries, clips, activeClipIndex],
+    () => findActiveTocPath(entries, activeClip),
+    [entries, activeClip],
   );
   const activeIds = useMemo(() => new Set(activePath.map((entry) => entry.id)), [activePath]);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(activeIds));
@@ -90,11 +94,14 @@ export default function TocDrawer({
             }}
             aria-current={isActive ? 'true' : undefined}
             className={cn(
-              'hover:bg-muted min-w-0 flex-1 rounded-md px-2 py-2 text-left text-sm',
+              'hover:bg-muted flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left text-sm',
               isActive && 'bg-accent text-accent-foreground font-medium',
             )}
           >
-            {entry.title}
+            {isActive && (
+              <span className="bg-primary size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+            )}
+            <span className="min-w-0 truncate">{entry.title}</span>
           </button>
         </div>
         {hasChildren && isOpen && (
@@ -114,6 +121,23 @@ export default function TocDrawer({
       description="Salta a cualquier sección del libro."
     >
       <nav aria-label="Índice del libro" className="space-y-3 pb-8">
+        <div className="bg-muted/50 rounded-xl border border-border/60 p-3">
+          <div className="mb-2 flex items-baseline justify-between gap-3 text-xs">
+            <span className="text-muted-foreground truncate">
+              {activeClip
+                ? `Capítulo ${activeClip.chapterIndex + 1} · ${
+                    activeClip.block.type === 'text'
+                      ? `fragmento ${activeClip.segmentIndex + 1} de ${activeClip.segmentCount}`
+                      : 'imagen'
+                  }`
+                : 'Todavía no has empezado'}
+            </span>
+            <span className="text-primary shrink-0 font-semibold tabular-nums">
+              {Math.round(percentage)}%
+            </span>
+          </div>
+          <StoriesBar percentage={percentage} />
+        </div>
         {activePath.length > 0 && (
           <p className="text-muted-foreground truncate text-xs">
             {activePath.map((entry) => entry.title).join(' › ')}

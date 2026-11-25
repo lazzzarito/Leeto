@@ -563,6 +563,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             toc={book.toc}
             clips={state.clips}
             activeClipIndex={state.clipIndex}
+            percentage={percentage}
             onSeek={handleTocSeek}
           />
         </Suspense>

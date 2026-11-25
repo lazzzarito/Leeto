@@ -1,7 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { updateSettings, useSettings, useSettingsLoaded } from '@/core/db/settings';
 import { readThemeCache, writeThemeCache } from '@/core/theme/cache';
-import { applyDynamicPalette, clearDynamicPalette, getDynamicPalette, listenDynamicPalette, themeForDynamicPalette, type DynamicPalette } from '@/core/theme/dynamic';
+import {
+  applyDynamicPalette,
+  cacheDynamicPalette,
+  clearDynamicPalette,
+  getDynamicPalette,
+  listenDynamicPalette,
+  readCachedDynamicPalette,
+  themeForDynamicPalette,
+  type DynamicPalette,
+} from '@/core/theme/dynamic';
 import { READING_THEMES } from '@/core/theme/themes';
 import type { ReadingTheme } from '@/types';
 
@@ -25,10 +34,17 @@ export function useTheme() {
   const { readingTheme, themeMode } = useSettings();
   const settingsLoaded = useSettingsLoaded();
   const [systemDark, setSystemDark] = useState(prefersDark);
-  const [dynamicPalette, setDynamicPalette] = useState<DynamicPalette | null>(null);
   const cached = useMemo(() => readThemeCache(), []);
+  const cachedPalette = useMemo(() => readCachedDynamicPalette(), []);
   // Antes de que Dexie responda, respeta la elección manual cacheada por el script inicial.
   const mode = settingsLoaded ? (themeMode ?? 'system') : (cached?.mode ?? 'system');
+  // La paleta cacheada ya fue aplicada por el script de index.html: React debe
+  // conservarla desde el primer render o se produciría un destello al revés.
+  const [dynamicPalette, setDynamicPalette] = useState<DynamicPalette | null>(
+    () => (mode === 'system' ? cachedPalette : null),
+  );
+  const [paletteReady, setPaletteReady] = useState(mode !== 'system' || !!cachedPalette);
+  const unsubRef = useRef<(() => void) | undefined>(undefined);
   const storedTheme = settingsLoaded ? readingTheme : (cached?.theme ?? readingTheme);
   const dynamicTheme = themeForDynamicPalette(dynamicPalette);
   const theme: ReadingTheme =
@@ -46,18 +62,28 @@ export function useTheme() {
   useEffect(() => {
     if (mode !== 'system') {
       setDynamicPalette(null);
+      setPaletteReady(true);
       return;
     }
     let active = true;
-    void getDynamicPalette().then((palette) => {
-      if (active) setDynamicPalette(palette);
-    });
-    const unsubPromise = listenDynamicPalette((palette) => {
-      if (active) setDynamicPalette(palette);
-    });
+    const receive = (palette: DynamicPalette | null) => {
+      if (!active) return;
+      cacheDynamicPalette(palette);
+      setDynamicPalette(palette);
+      setPaletteReady(true);
+    };
+    void getDynamicPalette().then(receive);
+    void listenDynamicPalette(receive)
+      .then((unsub) => {
+        if (!active) void unsub();
+        else unsubRef.current = unsub;
+      })
+      .catch(() => undefined);
     return () => {
       active = false;
-      void unsubPromise.then((unsub) => unsub()).catch(() => undefined);
+      const unsub = unsubRef.current;
+      unsubRef.current = undefined;
+      if (unsub) void unsub();
     };
   }, [mode]);
 
@@ -93,5 +119,5 @@ export function useTheme() {
     void updateSettings({ themeMode: 'system' });
   }, [theme]);
 
-  return { theme, setTheme, themeMode: mode, setThemeMode, themes: READING_THEMES };
+  return { theme, setTheme, themeMode: mode, setThemeMode, themes: READING_THEMES, paletteReady };
 }

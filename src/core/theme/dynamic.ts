@@ -67,37 +67,81 @@ function contrastFg(hex: string): string {
   return luminance > 0.6 ? '240 10% 3.9%' : '0 0% 98%';
 }
 
-export function applyDynamicPalette(palette: DynamicPalette) {
-  if (!palette.available || !palette.surface || !palette.primary) return;
-  const root = document.documentElement;
+const DYN_CACHE_KEY = 'leeto.dynamic-palette';
+
+interface CachedDynamicPalette {
+  palette: DynamicPalette;
+  vars: Record<string, string>;
+}
+
+/** Mismo mapa que aplica React; se guarda para que el script inicial lo reutilice sin conversiones. */
+export function paletteCssVars(palette: DynamicPalette): Record<string, string> {
+  if (!palette.available || !palette.surface || !palette.primary) return {};
   const bg = hexToHslTriplet(palette.surface);
   const fg = hexToHslTriplet(palette.onSurface ?? '#FFFFFF');
   const card = hexToHslTriplet(palette.surfaceContainer ?? palette.surface);
   const primary = hexToHslTriplet(palette.primary);
   const accent = hexToHslTriplet(palette.accent ?? palette.primary);
   const border = hexToHslTriplet(palette.outline ?? palette.surfaceContainer ?? palette.surface);
-  const primaryFg = contrastFg(palette.primary);
 
-  root.style.setProperty('--background', bg);
-  root.style.setProperty('--foreground', fg);
-  root.style.setProperty('--card', card);
-  root.style.setProperty('--card-foreground', fg);
-  root.style.setProperty('--popover', card);
-  root.style.setProperty('--popover-foreground', fg);
-  root.style.setProperty('--muted', card);
-  root.style.setProperty('--muted-foreground', palette.dark ? '240 5% 64.9%' : '240 3.8% 46.1%');
-  root.style.setProperty('--primary', primary);
-  root.style.setProperty('--primary-foreground', primaryFg);
-  root.style.setProperty('--secondary', card);
-  root.style.setProperty('--secondary-foreground', fg);
-  root.style.setProperty('--accent', accent);
-  root.style.setProperty('--accent-foreground', contrastFg(palette.accent ?? palette.primary));
-  root.style.setProperty('--border', border);
-  root.style.setProperty('--input', border);
-  root.style.setProperty('--ring', primary);
-  root.style.setProperty('--reader-bg', bg);
-  root.style.setProperty('--reader-fg', fg);
-  root.style.setProperty('--reader-highlight', accent);
+  return {
+    '--background': bg,
+    '--foreground': fg,
+    '--card': card,
+    '--card-foreground': fg,
+    '--popover': card,
+    '--popover-foreground': fg,
+    '--muted': card,
+    '--muted-foreground': palette.dark ? '240 5% 64.9%' : '240 3.8% 46.1%',
+    '--primary': primary,
+    '--primary-foreground': contrastFg(palette.primary),
+    '--secondary': card,
+    '--secondary-foreground': fg,
+    '--accent': accent,
+    '--accent-foreground': contrastFg(palette.accent ?? palette.primary),
+    '--border': border,
+    '--input': border,
+    '--ring': primary,
+    '--reader-bg': bg,
+    '--reader-fg': fg,
+    '--reader-highlight': accent,
+    // La portada de arranque usa esta variable: sincronizarla evita el cambio de color.
+    '--boot-bg': bg,
+  };
+}
+
+export function cacheDynamicPalette(palette: DynamicPalette | null): void {
+  try {
+    const vars = palette ? paletteCssVars(palette) : {};
+    if (Object.keys(vars).length === 0 || !palette) {
+      localStorage.removeItem(DYN_CACHE_KEY);
+      return;
+    }
+    const cached: CachedDynamicPalette = { palette, vars };
+    localStorage.setItem(DYN_CACHE_KEY, JSON.stringify(cached));
+  } catch {
+    // Sin almacenamiento el tema dinámico sigue aplicado mientras dure la sesión.
+  }
+}
+
+export function readCachedDynamicPalette(): DynamicPalette | null {
+  try {
+    const raw = localStorage.getItem(DYN_CACHE_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as Partial<CachedDynamicPalette>;
+    const palette = cached.palette;
+    if (!palette?.available || !palette.surface || !palette.primary) return null;
+    return palette;
+  } catch {
+    return null;
+  }
+}
+
+export function applyDynamicPalette(palette: DynamicPalette) {
+  const vars = paletteCssVars(palette);
+  if (Object.keys(vars).length === 0) return;
+  const root = document.documentElement;
+  for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);
 }
 
 export function clearDynamicPalette() {
@@ -106,7 +150,7 @@ export function clearDynamicPalette() {
     '--background','--foreground','--card','--card-foreground','--popover','--popover-foreground',
     '--muted','--muted-foreground','--primary','--primary-foreground','--secondary','--secondary-foreground',
     '--accent','--accent-foreground','--border','--input','--ring','--reader-bg','--reader-fg',
-    '--reader-highlight',
+    '--reader-highlight','--boot-bg',
   ]) root.style.removeProperty(key);
 }
 

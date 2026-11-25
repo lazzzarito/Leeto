@@ -92,16 +92,8 @@ export default function Onboarding({ onFinish }: OnboardingProps) {
       <div className="pointer-events-none absolute -top-24 -left-20 size-72 rounded-full bg-primary/20 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 -bottom-24 size-80 rounded-full bg-primary/10 blur-3xl" />
       <Sparkles
-        className="text-primary/20 onboard-gesture-float absolute top-24 right-10 size-16"
+        className="text-primary/25 onboard-gesture-float absolute top-24 right-10 size-16"
         aria-hidden="true"
-      />
-      <img
-        src="/icons/icon-192.webp"
-        alt=""
-        aria-hidden="true"
-        width={48}
-        height={48}
-        className="onboard-gesture-pop absolute bottom-28 left-8 size-12 rounded-xl object-contain opacity-40"
       />
 
       <div className="relative flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)]">

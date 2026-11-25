@@ -129,6 +129,7 @@
     margin: 0;
     min-height: 100dvh;
     overscroll-behavior-y: none;
+    transition: background-color 160ms linear, color 160ms linear;
   }
 
   button,

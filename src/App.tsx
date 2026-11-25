@@ -11,12 +11,24 @@ import { router } from '@/router';
 const MAX_SPLASH_MS = 2500;
 
 export default function App() {
-  useTheme();
+  const { paletteReady } = useTheme();
   const settingsReady = useSettingsLoaded();
   const { onboardingCompleted } = useSettings();
   const [timedOut, setTimedOut] = useState(false);
-  const ready = settingsReady || timedOut;
+  // La portada permanece hasta que la paleta Material You está resuelta: así
+  // nunca se ve el tema estático y después el dinámico.
+  const ready = (settingsReady && paletteReady) || timedOut;
   const routeRestoredRef = useRef(false);
+  const splashTimerRef = useRef<number | undefined>(undefined);
+
+  const hideSplash = useCallback(() => {
+    const splash = document.getElementById('boot-splash');
+    if (!splash || splash.dataset.hiding === 'true') return;
+    splash.dataset.hiding = 'true';
+    splash.style.transition = 'opacity 220ms ease-out';
+    splash.style.opacity = '0';
+    splashTimerRef.current = window.setTimeout(() => splash.remove(), 240);
+  }, []);
 
   useEffect(() => {
     void ensureSettings();
@@ -46,19 +58,22 @@ export default function App() {
     }
   }, [ready]);
 
-  // Si IndexedDB no está disponible, la app sigue abriéndose.
+  // Si IndexedDB o el puente nativo no responden, la app sigue abriéndose.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setTimedOut(true);
-      document.getElementById('boot-splash')?.remove();
+      hideSplash();
     }, MAX_SPLASH_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
+    return () => {
+      window.clearTimeout(timer);
+      window.clearTimeout(splashTimerRef.current);
+    };
+  }, [hideSplash]);
 
-  // La portada inline se retira en el mismo commit en que React ya tiene contenido.
+  // La portada inline se desvanece en el mismo commit en que React ya tiene contenido.
   useLayoutEffect(() => {
-    if (ready) document.getElementById('boot-splash')?.remove();
-  }, [ready]);
+    if (ready) hideSplash();
+  }, [ready, hideSplash]);
 
   const finishOnboarding = useCallback(() => {
     void updateSettings({ onboardingCompleted: true });

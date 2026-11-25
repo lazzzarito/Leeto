@@ -61,6 +61,25 @@
           theme === 'oled' || theme === 'graphite' ? 'dark' : 'light';
         document.documentElement.style.setProperty('--boot-bg', bg[theme] || bg.paper);
         document.querySelector('meta[name="theme-color"]').content = themeColor[theme] || themeColor.paper;
+
+        // El puente nativo es asíncrono, pero la última paleta Material You ya
+        // está en localStorage: se aplica antes del primer pintado para que la
+        // portada de arranque y la app compartan el mismo color desde el inicio.
+        if (mode === 'system') {
+          try {
+            var cachedPalette = JSON.parse(localStorage.getItem('leeto.dynamic-palette') || 'null');
+            if (cachedPalette && cachedPalette.palette && cachedPalette.palette.available && cachedPalette.vars) {
+              Object.keys(cachedPalette.vars).forEach(function (key) {
+                document.documentElement.style.setProperty(key, cachedPalette.vars[key]);
+              });
+              document.documentElement.dataset.readingTheme = cachedPalette.palette.dark ? 'graphite' : 'paper';
+              document.documentElement.style.colorScheme = cachedPalette.palette.dark ? 'dark' : 'light';
+              document.querySelector('meta[name="theme-color"]').content = cachedPalette.palette.surface;
+            }
+          } catch (e) {
+            // Una caché corrupta no debe impedir el arranque.
+          }
+        }
       })();
     </script>
     <meta property="og:title" content="Leeto — lector de libros" />
@@ -100,12 +119,9 @@
       @keyframes leeto-boot-float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.05); } }
       @keyframes leeto-boot-rise { from { opacity:0; transform: translateY(14px); letter-spacing:.5em; } to { opacity:1; transform: translateY(0); letter-spacing:.25em; } }
       @keyframes leeto-boot-fade { from { opacity:0 } to { opacity:1 } }
-      #boot-splash .boot-doodle{position:absolute;inset:0;background-image:url('/doodles.svg');background-size:420px 420px;background-repeat:repeat;opacity:.22;pointer-events:none}
-      [data-reading-theme='oled'] #boot-splash .boot-doodle,[data-reading-theme='graphite'] #boot-splash .boot-doodle{filter:invert(1);opacity:.12}
       @media (prefers-reduced-motion: reduce) { #boot-splash * { animation: none !important; } }
     </style>
     <div id="boot-splash" style="position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:hsl(var(--boot-bg, var(--background)));color:hsl(var(--foreground));font-family:system-ui,sans-serif;animation:leeto-boot-fade 240ms ease-out both">
-      <div class="boot-doodle" aria-hidden="true"></div>
       <div style="position:relative;display:flex;width:8rem;height:8rem;align-items:center;justify-content:center">
         <span style="position:absolute;inset:0;border-radius:9999px;border:2px solid hsl(var(--primary)/.25);border-top-color:hsl(var(--primary));animation:leeto-boot-spin 2.4s linear infinite"></span>
         <span style="position:absolute;inset:.75rem;border-radius:9999px;border:2px solid hsl(var(--primary)/.1);border-bottom-color:hsl(var(--primary)/.6);animation:leeto-boot-spin 3.4s linear infinite reverse"></span>
