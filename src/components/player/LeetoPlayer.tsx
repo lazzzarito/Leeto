@@ -10,10 +10,10 @@ import {
   type TouchEvent,
   type WheelEvent,
 } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { updateSettings, useSettings } from '@/core/db/settings';
 import { usePlayerContext } from '@/core/player/PlayerProvider';
 import { getClipDuration } from '@/core/player/state';
+import { useBackToLibrary } from '@/hooks/useBackToLibrary';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
 import Marquee from '@/components/ui/Marquee';
@@ -54,7 +54,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
     audioError,
   } = usePlayerContext();
   const settings = useSettings();
-  const navigate = useNavigate();
+  const goBack = useBackToLibrary();
   const reducedMotion = useReducedMotion(settings.reducedMotion);
 
   const kineticRef = useRef<KineticTextHandle>(null!);
@@ -176,13 +176,13 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           break;
         case 'Escape':
           if (state.status === 'playing') pause();
-          else navigate('/');
+          else goBack();
           break;
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleQuote, navigate, next, pause, previous, settingsOpen, showNotice, state.status, tocOpen, toggle]);
+  }, [goBack, handleQuote, next, pause, previous, settingsOpen, showNotice, state.status, tocOpen, toggle]);
 
   const cancelLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -332,8 +332,9 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
         onWheel={(event) => event.stopPropagation()}
       >
         <div className="flex h-12 items-center gap-2">
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={goBack}
             aria-label="Volver a la biblioteca"
             className={cn(
               'text-reel hover:bg-white/10 flex size-9 shrink-0 items-center justify-center rounded-full',
@@ -341,7 +342,7 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
             )}
           >
             <ArrowLeft className="size-5" aria-hidden="true" />
-          </Link>
+          </button>
           <div className={cn('min-w-0 flex-1', optionalChromeClass)}>
             <Marquee
               text={chapter?.title ?? ''}
