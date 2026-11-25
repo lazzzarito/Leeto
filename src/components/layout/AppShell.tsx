@@ -201,14 +201,7 @@ export default function AppShell() {
         </div>
         <aside className="relative z-10 sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border/70 bg-card/40 py-6 pr-6 pl-[calc(env(safe-area-inset-left,0px)+1rem)] lg:flex">
           <Link to="/" className="flex items-center gap-2 rounded-md px-2 focus-visible:ring-2">
-            <img
-              src="/icons/icon-192.webp"
-              alt=""
-              aria-hidden="true"
-              width={20}
-              height={20}
-              className="size-5 rounded-md object-contain"
-            />
+            <span aria-hidden="true" className="theme-icon text-primary size-5 shrink-0 rounded-md" />
             <span className="flex flex-col leading-tight">
               <span className="font-semibold tracking-tight">Leeto</span>
               <span className="text-muted-foreground text-[11px]">{APP_LABEL}</span>
@@ -283,14 +276,7 @@ export default function AppShell() {
             ) : (
               <div className="relative flex h-16 items-center justify-between px-4 sm:px-6">
                 <Link to="/" className="flex items-center gap-2 rounded-md focus-visible:ring-2">
-                  <img
-                    src="/icons/icon-192.webp"
-                    alt=""
-                    aria-hidden="true"
-                    width={20}
-                    height={20}
-                    className="size-5 rounded-md object-contain"
-                  />
+                  <span aria-hidden="true" className="theme-icon text-primary size-5 shrink-0 rounded-md" />
                   <span className="flex flex-col leading-tight">
                     <span className="font-semibold tracking-tight">Leeto</span>
                     <span className="text-muted-foreground text-[11px]">{APP_LABEL}</span>

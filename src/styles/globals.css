@@ -208,6 +208,13 @@
     display: none;
   }
 
+  /* Logotipo tematizable: la silueta monocroma se tiñe con el color del tema. */
+  .theme-icon {
+    background-color: currentColor;
+    -webkit-mask: url('/icons/icon-monochrome.png') center / contain no-repeat;
+    mask: url('/icons/icon-monochrome.png') center / contain no-repeat;
+  }
+
   .text-reel {
     color: hsl(var(--reel-fg));
   }
