@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 /**
- * Vuelve a la biblioteca conservando el historial real del WebView.
- * Así el gesto «atrás» de Android y el botón del lector hacen lo mismo.
+ * Vuelve a la biblioteca de forma explícita.
+ *
+ * Usar `navigate(-1)` era frágil: al restaurar la última lectura tras matar el
+ * proceso, el historial del WebView podía no tener una entrada nuestra detrás
+ * y el «atrás» terminaba cerrando la app.
  */
 export function useBackToLibrary() {
   const navigate = useNavigate();
-  const { key } = useLocation();
   const busyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -19,7 +21,7 @@ export function useBackToLibrary() {
   );
 
   return useCallback(() => {
-    // Un doble toque no debe consumir dos entradas del historial.
+    // Un doble toque no debe consumir dos navegaciones.
     if (busyRef.current) return;
     busyRef.current = true;
     timerRef.current = setTimeout(() => {
@@ -27,8 +29,6 @@ export function useBackToLibrary() {
       timerRef.current = undefined;
     }, 300);
 
-    // `default` es la entrada inicial: no hay biblioteca previa a la que volver.
-    if (key !== 'default') navigate(-1);
-    else navigate('/', { replace: true });
-  }, [key, navigate]);
+    navigate('/', { replace: true });
+  }, [navigate]);
 }
