@@ -11,6 +11,7 @@ import {
   type WheelEvent,
 } from 'react';
 import { updateSettings, useSettings } from '@/core/db/settings';
+import { registerBackHandler } from '@/core/navigation/backHandler';
 import { usePlayerContext } from '@/core/player/PlayerProvider';
 import { getClipDuration } from '@/core/player/state';
 import { useBackToLibrary } from '@/hooks/useBackToLibrary';
@@ -75,6 +76,24 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   const [cleanMode, setCleanMode] = useState(false);
   const [quoteCaptured, setQuoteCaptured] = useState(false);
 
+  // El back del sistema cierra primero la capa visible; la navegación de la
+  // ruta se registra en ReaderPage con menor prioridad.
+  useEffect(
+    () =>
+      registerBackHandler(() => {
+        if (settingsOpen) {
+          setSettingsOpen(false);
+          return true;
+        }
+        if (tocOpen) {
+          setTocOpen(false);
+          return true;
+        }
+        return false;
+      }, 10),
+    [settingsOpen, tocOpen],
+  );
+
   const showNotice = useCallback((message: string) => {
     setNotice(message);
     if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
@@ -133,13 +152,12 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
-      if (
+      const interactive =
         target instanceof HTMLElement &&
         (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName) ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
+          target.isContentEditable);
+      // Escape debe funcionar aunque el foco esté en el botón que cerró un diálogo.
+      if (interactive && event.key !== 'Escape') return;
       if (tocOpen || settingsOpen) return;
       switch (event.key) {
         case ' ':

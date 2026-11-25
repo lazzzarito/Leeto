@@ -1,15 +1,26 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import LeetoPlayer from '@/components/player/LeetoPlayer';
 import { ReaderSkeleton } from '@/components/ui/Skeletons';
 import { db } from '@/core/db/db';
+import { registerBackHandler } from '@/core/navigation/backHandler';
 import { useBackToLibrary } from '@/hooks/useBackToLibrary';
 
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>();
   const goBack = useBackToLibrary();
   const book = useLiveQuery(() => (id ? db.books.get(id) : undefined), [id], null);
+
+  useEffect(
+    () =>
+      registerBackHandler(() => {
+        goBack();
+        return true;
+      }),
+    [goBack],
+  );
 
   if (book === null) return <ReaderSkeleton />;
 

@@ -8,6 +8,7 @@ import { useNotifications } from '@/components/notifications/NotificationProvide
 import PlayerNotch from '@/components/player/PlayerNotch';
 import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
 import { PlayerProvider } from '@/core/player/PlayerProvider';
+import { registerBackHandler } from '@/core/navigation/backHandler';
 import { countBooksByStatus } from '@/core/library/views';
 import { useImport } from '@/components/import/ImportProvider';
 import { useBookCount, useBooks, useFavoriteCount, useProgressByBook } from '@/hooks/useLibrary';
@@ -50,6 +51,27 @@ export default function AppShell() {
   const pullStartY = useRef<number | null>(null);
   const pullRef = useRef(0);
   const refreshTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    return registerBackHandler(() => {
+      const next = new URLSearchParams(searchParams);
+      next.delete('settings');
+      setSearchParams(next, { replace: true });
+      return true;
+    }, 20);
+  }, [searchParams, setSearchParams, settingsOpen]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        'leeto:lastRoute',
+        `${location.pathname}${location.search}`,
+      );
+    } catch {
+      // Almacenamiento opcional: no afecta a la navegación.
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     if (reading) return;
