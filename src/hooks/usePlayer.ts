@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { progressRepo } from '@/core/db/repositories';
 import { useSettings } from '@/core/db/settings';
+import { resolveReadingStatus } from '@/core/library/views';
 import { createPlayerClock } from '@/core/player/clock';
 import { saveQuoteForClip } from '@/core/player/quotes';
 import { notifyLocalSyncChange } from '@/core/sync/scheduler';
@@ -12,8 +13,8 @@ import {
   playerReducer,
 } from '@/core/player/state';
 import { findClipIndex } from '@/core/player/resolve';
-import { useBookProgress } from '@/hooks/useLibrary';
-import type { LeetoBook } from '@/types';
+import { useBookProgress, useBookProgressLoaded } from '@/hooks/useLibrary';
+import type { LeetoBook, ReadingStatus } from '@/types';
 
 const SAVE_DEBOUNCE_MS = 300;
 
@@ -23,6 +24,7 @@ export function usePlayer(book?: LeetoBook) {
   const bookId = book?.id;
   const totalWordCount = book?.totalWordCount ?? 0;
   const progress = useBookProgress(bookId ?? '');
+  const progressLoaded = useBookProgressLoaded(bookId);
   const [state, dispatch] = useReducer(playerReducer, undefined, createInitialState);
   const clips = useMemo(() => buildClips(book?.chapters ?? []), [book?.chapters]);
 
@@ -30,32 +32,57 @@ export function usePlayer(book?: LeetoBook) {
   stateRef.current = state;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+  const bookIdRef = useRef(bookId);
+  bookIdRef.current = bookId;
+
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastSavedRef = useRef<string | undefined>(undefined);
   const appliedProgressAtRef = useRef<number | undefined>(undefined);
   const loadedBookIdRef = useRef<string | undefined>(undefined);
+  const hydratedBookIdRef = useRef<string | undefined>(undefined);
+  const loadedWordCountRef = useRef(totalWordCount);
+  const explicitStatusRef = useRef<ReadingStatus | undefined>(undefined);
+  const hasPlayedRef = useRef(false);
 
-  const flush = useCallback(() => {
+  /**
+   * Escribe la posición actual. Conserva el estado explícito del libro para que
+   * abrir el lector nunca degrade un "Marcar como leído" a "Leyendo".
+   */
+  const flush = useCallback((targetBookId?: string) => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = undefined;
     }
+    const id = targetBookId ?? bookIdRef.current;
     const current = stateRef.current;
     const clip = current.clips[current.clipIndex];
+    if (!clip || !id) return;
     // Nunca escribas el clip de otro libro con el id del libro actual.
-    if (!clip || !bookId || loadedBookIdRef.current !== bookId) return;
+    if (loadedBookIdRef.current !== id || hydratedBookIdRef.current !== id) return;
+
+    const percentage = getProgressPercentage(current, loadedWordCountRef.current);
+    // El porcentaje es una estimación: un libro terminado sigue terminado aunque
+    // se vuelva a abrir y el playhead quede antes del último bloque.
+    const status = resolveReadingStatus(explicitStatusRef.current, percentage);
+
     lastSavedRef.current = `${clip.block.id}:${clip.segmentIndex}`;
-    void progressRepo.put({
-      bookId,
-      chapterIndex: clip.chapterIndex,
-      blockId: clip.block.id,
-      segmentIndex: clip.segmentIndex,
-      percentage: getProgressPercentage(current, totalWordCount),
-      updatedAt: Date.now(),
-      deviceId: settings.deviceId,
-    });
+    void progressRepo
+      .put({
+        bookId: id,
+        chapterIndex: clip.chapterIndex,
+        blockId: clip.block.id,
+        segmentIndex: clip.segmentIndex,
+        percentage,
+        updatedAt: Date.now(),
+        deviceId: settingsRef.current.deviceId,
+        ...(status ? { status } : {}),
+      })
+      .catch(() => {
+        // Si falla IDB, permitir reintentar en el siguiente flush.
+        lastSavedRef.current = undefined;
+      });
     notifyLocalSyncChange();
-  }, [bookId, totalWordCount, settings.deviceId]);
+  }, []);
 
   const scheduleSave = useCallback(() => {
     const current = stateRef.current;
@@ -74,18 +101,32 @@ export function usePlayer(book?: LeetoBook) {
   // Restaura el subtítulo guardado. Es idempotente: una escritura propia nunca
   // debe recargar el clip (eso reiniciaba el playhead y cortaba la voz).
   useEffect(() => {
+    if (!bookId) {
+      loadedBookIdRef.current = undefined;
+      hydratedBookIdRef.current = undefined;
+      hasPlayedRef.current = false;
+      return;
+    }
+    // IndexedDB todavía no ha respondido: escribir un 0 % aquí sobrescribiría
+    // el progreso real del libro en la siguiente renderización.
+    if (!progressLoaded) return;
+
     const saved = progress?.bookId === bookId ? progress : undefined;
     const switchingBook = loadedBookIdRef.current !== bookId;
     if (switchingBook) {
+      // Vaciar la escritura pendiente del libro anterior antes de cambiar refs.
+      if (loadedBookIdRef.current) flush(loadedBookIdRef.current);
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = undefined;
       lastSavedRef.current = undefined;
       appliedProgressAtRef.current = undefined;
+      hasPlayedRef.current = false;
       loadedBookIdRef.current = bookId;
     } else if (stateRef.current.status === 'playing') {
       // Un cambio remoto mientras se reproduce no debe mover el playhead ni cortar la voz.
       return;
     }
+    explicitStatusRef.current = saved?.status;
 
     const savedKey = saved ? `${saved.blockId}:${saved.segmentIndex ?? 0}` : 'new';
     if (!switchingBook && saved && lastSavedRef.current === savedKey) return;
@@ -95,6 +136,9 @@ export function usePlayer(book?: LeetoBook) {
     if (!switchingBook && current.clips.length > 0 && current.clipIndex === clipIndex) return;
     const currentSettings = settingsRef.current;
     appliedProgressAtRef.current = saved?.updatedAt;
+    lastSavedRef.current = savedKey;
+    loadedWordCountRef.current = totalWordCount;
+    hydratedBookIdRef.current = bookId;
     dispatch({
       type: 'load',
       clips,
@@ -105,7 +149,18 @@ export function usePlayer(book?: LeetoBook) {
       elapsedMs: 0,
       status: 'paused',
     });
-  }, [bookId, clips, progress?.bookId, progress?.blockId, progress?.segmentIndex, progress?.updatedAt]);
+  }, [
+    bookId,
+    progressLoaded,
+    progress?.bookId,
+    progress?.blockId,
+    progress?.segmentIndex,
+    progress?.status,
+    progress?.updatedAt,
+    clips,
+    totalWordCount,
+    flush,
+  ]);
 
   useEffect(() => {
     dispatch({ type: 'setWpm', wpm: settings.wpm });
@@ -127,10 +182,16 @@ export function usePlayer(book?: LeetoBook) {
   }, [state.status]);
 
   useEffect(() => {
+    if (state.status === 'playing') hasPlayedRef.current = true;
+  }, [state.status]);
+
+  useEffect(() => {
     scheduleSave();
   }, [state.clipIndex, scheduleSave]);
 
   useEffect(() => {
+    // La carga programada del lector no cuenta como avance: no debe escribir.
+    if (!hasPlayedRef.current) return;
     if (['paused', 'ended', 'error'].includes(state.status)) flush();
   }, [state.status, flush]);
 

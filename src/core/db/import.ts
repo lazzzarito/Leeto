@@ -45,19 +45,32 @@ export async function persistParseResult(result: ParseResult): Promise<LeetoBook
   }));
 
   const firstBlockId = result.chapters[0]?.blocks[0]?.id ?? '';
-  const progress: ReadingProgress = {
-    bookId: book.id,
-    chapterIndex: 0,
-    blockId: firstBlockId,
-    percentage: 0,
-    updatedAt: now,
-    deviceId: settings.deviceId,
-  };
+  const progress: ReadingProgress | undefined = firstBlockId
+    ? {
+        bookId: book.id,
+        chapterIndex: 0,
+        blockId: firstBlockId,
+        percentage: 0,
+        updatedAt: now,
+        deviceId: settings.deviceId,
+      }
+    : undefined;
 
   await db.transaction('rw', db.books, db.assets, db.progress, async () => {
     await db.books.put(book);
     if (assets.length > 0) await db.assets.bulkPut(assets);
-    await db.progress.put(progress);
+    const existing = await db.progress.get(book.id);
+    if (!existing) {
+      // Un libro sin bloques no puede tener un progreso válido para el sync.
+      if (progress) await db.progress.put(progress);
+    } else if (existing.deletedAt) {
+      // Reimportar tras borrar recupera el progreso en lugar de revivir el tombstone.
+      await db.progress.put({
+        ...existing,
+        deletedAt: undefined,
+        updatedAt: Math.max(now, existing.updatedAt),
+      });
+    }
   });
 
   return book;

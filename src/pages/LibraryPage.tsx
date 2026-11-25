@@ -14,6 +14,7 @@ import { useNotifications } from '@/components/notifications/NotificationProvide
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { LibrarySkeleton } from '@/components/ui/Skeletons';
 import { deleteBookCascade, restoreBookSnapshot } from '@/core/db/delete';
+import { getReadingStatus } from '@/core/library/views';
 
 import { addScanRoot, getSettings, removeScanRoot, useSettings } from '@/core/db/settings';
 import {
@@ -77,7 +78,9 @@ export default function LibraryPage() {
     if (requested) { initialTabDone.current = true; return; }
     if (booksLoading) return;
     initialTabDone.current = true;
-    const hasReading = Array.from(progressByBook.values()).some((p) => p.percentage > 0 && p.percentage < 99.5);
+    const hasReading = Array.from(progressByBook.values()).some(
+      (item) => getReadingStatus(item) === 'reading',
+    );
     const next = new URLSearchParams(searchParams);
     next.set('tab', hasReading ? 'reading' : 'all');
     setSearchParams(next, { replace: true });

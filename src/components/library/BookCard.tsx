@@ -63,23 +63,40 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
   const status = getReadingStatus(progress);
 
   const markAsRead = async () => {
-    const lastChapterIndex = Math.max(0, book.chapters.length - 1);
-    const lastChapter = book.chapters[lastChapterIndex];
-    const lastBlock = lastChapter?.blocks[lastChapter.blocks.length - 1];
-    await progressRepo.put({
-      bookId: book.id,
-      chapterIndex: lastChapterIndex,
-      blockId: lastBlock?.id ?? '',
-      segmentIndex: 0,
-      percentage: 100,
-      updatedAt: Date.now(),
-      deviceId,
-    });
-    notifyLocalSyncChange();
+    // El último bloque real puede estar en un capítulo sin bloques al final.
+    for (let chapterIndex = book.chapters.length - 1; chapterIndex >= 0; chapterIndex -= 1) {
+      const blocks = book.chapters[chapterIndex]?.blocks ?? [];
+      const lastBlock = blocks[blocks.length - 1];
+      if (!lastBlock) continue;
+      await progressRepo.put({
+        bookId: book.id,
+        chapterIndex,
+        blockId: lastBlock.id,
+        segmentIndex: 0,
+        percentage: 100,
+        updatedAt: Date.now(),
+        deviceId,
+        status: 'finished',
+      });
+      notifyLocalSyncChange();
+      return;
+    }
   };
 
   const markAsUnread = async () => {
-    await progressRepo.delete(book.id);
+    const now = Date.now();
+    // Tombstone: borrar el registro local dejaría que el sync restaurara "leído".
+    await progressRepo.put({
+      bookId: book.id,
+      chapterIndex: progress?.chapterIndex ?? 0,
+      blockId: progress?.blockId ?? book.chapters[0]?.blocks[0]?.id ?? '',
+      segmentIndex: progress?.segmentIndex ?? 0,
+      percentage: 0,
+      updatedAt: now,
+      deviceId,
+      deletedAt: now,
+      status: 'unread',
+    });
     notifyLocalSyncChange();
   };
 

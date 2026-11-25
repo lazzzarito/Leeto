@@ -34,6 +34,12 @@ function isOptionalSegmentIndex(value: unknown): boolean {
   return value === undefined || (isNumber(value) && Number.isInteger(value) && value >= 0);
 }
 
+function isOptionalStatus(value: unknown): boolean {
+  return (
+    value === undefined || value === 'unread' || value === 'reading' || value === 'finished'
+  );
+}
+
 export function isValidProgress(value: unknown): value is ReadingProgress {
   if (!isRecord(value)) return false;
   return (
@@ -47,7 +53,8 @@ export function isValidProgress(value: unknown): value is ReadingProgress {
     isNumber(value.updatedAt) &&
     isText(value.deviceId) &&
     isOptionalSegmentIndex(value.segmentIndex) &&
-    isOptionalNumber(value.deletedAt)
+    isOptionalNumber(value.deletedAt) &&
+    isOptionalStatus(value.status)
   );
 }
 

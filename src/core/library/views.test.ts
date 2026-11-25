@@ -8,8 +8,10 @@ import {
   filterQuotes,
   groupByAuthor,
   groupBySaga,
+  getReadingStatus,
   normalizeSearchText,
   quoteChapterTitle,
+  resolveReadingStatus,
   sortByVolume,
 } from './views';
 
@@ -108,6 +110,18 @@ describe('vistas de biblioteca', () => {
     expect(filterBooksByStatus(books, byBook, 'reading').map((item) => item.id)).toEqual(['a']);
     expect(filterBooksByStatus(books, byBook, 'finished').map((item) => item.id)).toEqual(['b']);
     expect(countBooksByStatus(books, byBook)).toEqual({ reading: 1, finished: 1 });
+  });
+
+  it('respeta el estado explícito aunque el porcentaje baje al reabrir el libro', () => {
+    const base = { bookId: 'a', chapterIndex: 0, blockId: 'b1', updatedAt: 0, deviceId: 'd' };
+    const finished = { ...base, percentage: 96.8, status: 'finished' as const };
+
+    expect(getReadingStatus(finished)).toBe('finished');
+    expect(resolveReadingStatus('finished', 96.8)).toBe('finished');
+    expect(resolveReadingStatus('reading', 100)).toBe('finished');
+    expect(resolveReadingStatus(undefined, 42)).toBe('reading');
+    expect(resolveReadingStatus(undefined, 0)).toBeUndefined();
+    expect(getReadingStatus({ ...finished, deletedAt: 123 })).toBeUndefined();
   });
 
   it('filtra solo los libros marcados como favoritos', () => {

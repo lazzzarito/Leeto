@@ -27,6 +27,15 @@ export function useBookProgress(bookId?: string): ReadingProgress | undefined {
   return progress?.deletedAt ? undefined : progress;
 }
 
+/** `false` mientras IndexedDB no ha respondido si existe progreso para el libro. */
+export function useBookProgressLoaded(bookId?: string): boolean {
+  const count = useLiveQuery<number>(
+    () => (bookId ? db.progress.where('bookId').equals(bookId).count() : 0),
+    [bookId],
+  );
+  return count !== undefined;
+}
+
 /** Progreso de toda la biblioteca, para las vistas Leyendo y Leídos. */
 export function useProgressByBook(): Map<string, ReadingProgress> {
   const items = useLiveQuery(() => db.progress.toArray(), [], []);

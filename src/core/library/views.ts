@@ -1,4 +1,9 @@
-import type { LeetoBook, ReadingProgress, SavedQuote } from '@/types';
+import type { LeetoBook, ReadingProgress, ReadingStatus, SavedQuote } from '@/types';
+
+export type { ReadingStatus } from '@/types';
+
+/** Estados visibles en la biblioteca; "unread" se representa como ausencia. */
+export type VisibleReadingStatus = Exclude<ReadingStatus, 'unread'>;
 
 export interface BookGroup {
   key: string;
@@ -6,22 +11,30 @@ export interface BookGroup {
   books: LeetoBook[];
 }
 
-export type ReadingStatus = 'reading' | 'finished';
-
 /** El progreso se guarda redondeado a un decimal; 100 % marca el final. */
-const FINISHED_PERCENTAGE = 99.5;
+export const FINISHED_PERCENTAGE = 99.5;
 
-export function getReadingStatus(progress?: ReadingProgress): ReadingStatus | undefined {
-  const percentage = progress?.percentage ?? 0;
-  if (percentage >= FINISHED_PERCENTAGE) return 'finished';
-  if (percentage > 0) return 'reading';
+export function getReadingStatus(progress?: ReadingProgress): VisibleReadingStatus | undefined {
+  if (!progress || progress.deletedAt) return undefined;
+  return resolveReadingStatus(progress.status, progress.percentage ?? 0);
+}
+
+/** Estado que debe persistir el lector: nunca degrada un libro marcado como leído. */
+export function resolveReadingStatus(
+  explicit: ReadingStatus | undefined,
+  percentage: number,
+): VisibleReadingStatus | undefined {
+  if (explicit === 'unread') return undefined;
+  // Un libro leído sigue leído aunque se reabra; llegar al final también lo marca.
+  if (explicit === 'finished' || percentage >= FINISHED_PERCENTAGE) return 'finished';
+  if (explicit === 'reading' || percentage > 0) return 'reading';
   return undefined;
 }
 
 export function filterBooksByStatus(
   books: LeetoBook[],
   progressByBook: Map<string, ReadingProgress>,
-  status: ReadingStatus,
+  status: VisibleReadingStatus,
 ): LeetoBook[] {
   return books.filter((book) => getReadingStatus(progressByBook.get(book.id)) === status);
 }
@@ -29,8 +42,8 @@ export function filterBooksByStatus(
 export function countBooksByStatus(
   books: LeetoBook[],
   progressByBook: Map<string, ReadingProgress>,
-): Record<ReadingStatus, number> {
-  const counts: Record<ReadingStatus, number> = { reading: 0, finished: 0 };
+): Record<VisibleReadingStatus, number> {
+  const counts: Record<VisibleReadingStatus, number> = { reading: 0, finished: 0 };
   const ids = new Set(books.map((book) => book.id));
   for (const [bookId, progress] of progressByBook) {
     if (!ids.has(bookId)) continue;

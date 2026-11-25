@@ -46,11 +46,14 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
 }
 
 function compareProgress(a: ReadingProgress, b: ReadingProgress): number {
+  // Last-write-wins, como las citas: un tombstone antiguo no debe ganar a un
+  // progreso reciente (ni impedir re-importar/restaurar un libro borrado).
+  const aTime = Math.max(a.updatedAt, a.deletedAt ?? 0);
+  const bTime = Math.max(b.updatedAt, b.deletedAt ?? 0);
+  if (aTime !== bTime) return aTime - bTime;
   const aDeleted = a.deletedAt ?? 0;
   const bDeleted = b.deletedAt ?? 0;
-  // Un borrado local reciente no debe ser resucitado por un progreso remoto antiguo.
   if (aDeleted !== bDeleted) return aDeleted - bDeleted;
-  if (a.updatedAt !== b.updatedAt) return a.updatedAt - b.updatedAt;
   // Desempate determinista: el mismo par de registros siempre gana el mismo dispositivo.
   return compareText(a.deviceId, b.deviceId);
 }

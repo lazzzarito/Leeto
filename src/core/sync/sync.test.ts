@@ -21,7 +21,12 @@ import {
   stableStringify,
 } from './merge';
 
-function progress(bookId: string, deviceId: string, updatedAt: number): ReadingProgress {
+function progress(
+  bookId: string,
+  deviceId: string,
+  updatedAt: number,
+  extra: Partial<ReadingProgress> = {},
+): ReadingProgress {
   return {
     bookId,
     chapterIndex: 1,
@@ -29,6 +34,7 @@ function progress(bookId: string, deviceId: string, updatedAt: number): ReadingP
     percentage: 42,
     updatedAt,
     deviceId,
+    ...extra,
   };
 }
 
@@ -162,6 +168,35 @@ describe('merge por registro', () => {
 
     expect(mergeEnvelopes(low, high).envelope.progress.book_1.deviceId).toBe('dev_Z');
     expect(mergeEnvelopes(high, low).envelope.progress.book_1.deviceId).toBe('dev_Z');
+  });
+
+  it('un progreso reciente gana a un tombstone antiguo (marcar como leído sobrevive)', () => {
+    const local = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 300)] }, 300);
+    const remote = envelope(
+      'dev_B',
+      { progress: [progress('book_1', 'dev_B', 100, { deletedAt: 200 })] },
+      200,
+    );
+
+    for (const merged of [mergeEnvelopes(local, remote), mergeEnvelopes(remote, local)]) {
+      expect(merged.envelope.progress.book_1?.updatedAt).toBe(300);
+      expect(merged.envelope.progress.book_1?.deletedAt).toBeUndefined();
+    }
+  });
+
+  it('un tombstone reciente gana a un progreso antiguo (marcar como no leído)', () => {
+    const local = envelope('dev_A', { progress: [progress('book_1', 'dev_A', 100)] }, 100);
+    const remote = envelope(
+      'dev_B',
+      { progress: [progress('book_1', 'dev_B', 100, { deletedAt: 250, updatedAt: 250 })] },
+      250,
+    );
+
+    const merged = mergeEnvelopes(local, remote);
+    expect(merged.envelope.progress.book_1?.deletedAt).toBe(250);
+    expect(envelopeFingerprint(mergeEnvelopes(remote, local).envelope)).toBe(
+      envelopeFingerprint(merged.envelope),
+    );
   });
 
   it('no marca cambios si el remoto es idéntico', () => {
