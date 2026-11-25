@@ -513,3 +513,12 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Ajustes booleanos/URLs normalizados, guardia HTTPS en WebDAV manual, color del navegador dinámico y contador de citas filtrado.
 - [x] 164 tests, typecheck, build y APK firmada v2/zipalign verificados.
 - [x] Versión 0.1.4-beta (`versionCode=209`).
+
+### T46: Índice, arranque, gestos y audio en segundo plano
+- [x] El índice muestra progreso global, capítulo y fragmento actuales, y marca la sección activa con un punto.
+- [x] La portada de arranque usa la paleta Material You cacheada antes del primer pintado; se desvanece cuando la app está lista.
+- [x] Se eliminaron las decoraciones repetidas del arranque y de la bienvenida: queda una sola marca.
+- [x] El área táctil de las pestañas de la biblioteca cubre toda la pantalla aunque la pestaña esté vacía o tenga poco contenido.
+- [x] La notificación de audio siempre es persistente y ya no tiene un `deleteIntent` que detuviera la voz al limpiar el sistema.
+- [x] Una pausa reflejada desde JS no cancela la reanudación automática tras pérdida de foco; si el servicio muere, se recupera el primer plano.
+- [x] Versión 0.1.5-beta (`versionCode=211`).
