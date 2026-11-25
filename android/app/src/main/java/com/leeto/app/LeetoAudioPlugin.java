@@ -78,7 +78,8 @@ public class LeetoAudioPlugin extends Plugin {
                         call.getString("subtitle"),
                         call.getInt("index", 0),
                         call.getDouble("rate", 1.0).floatValue(),
-                        call.getString("lang"));
+                        call.getString("lang"),
+                        call.getString("bookId"));
         call.resolve();
     }
 

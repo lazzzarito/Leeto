@@ -1,8 +1,16 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '@/core/db/db';
-import { useSettings } from '@/core/db/settings';
+import { useSettings, useSettingsLoaded } from '@/core/db/settings';
 import { isNativeAudioAvailable } from '@/core/tts/nativeAudio';
 import { useNativeAudio } from '@/core/tts/useNativeAudio';
 import { useTts } from '@/core/tts/useTts';
@@ -29,8 +37,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     undefined,
   );
   const settings = useSettings();
+  const settingsLoaded = useSettingsLoaded();
   const player = usePlayer(book);
-  const coverDataUrl = useCoverDataUrl(book?.coverAssetId);
+  // La voz puede seguir sonando después de salir del lector: conservamos el
+  // último libro para no borrar título, idioma ni portada de la notificación.
+  const lastBookRef = useRef<LeetoBook | undefined>(undefined);
+  if (book) lastBookRef.current = book;
+  const audioBook = book ?? lastBookRef.current;
+  const coverDataUrl = useCoverDataUrl(
+    audioBook ? (audioBook.coverAssetId ?? null) : undefined,
+  );
   const [audioError, setAudioError] = useState<string>();
 
   const onBoundary = useCallback(
@@ -47,14 +63,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   useNativeAudio({
     enabled: settings.ttsEnabled,
+    settingsLoaded,
+    bookId: audioBook?.id,
     clips: player.state.clips,
     clip: player.clip,
     clipIndex: player.state.clipIndex,
     status: player.state.status,
     wpm: player.state.wpm,
     speed: player.state.speed,
-    lang: book?.language || 'es-ES',
-    title: book?.title,
+    lang: audioBook?.language || 'es-ES',
+    title: audioBook?.title,
     coverDataUrl,
     onBoundary,
     onIndexChange,

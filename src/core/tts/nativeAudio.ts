@@ -21,6 +21,7 @@ interface LeetoAudioPlugin {
     index: number;
     rate: number;
     lang: string;
+    bookId?: string;
   }): Promise<void>;
   play(options: { index: number }): Promise<void>;
   pause(): Promise<void>;

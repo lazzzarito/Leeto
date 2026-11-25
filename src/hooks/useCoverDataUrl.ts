@@ -4,6 +4,12 @@ import { assetsRepo } from '@/core/db/repositories';
 const MAX_COVER_PX = 256;
 const MAX_DATA_URL_CHARS = 300_000;
 
+/**
+ * `undefined` = aún no hay contexto de libro (no tocar la portada nativa).
+ * `null` = el libro existe pero no tiene portada usable (sí hay que limpiarla).
+ */
+export type CoverDataUrl = string | null | undefined;
+
 async function encodeCover(blob: Blob): Promise<string | undefined> {
   if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') return undefined;
 
@@ -31,12 +37,16 @@ async function encodeCover(blob: Blob): Promise<string | undefined> {
 }
 
 /** Portada reducida para el servicio nativo: un `blob:` del WebView no sirve fuera de él. */
-export function useCoverDataUrl(assetId?: string): string | undefined {
-  const [dataUrl, setDataUrl] = useState<string>();
+export function useCoverDataUrl(assetId?: string | null): CoverDataUrl {
+  const [dataUrl, setDataUrl] = useState<CoverDataUrl>();
 
   useEffect(() => {
-    if (!assetId) {
+    if (assetId === undefined) {
       setDataUrl(undefined);
+      return;
+    }
+    if (!assetId) {
+      setDataUrl(null);
       return;
     }
 
@@ -45,9 +55,11 @@ export function useCoverDataUrl(assetId?: string): string | undefined {
       .get(assetId)
       .then((asset) => (asset ? encodeCover(asset.blob) : undefined))
       .then((encoded) => {
-        if (!cancelled) setDataUrl(encoded);
+        if (!cancelled) setDataUrl(encoded ?? null);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setDataUrl(null);
+      });
 
     return () => {
       cancelled = true;

@@ -25,6 +25,7 @@ public class LeetoAudioService extends Service {
     static final String ACTION_NEXT = "com.leeto.app.NEXT";
     static final String ACTION_PREV = "com.leeto.app.PREV";
     static final String ACTION_STOP = "com.leeto.app.STOP";
+    static final String EXTRA_BOOK_ID = "com.leeto.app.BOOK_ID";
 
     private static final String CHANNEL_ID = "leeto_audio";
     private static final int NOTIFICATION_ID = 1001;
@@ -93,8 +94,8 @@ public class LeetoAudioService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
-        if (intent == null && !engine.isPlaying()) {
-            // Reinicio de START_STICKY sin reproducción activa: no resucitamos la notificación.
+        if (intent == null && !engine.isPlaying() && !engine.canShowNotification()) {
+            // Reinicio de START_STICKY sin lectura activa: no resucitamos la notificación.
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -102,6 +103,12 @@ public class LeetoAudioService extends Service {
         if (ACTION_PREV.equals(action)) engine.previous();
         if (ACTION_PAUSE.equals(action)) engine.pause();
         if (ACTION_PLAY.equals(action)) engine.resume();
+        if (!engine.canShowNotification()) {
+            // «Siguiente» al terminar el libro ya llamó a stop(): no volvemos a
+            // levantar una notificación zombie desde onStartCommand.
+            stopSelf();
+            return START_NOT_STICKY;
+        }
         startForeground(NOTIFICATION_ID, buildNotification());
         return START_STICKY;
     }
@@ -155,7 +162,11 @@ public class LeetoAudioService extends Service {
                         + "|"
                         + engine.getRate()
                         + "|"
-                        + engine.getCoverGeneration();
+                        + engine.getCoverGeneration()
+                        + "|"
+                        + engine.getLastState()
+                        + "|"
+                        + engine.canShowNotification();
         if (key.equals(lastSyncKey)) return;
         lastSyncKey = key;
 
@@ -186,7 +197,9 @@ public class LeetoAudioService extends Service {
         }
         active.setMetadata(metadata.build());
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (manager != null) manager.notify(NOTIFICATION_ID, buildNotification());
+        if (manager == null) return;
+        if (engine.canShowNotification()) manager.notify(NOTIFICATION_ID, buildNotification());
+        else manager.cancel(NOTIFICATION_ID);
     }
 
     private Notification buildNotification() {
@@ -214,7 +227,9 @@ public class LeetoAudioService extends Service {
                         PendingIntent.getActivity(
                                 this,
                                 0,
-                                new Intent(this, MainActivity.class),
+                                new Intent(this, MainActivity.class)
+                                        .putExtra(EXTRA_BOOK_ID, engine.getBookId())
+                                        .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
                                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
                 .setDeleteIntent(actionIntent(ACTION_STOP, 4))
                 .addAction(R.drawable.ic_prev, "Anterior", actionIntent(ACTION_PREV, 1))

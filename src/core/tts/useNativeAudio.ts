@@ -7,6 +7,8 @@ import { isNativeAudioAvailable, nativeAudio } from './nativeAudio';
 
 interface UseNativeAudioOptions {
   enabled: boolean;
+  settingsLoaded?: boolean;
+  bookId?: string;
   clips: PlayerClip[];
   clip?: PlayerClip;
   clipIndex: number;
@@ -15,7 +17,7 @@ interface UseNativeAudioOptions {
   speed: number;
   lang: string;
   title?: string;
-  coverDataUrl?: string;
+  coverDataUrl?: string | null;
   onBoundary: (elapsedMs: number) => void;
   onIndexChange: (index: number) => void;
   onStatus: (status: 'playing' | 'paused') => void;
@@ -23,9 +25,16 @@ interface UseNativeAudioOptions {
   onError: (message: string) => void;
 }
 
+interface Suppression {
+  status: 'playing' | 'paused';
+  clipIndex: number;
+}
+
 /** Sincroniza el reproductor web con el servicio nativo y sus eventos. */
 export function useNativeAudio({
   enabled,
+  settingsLoaded = true,
+  bookId,
   clips,
   clip,
   clipIndex,
@@ -46,37 +55,64 @@ export function useNativeAudio({
   const indexRef = useRef(clipIndex);
   const clipsRef = useRef(clips);
   const statusRef = useRef(status);
-  const suppressCommandRef = useRef(false);
+  const suppressRef = useRef<Suppression | undefined>(undefined);
+  const permissionWarnedRef = useRef(false);
+  const wasEnabledRef = useRef(enabled);
   const latestRef = useRef({ clip, wpm, speed, onBoundary, onIndexChange, onStatus, onEnded, onError });
+  const bookIdRef = useRef(bookId);
   indexRef.current = clipIndex;
   clipsRef.current = clips;
   statusRef.current = status;
   latestRef.current = { clip, wpm, speed, onBoundary, onIndexChange, onStatus, onEnded, onError };
+  bookIdRef.current = bookId;
 
+  // Los listeners se registran una sola vez: durante la hidratación de ajustes
+  // un `enabled: false` transitorio no debe desconectarlos ni detener la voz.
   useEffect(() => {
-    if (!available || !enabled) return;
+    if (!available) return;
     let alive = true;
-    void nativeAudio.requestPermissions().catch(() => undefined);
+    void nativeAudio
+      .requestPermissions()
+      .then((result) => {
+        const permission = result?.notifications;
+        if (
+          permission === 'denied' &&
+          !permissionWarnedRef.current
+        ) {
+          permissionWarnedRef.current = true;
+          latestRef.current.onError(
+            'Notificaciones desactivadas: activa el permiso para ver los controles de audio',
+          );
+        }
+      })
+      .catch(() => undefined);
 
-    // Registrar una sola vez: los callbacks se leen de latestRef para no
-    // recrear los listeners en cada render. Esperamos el registro antes de
-    // limpiar para no dejar listeners huérfanos al desmontar.
     const registrations = [
       nativeAudio.addListener('stateChanged', (event) => {
         if (!alive) return;
         const { onIndexChange, onStatus, onEnded } = latestRef.current;
         if (event.index !== indexRef.current) {
           indexRef.current = event.index;
-          suppressCommandRef.current = true;
           onIndexChange(event.index);
         }
+        if (event.status === 'ended') {
+          if (activeRef.current) {
+            activeRef.current = false;
+            onEnded();
+          }
+          return;
+        }
         const mapped: 'playing' | 'paused' | undefined =
-          event.status === 'playing' || event.status === 'paused' ? event.status : undefined;
+          event.status === 'playing' || event.status === 'paused'
+            ? event.status
+            : event.status === 'stopped' || event.status === 'error'
+              ? 'paused'
+              : undefined;
         if (mapped && mapped !== statusRef.current) {
-          suppressCommandRef.current = true;
+          // Solo suprimimos el comando que este mismo evento va a provocar.
+          suppressRef.current = { status: mapped, clipIndex: indexRef.current };
           onStatus(mapped);
         }
-        if (event.status === 'ended' && activeRef.current) onEnded();
       }),
       nativeAudio.addListener('boundary', (event) => {
         if (!alive || event.index !== indexRef.current) return;
@@ -106,13 +142,16 @@ export function useNativeAudio({
         }
       });
     };
-  }, [available, enabled]);
+  }, [available]);
 
   useEffect(() => {
     if (!available || !enabled) return;
     const entries = clips
       .map((item, index) => ({ text: item.text, index }))
       .filter((item) => item.text.trim().length > 0);
+    // Sin clips no hay contexto de libro: reconfigurar aquí borraría el título
+    // y el idioma de la notificación mientras la voz sigue sonando.
+    if (entries.length === 0) return;
     void nativeAudio
       .configure({
         chunks: entries.map((item) => item.text),
@@ -122,36 +161,34 @@ export function useNativeAudio({
         index: clipIndex,
         rate: getSpeechRate(wpm, speed),
         lang,
+        bookId: bookIdRef.current,
       })
       .catch(() => undefined);
     // clipIndex se lee aquí solo al configurar un libro nuevo; los saltos se
     // envían con play() y no deben reiniciar la cola de voz.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [available, enabled, clips, wpm, speed, lang, title]);
+  }, [available, enabled, clips, wpm, speed, lang, title, bookId]);
 
-  // La portada llega después de configurar la cola: enviarla aparte evita
-  // reiniciar el TTS cada vez que IndexedDB termina de decodificar la imagen.
+  // `undefined` = aún no hay libro: no tocamos la portada que el servicio ya
+  // tiene, para que sobreviva a cambios de Activity.
   useEffect(() => {
-    if (!available) return;
-    void nativeAudio.setCover(coverDataUrl).catch(() => undefined);
+    if (!available || coverDataUrl === undefined) return;
+    void nativeAudio.setCover(coverDataUrl ?? undefined).catch(() => undefined);
   }, [available, coverDataUrl]);
 
+  // Solo una transición real de encendido a apagado detiene la voz. El valor
+  // inicial `false` de IndexedDB no cuenta como acción del usuario.
   useEffect(() => {
-    if (!available || enabled) return;
-    void nativeAudio.stop().catch(() => undefined);
-  }, [available, enabled]);
-
-  useEffect(() => {
-    if (!available) return;
-    return () => {
-      void nativeAudio.stop().catch(() => undefined);
-    };
-  }, [available]);
+    if (!available || !settingsLoaded) return;
+    if (wasEnabledRef.current && !enabled) void nativeAudio.stop().catch(() => undefined);
+    wasEnabledRef.current = enabled;
+  }, [available, enabled, settingsLoaded]);
 
   useEffect(() => {
     if (!available || !enabled) return;
-    if (suppressCommandRef.current) {
-      suppressCommandRef.current = false;
+    const suppression = suppressRef.current;
+    if (suppression && suppression.status === status && suppression.clipIndex === clipIndex) {
+      suppressRef.current = undefined;
       return;
     }
     if (status === 'playing') {
