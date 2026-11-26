@@ -521,4 +521,6 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] El área táctil de las pestañas de la biblioteca cubre toda la pantalla aunque la pestaña esté vacía o tenga poco contenido.
 - [x] La notificación de audio siempre es persistente y ya no tiene un `deleteIntent` que detuviera la voz al limpiar el sistema.
 - [x] Una pausa reflejada desde JS no cancela la reanudación automática tras pérdida de foco; si el servicio muere, se recupera el primer plano.
+- [x] En Android, “Carpeta completa” usa SAF nativo en lugar de `webkitdirectory`, que no es fiable en WebView; si no hay soporte real, la UI explica que hay que seleccionar varios libros.
+- [x] Las portadas de la biblioteca usan caché de object URLs en memoria para no parpadear al cambiar de pestaña/filtro.
 - [x] Versión 0.1.5-beta (`versionCode=211`).

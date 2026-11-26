@@ -1,6 +1,7 @@
 /** Descubrimiento de libros en carpetas, sin depender de React ni de la UI. */
 
 import { isBookFile } from '@/core/parsers/formats';
+import { isNativeAndroid } from '@/lib/platform';
 
 export { isBookFile };
 
@@ -73,11 +74,17 @@ export async function ensureReadPermission(handle: FileSystemDirectoryHandle): P
 }
 
 export function isDirectoryPickerSupported(): boolean {
+  // Android WebView/Capacitor no expone un selector de carpetas fiable por File System Access.
+  if (isNativeAndroid()) return false;
   return typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 }
 
-/** Safari/Firefox y algunos móviles no tienen el selector nativo, pero sí `<input webkitdirectory>`. */
+/**
+ * Safari/Firefox y algunos móviles no tienen el selector nativo, pero sí `<input webkitdirectory>`.
+ * Android WebView suele anunciar el atributo sin soportar realmente la selección de carpetas.
+ */
 export function isDirectoryInputSupported(): boolean {
+  if (isNativeAndroid()) return false;
   if (typeof document === 'undefined') return false;
   const input = document.createElement('input');
   return 'webkitdirectory' in input || 'directory' in input;

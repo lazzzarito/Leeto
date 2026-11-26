@@ -129,7 +129,7 @@ export default function ScanDialog({
             <p className="text-muted-foreground rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs">
               {canAddRoot
                 ? 'No hay carpetas guardadas.'
-                : 'Este navegador no permite guardar carpetas. Usa «Carpeta completa» o selecciona varios libros a la vez.'}
+                : 'Este dispositivo no permite guardar carpetas. En Android, por ahora selecciona varios libros a la vez.'}
             </p>
           ) : (
             <ul className="space-y-2">

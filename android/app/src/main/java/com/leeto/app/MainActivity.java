@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(LeetoAudioPlugin.class);
         registerPlugin(LeetoThemePlugin.class);
+        registerPlugin(LeetoFolderPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Android 13+ entrega el back mediante OnBackInvokedCallback. Registrar

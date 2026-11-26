@@ -22,6 +22,8 @@ import {
   isDirectoryPickerSupported,
   pickBookDirectory,
 } from '@/core/import/folder';
+import { isNativeFolderPickerSupported, pickNativeBookFolder } from '@/core/import/nativeFolder';
+import { isNativeAndroid } from '@/lib/platform';
 import { BOOK_FORMAT_LABEL } from '@/core/parsers/formats';
 import { useBooks, useBooksLoading, useProgressByBook, useQuotes } from '@/hooks/useLibrary';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -129,6 +131,17 @@ export default function LibraryPage() {
 
   const handlePickFolder = async () => {
     try {
+      if (isNativeFolderPickerSupported()) {
+        const files = await pickNativeBookFolder();
+        if (!files) return;
+        if (files.length === 0) {
+          setError('No se encontraron libros compatibles en la carpeta seleccionada.');
+          return;
+        }
+        await importFiles(files);
+        return;
+      }
+
       const handle = await pickBookDirectory();
       if (!handle) return;
       await addScanRoot({
@@ -276,7 +289,8 @@ export default function LibraryPage() {
             onFiles={(files) => void importFiles(files)}
             onPickFolder={() => void handlePickFolder()}
             onOpenScan={() => setScanOpen(true)}
-            nativeFolderPicker={isDirectoryPickerSupported()}
+            nativeFolderPicker={isDirectoryPickerSupported() || isNativeFolderPickerSupported()}
+            folderImportUnsupported={isNativeAndroid() && !isNativeFolderPickerSupported()}
             fullWidth={isDesktop}
           />,
           actionSlot,

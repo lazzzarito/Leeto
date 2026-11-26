@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/platform', () => ({
+  isNativeAndroid: vi.fn(() => false),
+}));
+
+import { isNativeAndroid } from '@/lib/platform';
 import {
   collectFromDirectory,
   ensureReadPermission,
   fromFileList,
   isBookFile,
+  isDirectoryInputSupported,
+  isDirectoryPickerSupported,
   type DirectoryCandidate,
 } from './folder';
 
@@ -89,5 +97,19 @@ describe('descubrimiento de libros en carpetas', () => {
     expect(requestPermission).not.toHaveBeenCalled();
     expect(await ensureReadPermission(prompt)).toBe(true);
     expect(requestPermission).toHaveBeenCalledWith({ name: 'read' });
+  });
+
+  it('desactiva el selector de carpetas en Android nativo aunque el WebView anuncie soporte', () => {
+    const windowWithPicker = window as Window & { showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle> };
+    const originalPicker = windowWithPicker.showDirectoryPicker;
+    windowWithPicker.showDirectoryPicker = vi.fn() as unknown as () => Promise<FileSystemDirectoryHandle>;
+    vi.mocked(isNativeAndroid).mockReturnValue(true);
+
+    expect(isDirectoryPickerSupported()).toBe(false);
+    expect(isDirectoryInputSupported()).toBe(false);
+
+    vi.mocked(isNativeAndroid).mockReturnValue(false);
+    if (originalPicker === undefined) delete windowWithPicker.showDirectoryPicker;
+    else windowWithPicker.showDirectoryPicker = originalPicker;
   });
 });

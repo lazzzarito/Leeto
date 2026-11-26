@@ -12,6 +12,8 @@ interface AddMenuProps {
   onPickFolder: () => void;
   onOpenScan: () => void;
   nativeFolderPicker: boolean;
+  /** WebView Android no soporta elegir carpetas; mostramos un camino alternativo claro. */
+  folderImportUnsupported?: boolean;
   fullWidth?: boolean;
 }
 
@@ -23,6 +25,7 @@ export default function AddMenu({
   onPickFolder,
   onOpenScan,
   nativeFolderPicker,
+  folderImportUnsupported = false,
   fullWidth = false,
 }: AddMenuProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +33,7 @@ export default function AddMenu({
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const canUseDirectoryInput = isDirectoryInputSupported();
-  const canUseFolder = nativeFolderPicker || canUseDirectoryInput;
+  const canUseFolder = !folderImportUnsupported && (nativeFolderPicker || canUseDirectoryInput);
 
   const pickFolder = () => {
     if (nativeFolderPicker) onPickFolder();
@@ -38,20 +41,36 @@ export default function AddMenu({
     else fileInputRef.current?.click();
   };
 
+  const folderActionLabel = canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez';
+
   const actions = (
     <>
       <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); fileInputRef.current?.click(); }}>
         <Upload className="size-4" aria-hidden="true" />
         Archivos de libro
       </button>
-      <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); pickFolder(); }}>
-        <FolderOpen className="size-4" aria-hidden="true" />
-        {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
-      </button>
-      <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); onOpenScan(); }}>
-        <FolderSearch className="size-4" aria-hidden="true" />
-        Escanear carpetas guardadas
-      </button>
+      {folderImportUnsupported ? (
+        <div className="text-muted-foreground rounded-lg px-3 py-3 text-sm">
+          <div className="text-foreground flex items-center gap-3 font-medium">
+            <FolderOpen className="size-4" aria-hidden="true" />
+            Carpeta completa
+          </div>
+          <p className="mt-1 pl-7 text-xs leading-relaxed">
+            En Android, por ahora selecciona varios libros a la vez.
+          </p>
+        </div>
+      ) : (
+        <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); pickFolder(); }}>
+          <FolderOpen className="size-4" aria-hidden="true" />
+          {folderActionLabel}
+        </button>
+      )}
+      {!folderImportUnsupported && (
+        <button type="button" className={ITEM_CLASS} onClick={() => { setOpen(false); onOpenScan(); }}>
+          <FolderSearch className="size-4" aria-hidden="true" />
+          Escanear carpetas guardadas
+        </button>
+      )}
     </>
   );
 
@@ -81,14 +100,29 @@ export default function AddMenu({
                 <Upload className="size-4" aria-hidden="true" />
                 Archivos de libro
               </DropdownMenu.Item>
-              <DropdownMenu.Item className={ITEM_CLASS} onSelect={pickFolder}>
-                <FolderOpen className="size-4" aria-hidden="true" />
-                {canUseFolder ? 'Carpeta completa' : 'Varios libros a la vez'}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
-                <FolderSearch className="size-4" aria-hidden="true" />
-                Escanear carpetas guardadas
-              </DropdownMenu.Item>
+              {folderImportUnsupported ? (
+                <DropdownMenu.Item
+                  disabled
+                  className="text-muted-foreground flex cursor-default flex-col items-start gap-0.5 rounded-lg px-3 py-3 text-left text-sm outline-none data-[disabled]:opacity-100"
+                >
+                  <span className="text-foreground/70 flex items-center gap-3 font-medium">
+                    <FolderOpen className="size-4" aria-hidden="true" />
+                    Carpeta completa
+                  </span>
+                  <span className="pl-7 text-xs">En Android, por ahora selecciona varios libros a la vez.</span>
+                </DropdownMenu.Item>
+              ) : (
+                <>
+                  <DropdownMenu.Item className={ITEM_CLASS} onSelect={pickFolder}>
+                    <FolderOpen className="size-4" aria-hidden="true" />
+                    {folderActionLabel}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item className={ITEM_CLASS} onSelect={onOpenScan}>
+                    <FolderSearch className="size-4" aria-hidden="true" />
+                    Escanear carpetas guardadas
+                  </DropdownMenu.Item>
+                </>
+              )}
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>

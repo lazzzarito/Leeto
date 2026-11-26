@@ -69,6 +69,7 @@ export async function updateBookMetadata(
       await db.assets.put(newCover);
     }
     await db.books.put(next);
+    notifyLocalSyncChange();
     return next;
   });
 }
