@@ -17,7 +17,7 @@
 
 <br>
 
-[**Descargar para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta)
+[**Descargar para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.6-beta)
 
 </div>
 
@@ -107,7 +107,7 @@ Leeto está pensado para que leer vuelva a sentirse personal.
 
 Lleva tus libros en el bolsillo y sigue leyendo como prefieras: en pantalla, con voz o retomando justo donde lo dejaste.
 
-- Descarga la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta).
+- Descarga la APK desde [GitHub Releases](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.6-beta).
 - Instálala en tu Android y abre tus libros al instante.
 - Si escuchas con voz, puedes salir de la app y seguir con el audio desde la notificación.
 
@@ -132,7 +132,7 @@ Leeto abre los formatos más comunes para que no tengas que andar convirtiendo t
 
 ### ¿Listo para volver a leer con gusto?
 
-[**Descargar Leeto para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.5-beta)
+[**Descargar Leeto para Android**](https://github.com/lazzzarito/Leeto/releases/tag/v0.1.6-beta)
 
 <br>
 
