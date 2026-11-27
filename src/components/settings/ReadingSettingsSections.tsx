@@ -97,7 +97,9 @@ export default function ReadingSettingsSections({
   const [openSection, setOpenSection] = useState<string | undefined>('ritmo');
   const accordion = (id: string) => ({
     open: openSection === id,
-    onOpenChange: (next: boolean) => setOpenSection(next ? id : undefined),
+    // Los eventos `toggle` de al cerrar otra sección no deben borrar la nueva apertura.
+    onOpenChange: (next: boolean) =>
+      setOpenSection((current) => (next ? id : current === id ? undefined : current)),
   });
 
   return (

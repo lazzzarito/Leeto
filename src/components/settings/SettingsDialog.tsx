@@ -22,7 +22,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Configuración"
+      title="Ajustes"
     >
       <div className="space-y-6 pb-8">
         <SettingsQuickActions onNavigate={() => onOpenChange(false)} />

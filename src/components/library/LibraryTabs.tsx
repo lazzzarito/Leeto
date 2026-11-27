@@ -1,6 +1,5 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
 import PlayerNotch from '@/components/player/PlayerNotch';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { APP_LABEL } from '@/lib/buildInfo';
@@ -26,6 +25,7 @@ interface LibraryTabsProps {
   query: string;
   value: string;
   onValueChange: (value: string) => void;
+  onRefresh: () => void;
   onEdit: (book: LeetoBook) => void;
   onDelete: (book: LeetoBook) => void;
 }
@@ -64,6 +64,7 @@ export default function LibraryTabs({
   query,
   value,
   onValueChange,
+  onRefresh,
   onEdit,
   onDelete,
 }: LibraryTabsProps) {
@@ -155,13 +156,18 @@ export default function LibraryTabs({
         className="bg-background sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-4 sm:-mx-6 lg:hidden"
       >
         <div className="flex items-center gap-2 border-b border-border/50 px-4 pt-3 pb-2.5 sm:px-6">
-          <Link to="/" className="flex shrink-0 items-center gap-1.5 rounded-md focus-visible:ring-2">
+          <button
+            type="button"
+            onClick={onRefresh}
+            aria-label="Restablecer la biblioteca"
+            className="flex shrink-0 items-center gap-1.5 rounded-md text-left focus-visible:ring-2"
+          >
             <span aria-hidden="true" className="theme-icon text-primary size-4 shrink-0 rounded-sm" />
-            <span className="flex flex-col leading-tight">
+            <span className="flex flex-col text-left leading-tight">
               <span className="text-xs font-semibold tracking-tight">Leeto</span>
               <span className="text-muted-foreground text-[9px]">{APP_LABEL}</span>
             </span>
-          </Link>
+          </button>
           <span aria-hidden="true" className="text-border shrink-0">|</span>
           <Tabs.List
             ref={tabsListRef}

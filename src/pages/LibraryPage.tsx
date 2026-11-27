@@ -59,6 +59,14 @@ export default function LibraryPage() {
   const requestedTab = searchParams.get('tab');
   const tab = requestedTab && (TABS as readonly string[]).includes(requestedTab) ? requestedTab : 'all';
 
+  /** El logo limpia la búsqueda y vuelve arriba sin cambiar de pestaña ni recargar. */
+  const refreshLibrary = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('q');
+    setSearchParams(next, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [editingBookId, setEditingBookId] = useState<string>();
   const [deletingBook, setDeletingBook] = useState<LeetoBook>();
   const [scanOpen, setScanOpen] = useState(false);
@@ -233,6 +241,7 @@ export default function LibraryPage() {
           query={query}
           value={tab}
           onValueChange={(value) => setParam('tab', value)}
+          onRefresh={refreshLibrary}
           onEdit={(book) => setEditingBookId(book.id)}
           onDelete={setDeletingBook}
         />
@@ -359,10 +368,6 @@ export default function LibraryPage() {
                 compact
                 value={query}
                 onChange={(value) => setParam('q', value)}
-                className={cn(
-                  'transition-[width] duration-200',
-                  query ? 'w-full flex-1' : 'w-auto flex-none',
-                )}
               />
             )}
             <div id="library-floating-actions" className="shrink-0" />
