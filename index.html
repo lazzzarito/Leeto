@@ -117,7 +117,6 @@
     <style>
       @keyframes leeto-boot-spin { to { transform: rotate(360deg); } }
       @keyframes leeto-boot-float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.05); } }
-      @keyframes leeto-boot-rise { from { opacity:0; transform: translateY(14px); letter-spacing:.5em; } to { opacity:1; transform: translateY(0); letter-spacing:.25em; } }
       @keyframes leeto-boot-fade { from { opacity:0 } to { opacity:1 } }
       @media (prefers-reduced-motion: reduce) { #boot-splash * { animation: none !important; } }
     </style>
@@ -130,7 +129,6 @@
           <img src="/icons/icon-192.webp" alt="" width="44" height="44" style="width:44px;height:44px;border-radius:12px;object-fit:contain">
         </span>
       </div>
-      <p style="margin:1.25rem 0 0;font-size:.75rem;font-weight:600;letter-spacing:.25em;text-transform:uppercase;animation:leeto-boot-rise 500ms ease-out both">Leeto</p>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
