@@ -16,6 +16,7 @@ interface ScanDialogProps {
   canAddRoot: boolean;
   onAddRoot: () => void;
   onRemoveRoot: (id: string) => void;
+  onScanned: (rootId: string, files: File[]) => void;
   onImport: (files: File[]) => void;
 }
 
@@ -31,6 +32,7 @@ export default function ScanDialog({
   canAddRoot,
   onAddRoot,
   onRemoveRoot,
+  onScanned,
   onImport,
 }: ScanDialogProps) {
   const [items, setItems] = useState<ScannedBook[]>([]);
@@ -63,6 +65,10 @@ export default function ScanDialog({
           file: await candidate.handle.getFile(),
           selected: true,
         })),
+      );
+      onScanned(
+        root.id,
+        files.map((item) => item.file),
       );
       setItems((previous) => {
         const merged = new Map(previous.map((item) => [item.key, item]));

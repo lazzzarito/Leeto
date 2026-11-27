@@ -116,6 +116,19 @@ export async function removeScanRoot(id: string): Promise<AppSettings> {
   });
 }
 
+/** Actualiza el resumen de una carpeta importada sin perder su handle local. */
+export async function updateScanRoot(
+  id: string,
+  patch: Partial<Pick<ScanRoot, 'bookCount' | 'totalSize' | 'syncedAt' | 'origin'>>,
+): Promise<AppSettings> {
+  const current = await getSettings();
+  return updateSettings({
+    scanRoots: (current.scanRoots ?? []).map((root) =>
+      root.id === id ? { ...root, ...patch } : root,
+    ),
+  });
+}
+
 /** Hook reactivo: devuelve defaults mientras Dexie carga el registro. */
 export function useSettings(): AppSettings {
   const stored = useLiveQuery(() => db.settings.get('singleton'), [], undefined);

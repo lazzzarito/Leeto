@@ -3,6 +3,7 @@ import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/cn';
 import AndroidAppSettings from './AndroidAppSettings';
+import ImportedFoldersSettings from './ImportedFoldersSettings';
 import ReadingSettingsSections, { SettingsSection } from './ReadingSettingsSections';
 import SettingsFooter from './SettingsFooter';
 import SettingsQuickActions from './SettingsQuickActions';
@@ -103,6 +104,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
           </div>
         </section>
 
+        <ImportedFoldersSettings />
         <AndroidAppSettings />
         <SyncSettings />
 

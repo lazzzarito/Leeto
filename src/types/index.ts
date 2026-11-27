@@ -109,7 +109,13 @@ export interface ScanRoot {
   id: string;
   name: string;
   addedAt: number;
+  /** El handle solo existe en navegadores con File System Access. */
   handle?: FileSystemDirectoryHandle;
+  bookCount?: number;
+  totalSize?: number;
+  /** Última sincronización correcta de los libros de esta carpeta. */
+  syncedAt?: number;
+  origin?: 'picker' | 'native' | 'input';
 }
 
 export interface AppSettings {

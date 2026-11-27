@@ -19,7 +19,13 @@ import { LibrarySkeleton } from '@/components/ui/Skeletons';
 import { deleteBookCascade, restoreBookSnapshot } from '@/core/db/delete';
 import { getReadingStatus } from '@/core/library/views';
 
-import { addScanRoot, getSettings, removeScanRoot, useSettings } from '@/core/db/settings';
+import {
+  addScanRoot,
+  getSettings,
+  removeScanRoot,
+  updateScanRoot,
+  useSettings,
+} from '@/core/db/settings';
 import {
   fromFileList,
   isDirectoryPickerSupported,
@@ -152,6 +158,16 @@ export default function LibraryPage() {
           setError('No se encontraron libros compatibles en la carpeta seleccionada.');
           return;
         }
+        const rootName = files[0].webkitRelativePath.split('/')[0] || 'Carpeta importada';
+        await addScanRoot({
+          id: newId('root'),
+          name: rootName,
+          addedAt: Date.now(),
+          bookCount: files.length,
+          totalSize: files.reduce((sum, file) => sum + file.size, 0),
+          syncedAt: Date.now(),
+          origin: 'native',
+        });
         await importFiles(files);
         return;
       }
@@ -163,6 +179,7 @@ export default function LibraryPage() {
         name: handle.name,
         addedAt: Date.now(),
         handle,
+        origin: 'picker',
       });
       setScanOpen(true);
     } catch (cause) {
@@ -255,6 +272,14 @@ export default function LibraryPage() {
         canAddRoot={isDirectoryPickerSupported()}
         onAddRoot={() => void handlePickFolder()}
         onRemoveRoot={(id) => void removeScanRoot(id)}
+        onScanned={(id, files) =>
+          void updateScanRoot(id, {
+            bookCount: files.length,
+            totalSize: files.reduce((sum, file) => sum + file.size, 0),
+          }).catch((cause) => {
+            setError(cause instanceof Error ? cause.message : 'No se pudo guardar el resumen de la carpeta');
+          })
+        }
         onImport={(files) => void importFiles(files)}
       />
 
