@@ -523,4 +523,4 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Una pausa reflejada desde JS no cancela la reanudación automática tras pérdida de foco; si el servicio muere, se recupera el primer plano.
 - [x] En Android, “Carpeta completa” usa SAF nativo en lugar de `webkitdirectory`, que no es fiable en WebView; si no hay soporte real, la UI explica que hay que seleccionar varios libros.
 - [x] Las portadas de la biblioteca usan caché de object URLs en memoria para no parpadear al cambiar de pestaña/filtro.
-- [x] Versión 0.1.6-beta (`versionCode=213`).
+- [x] Versión 0.1.7-beta (`versionCode=215`).
