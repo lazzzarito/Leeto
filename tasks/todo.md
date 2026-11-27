@@ -525,3 +525,4 @@ Convención: `[x]` = verificado. Cada tarea debe dejar el proyecto compilable.
 - [x] Las portadas de la biblioteca usan caché de object URLs en memoria para no parpadear al cambiar de pestaña/filtro.
 - [x] Versión 0.1.7-beta (`versionCode=215`).
 - [x] Versión 0.1.8-beta (`versionCode=217`).
+- [x] Versión 0.1.9-beta (`versionCode=219`): ajustes legales y de compartir, carpetas importadas, acordeón exclusivo y sincronización de biblioteca completa + ajustes.
