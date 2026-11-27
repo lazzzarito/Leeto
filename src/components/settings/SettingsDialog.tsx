@@ -4,6 +4,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/cn';
 import AndroidAppSettings from './AndroidAppSettings';
 import ReadingSettingsSections, { SettingsSection } from './ReadingSettingsSections';
+import SettingsFooter from './SettingsFooter';
+import SettingsQuickActions from './SettingsQuickActions';
 import SyncSettings from './SyncSettings';
 
 interface SettingsDialogProps {
@@ -20,9 +22,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
       open={open}
       onOpenChange={onOpenChange}
       title="Configuración"
-      description="Preferencias guardadas solo en este dispositivo."
     >
       <div className="space-y-6 pb-8">
+        <SettingsQuickActions onNavigate={() => onOpenChange(false)} />
+
         <section
           aria-labelledby="settings-theme-heading"
           className="space-y-4 rounded-xl border border-border bg-card p-4"
@@ -103,12 +106,11 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         <AndroidAppSettings />
         <SyncSettings />
 
-        <SettingsSection
-          title="Ajustes de lectura"
-          description="Ritmo, texto, apariencia y voz, aquí mismo"
-        >
+        <SettingsSection title="Ajustes de lectura" description="Ritmo, texto, apariencia y voz">
           <ReadingSettingsSections />
         </SettingsSection>
+
+        <SettingsFooter />
       </div>
     </ResponsiveDialog>
   );

@@ -123,6 +123,7 @@ export default defineConfig(({ mode }) => {
       __APP_CHANNEL__: JSON.stringify(channel),
       __APP_LABEL__: JSON.stringify(`v${packageVersion} · ${channelLabel}`),
       __APK_FILENAME__: JSON.stringify(apkFileName),
+      __SITE_URL__: JSON.stringify(site),
     },
     plugins: [siteMetadata(site), serviceWorkerPrecache(), react()],
     resolve: {

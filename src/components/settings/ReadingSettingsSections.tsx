@@ -1,5 +1,5 @@
 import { ChevronDown, Star } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { booksRepo } from '@/core/db/repositories';
 import { updateSettings, useSettings } from '@/core/db/settings';
 import { listVoices } from '@/core/tts/driver';
@@ -17,15 +17,32 @@ export function SettingsSection({
   title,
   description,
   defaultOpen = false,
+  open,
+  onOpenChange,
   children,
 }: {
   title: string;
   description?: string;
   defaultOpen?: boolean;
+  /** Presente cuando varias secciones comparten un único estado de acordeón. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   children: ReactNode;
 }) {
+  const [internalOpen, setInternalOpen] = useState(defaultOpen);
+  const isOpen = open ?? internalOpen;
+
   return (
-    <details open={defaultOpen} className="group rounded-xl border border-border bg-card">
+    <details
+      open={isOpen}
+      onToggle={(event) => {
+        const next = event.currentTarget.open;
+        if (next === isOpen) return;
+        if (open === undefined) setInternalOpen(next);
+        onOpenChange?.(next);
+      }}
+      className="group rounded-xl border border-border bg-card"
+    >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="block text-sm font-medium">{title}</span>
@@ -77,10 +94,15 @@ export default function ReadingSettingsSections({
   const settings = useSettings();
   const { theme, setTheme, themeMode, setThemeMode, themes } = useTheme();
   const availableVoices = voices ?? listVoices();
+  const [openSection, setOpenSection] = useState<string | undefined>('ritmo');
+  const accordion = (id: string) => ({
+    open: openSection === id,
+    onOpenChange: (next: boolean) => setOpenSection(next ? id : undefined),
+  });
 
   return (
     <div className="space-y-3">
-      <SettingsSection title="Ritmo" description="Velocidad y duración de cada fragmento" defaultOpen>
+      <SettingsSection {...accordion('ritmo')} title="Ritmo" description="Velocidad y duración de cada fragmento">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Field label="Velocidad">
             <select
@@ -118,7 +140,7 @@ export default function ReadingSettingsSections({
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Texto" description="Tamaño y separación de líneas">
+      <SettingsSection {...accordion('texto')} title="Texto" description="Tamaño y separación de líneas">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tamaño" value={`${settings.fontSize} px`}>
             <input
@@ -144,7 +166,7 @@ export default function ReadingSettingsSections({
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Apariencia" description="Tema, modo y movimiento">
+      <SettingsSection {...accordion('apariencia')} title="Apariencia" description="Tema, modo y movimiento">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <Field label="Tema">
             <select
@@ -189,7 +211,7 @@ export default function ReadingSettingsSections({
         </label>
       </SettingsSection>
 
-      <SettingsSection title="Voz" description="Lectura en voz alta del dispositivo">
+      <SettingsSection {...accordion('voz')} title="Voz" description="Lectura en voz alta del dispositivo">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="text-muted-foreground flex items-center gap-2 text-sm">
             <input
@@ -219,7 +241,7 @@ export default function ReadingSettingsSections({
       </SettingsSection>
 
       {book && (
-        <SettingsSection title="Libro" description={book.title}>
+        <SettingsSection {...accordion('libro')} title="Libro" description={book.title}>
           <button
             type="button"
             role="switch"
