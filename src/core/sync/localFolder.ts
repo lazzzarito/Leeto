@@ -76,10 +76,33 @@ export function createLocalFolderProvider(directory: FileSystemDirectoryHandle):
     }
   }
 
+  async function readBlob(name: string): Promise<Blob | null> {
+    try {
+      const file = await directory.getFileHandle(name);
+      return await file.getFile();
+    } catch (error) {
+      if (isNotFound(error)) return null;
+      throw describeError(error, 'leer');
+    }
+  }
+
+  async function writeBlob(name: string, blob: Blob): Promise<void> {
+    try {
+      const file = await directory.getFileHandle(name, { create: true });
+      const writable = await file.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (error) {
+      throw describeError(error, 'escribir');
+    }
+  }
+
   return {
     id: 'local-folder',
     label: 'Carpeta local',
     read: readFile,
+    readBlob,
+    writeBlob,
 
     async exists(name): Promise<boolean> {
       try {
@@ -98,7 +121,7 @@ export function createLocalFolderProvider(directory: FileSystemDirectoryHandle):
 
     async write(name, text, options = {}): Promise<SyncWriteResult> {
       if (options.etag) {
-        throw new Error('Carpeta local: no puede verificar escrituras condicionales; usa WebDAV');
+        throw new Error('Carpeta local: no puede verificar escrituras condicionales; vuelve a sincronizar');
       }
       // La API no ofrece rename atómico: escritura temporal + final + verificación.
       await writeFile(`${name}.tmp`, text);

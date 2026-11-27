@@ -1,4 +1,4 @@
-import type { ReadingProgress, SavedQuote, SyncEnvelope } from '@/types';
+import type { ReadingProgress, SavedQuote, SyncEnvelope, SyncSettingsValues } from '@/types';
 
 type LibraryRef = NonNullable<SyncEnvelope['libraryRefs']>[string];
 
@@ -12,6 +12,7 @@ export interface MergeResult {
   progress: ReadingProgress[];
   quotes: SavedQuote[];
   libraryRefs: Record<string, LibraryRef>;
+  syncedSettings?: SyncSettingsValues;
   /** true si el merge cambió algún registro respecto al sobre local. */
   changed: boolean;
 }
@@ -34,6 +35,7 @@ export function envelopeFingerprint(envelope: SyncEnvelope): string {
     progress: envelope.progress ?? {},
     quotes: envelope.quotes ?? {},
     libraryRefs: envelope.libraryRefs ?? {},
+    settings: envelope.settings ?? {},
   });
 }
 
@@ -43,6 +45,7 @@ export function recordsFingerprint(envelope: SyncEnvelope): string {
     progress: envelope.progress ?? {},
     quotes: envelope.quotes ?? {},
     libraryRefs: envelope.libraryRefs ?? {},
+    settings: envelope.settings ?? {},
   });
 }
 
@@ -118,6 +121,10 @@ export function mergeEnvelopes(local: SyncEnvelope, remote: SyncEnvelope): Merge
   const progress = [...progressMap.values()];
   const quotes = [...quotesMap.values()];
   const libraryRefs = Object.fromEntries(refsMap);
+  const settings =
+    (remote.settings?.updatedAt ?? 0) > (local.settings?.updatedAt ?? 0)
+      ? remote.settings
+      : local.settings;
   const envelope: SyncEnvelope = {
     schemaVersion: 1,
     updatedAt: Math.max(local.updatedAt, remote.updatedAt),
@@ -126,6 +133,7 @@ export function mergeEnvelopes(local: SyncEnvelope, remote: SyncEnvelope): Merge
     progress: Object.fromEntries(progress.map((item) => [item.bookId, item])),
     quotes: Object.fromEntries(quotes.map((item) => [item.id, item])),
     libraryRefs,
+    settings,
   };
 
   return {
@@ -133,6 +141,7 @@ export function mergeEnvelopes(local: SyncEnvelope, remote: SyncEnvelope): Merge
     progress,
     quotes,
     libraryRefs,
+    syncedSettings: settings?.values,
     changed: recordsFingerprint(local) !== recordsFingerprint(envelope),
   };
 }

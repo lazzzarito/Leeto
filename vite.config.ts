@@ -124,6 +124,9 @@ export default defineConfig(({ mode }) => {
       __APP_LABEL__: JSON.stringify(`v${packageVersion} · ${channelLabel}`),
       __APK_FILENAME__: JSON.stringify(apkFileName),
       __SITE_URL__: JSON.stringify(site),
+      __GOOGLE_DRIVE_CLIENT_ID__: JSON.stringify(
+        process.env.VITE_GOOGLE_DRIVE_CLIENT_ID || env.VITE_GOOGLE_DRIVE_CLIENT_ID || '',
+      ),
     },
     plugins: [siteMetadata(site), serviceWorkerPrecache(), react()],
     resolve: {

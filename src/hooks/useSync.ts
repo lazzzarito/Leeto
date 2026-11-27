@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSettings } from '@/core/db/settings';
+import { updateScanRoot, useSettings } from '@/core/db/settings';
 import { applyMergeResult, loadLocalEnvelope } from '@/core/sync/apply';
 import { BACKUP_FILENAME, SYNC_FILENAME, rotateBackup, restoreBackup } from '@/core/sync/backup';
-import { getWebDavPassword } from '@/core/sync/credentials';
 import { parseEnvelope, serializeEnvelope } from '@/core/sync/envelope';
+import { createGoogleDriveProvider } from '@/core/sync/googleDrive';
+import { syncLibraryFiles } from '@/core/sync/library';
 import { createLocalFolderProvider, getSyncDirectory, isLocalFolderSupported } from '@/core/sync/localFolder';
 import { mergeEnvelopes, prepareForWrite } from '@/core/sync/merge';
-import { isSecureSyncUrl, type SyncProvider } from '@/core/sync/provider';
+import type { SyncProvider } from '@/core/sync/provider';
 import {
   createLoopGuard,
   createSyncScheduler,
   subscribeLocalSyncChange,
 } from '@/core/sync/scheduler';
-import { createWebDavProvider } from '@/core/sync/webdav';
-import type { AppSettings } from '@/types';
+import type { AppSettings, SyncEnvelope } from '@/types';
 
 export interface SyncStatus {
   phase: 'idle' | 'syncing' | 'ok' | 'error';
@@ -22,35 +22,16 @@ export interface SyncStatus {
 }
 
 function buildProvider(settings: AppSettings): SyncProvider {
-  if (settings.syncProvider === 'webdav') {
-    if (!settings.syncWebDavUrl) throw new Error('Configura la URL WebDAV antes de sincronizar');
-    // El botón manual no debe poder evadir la regla HTTPS/localhost.
-    if (!isSecureSyncUrl(settings.syncWebDavUrl)) {
-      throw new Error('La URL WebDAV debe usar HTTPS o localhost');
-    }
-    return createWebDavProvider({
-      baseUrl: settings.syncWebDavUrl,
-      username: settings.syncWebDavUsername,
-      password: getWebDavPassword(),
-    });
-  }
-  if (settings.syncProvider === 'local-folder') {
-    const directory = getSyncDirectory();
-    if (!directory) throw new Error('Elige una carpeta local antes de sincronizar');
-    return createLocalFolderProvider(directory);
-  }
-  throw new Error('Proveedor de sincronización no soportado en esta versión');
+  if (settings.syncProvider === 'gdrive') return createGoogleDriveProvider();
+  const directory = getSyncDirectory();
+  if (!directory) throw new Error('Elige una carpeta local antes de sincronizar');
+  return createLocalFolderProvider(directory);
 }
 
 /** Configuración mínima para hablar con el proveedor, con auto-sync activado o no. */
 export function isSyncConfigured(settings: AppSettings): boolean {
-  if (settings.syncProvider === 'webdav') {
-    return Boolean(settings.syncWebDavUrl) && isSecureSyncUrl(settings.syncWebDavUrl!);
-  }
-  if (settings.syncProvider === 'local-folder') {
-    return isLocalFolderSupported() && Boolean(getSyncDirectory());
-  }
-  return false;
+  if (settings.syncProvider === 'gdrive') return false;
+  return isLocalFolderSupported() && Boolean(getSyncDirectory());
 }
 
 /** El scheduler y el botón manual comparten la misma comprobación. */
@@ -75,6 +56,22 @@ export function useSync() {
 
   const [status, setStatus] = useState<SyncStatus>({ phase: 'idle' });
 
+  const syncLibraryForProvider = useCallback(
+    async (provider: SyncProvider, refs: SyncEnvelope['libraryRefs']) => {
+      const stats = await syncLibraryFiles(provider, refs ?? {});
+      if (stats.uploaded || stats.applied) {
+        const now = Date.now();
+        await Promise.all(
+          (settingsRef.current.scanRoots ?? []).map((root) =>
+            updateScanRoot(root.id, { syncedAt: now }),
+          ),
+        );
+      }
+      return stats;
+    },
+    [],
+  );
+
   const runSync = useCallback(async () => {
     const current = settingsRef.current;
     setStatus({ phase: 'syncing' });
@@ -86,12 +83,13 @@ export function useSync() {
 
       const remote = await provider.read(SYNC_FILENAME);
       if (!remote.text) {
+        const libraryStats = await syncLibraryForProvider(provider, local.libraryRefs);
         const created = prepareForWrite(local, current.deviceId);
         await provider.write(SYNC_FILENAME, serializeEnvelope(created));
         guardRef.current.markWritten(created);
         setStatus({
           phase: 'ok',
-          message: 'Archivo de sincronización creado',
+          message: `Sincronización creada · ${libraryStats.uploaded} libros subidos`,
           lastSyncedAt: created.updatedAt,
         });
         return;
@@ -105,6 +103,7 @@ export function useSync() {
 
       const result = mergeEnvelopes(local, parsed);
       if (result.changed) await applyMergeResult(result);
+      const libraryStats = await syncLibraryForProvider(provider, result.libraryRefs);
 
       // Solo publicamos si hay cambios de registros o si el sobre viene de otro dispositivo.
       if (result.changed || parsed.originDeviceId !== current.deviceId) {
@@ -114,7 +113,7 @@ export function useSync() {
         guardRef.current.markWritten(written);
         setStatus({
           phase: 'ok',
-          message: result.changed ? 'Cambios aplicados y publicados' : 'Sincronizado',
+          message: `${result.changed ? 'Cambios aplicados y publicados' : 'Sincronizado'} · ${libraryStats.applied} libros restaurados, ${libraryStats.uploaded} subidos`,
           lastSyncedAt: written.updatedAt,
         });
       } else {
@@ -125,7 +124,7 @@ export function useSync() {
       setStatus({ phase: 'error', message });
       throw error;
     }
-  }, []);
+  }, [syncLibraryForProvider]);
 
   const scheduler = useMemo(
     () => createSyncScheduler({ run: runSync, debounceMs: 800, minIntervalMs: 5000 }),
@@ -145,7 +144,7 @@ export function useSync() {
 
   useEffect(() => {
     if (canSync(settingsRef.current)) scheduler.trigger();
-  }, [scheduler, settings.syncEnabled, settings.syncProvider, settings.syncWebDavUrl]);
+  }, [scheduler, settings.syncEnabled, settings.syncProvider]);
 
   const exportJson = useCallback(async () => {
     const envelope = await loadLocalEnvelope(settingsRef.current.deviceId);

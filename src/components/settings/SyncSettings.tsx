@@ -11,16 +11,15 @@ import {
   X,
 } from 'lucide-react';
 import { useRef, useState, type ChangeEvent } from 'react';
-import { updateSettings } from '@/core/db/settings';
-import { clearWebDavPassword, getWebDavPassword, saveWebDavPassword } from '@/core/sync/credentials';
+import { updateSettings, useSettings } from '@/core/db/settings';
+import { isGoogleDriveReady } from '@/core/sync/googleDrive';
 import { getSyncDirectory, isLocalFolderSupported, pickSyncDirectory } from '@/core/sync/localFolder';
 import { readFileTextLimited } from '@/core/sync/limits';
-import { isSecureSyncUrl } from '@/core/sync/provider';
-import { useSettings } from '@/core/db/settings';
 import { isSyncConfigured } from '@/hooks/useSync';
 import { useSyncController } from '@/hooks/useSyncContext';
 
 type ConfirmAction = 'import' | 'restore';
+type ProviderId = 'local-folder' | 'gdrive';
 
 const INPUT_CLASS =
   'bg-background border-border h-9 w-full rounded-lg border px-3 text-sm outline-none focus-visible:ring-2';
@@ -30,7 +29,6 @@ const BUTTON_CLASS =
 export default function SyncSettings() {
   const settings = useSettings();
   const { status, syncNow, exportJson, importJson, restoreBackupNow } = useSyncController();
-  const [password, setPassword] = useState(getWebDavPassword);
   const [folderName, setFolderName] = useState(getSyncDirectory()?.name);
   const [pendingText, setPendingText] = useState<string>();
   const [importError, setImportError] = useState<string>();
@@ -38,8 +36,8 @@ export default function SyncSettings() {
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const provider = settings.syncProvider ?? 'local-folder';
   const folderSupported = isLocalFolderSupported();
-  const insecureUrl = Boolean(settings.syncWebDavUrl) && !isSecureSyncUrl(settings.syncWebDavUrl!);
   const syncing = status.phase === 'syncing' || busy;
   const configured = isSyncConfigured(settings);
 
@@ -100,8 +98,8 @@ export default function SyncSettings() {
           Sincronización
         </h2>
         <p className="text-muted-foreground text-sm">
-          Progreso, citas y referencias en un archivo JSON. Se fusiona registro a registro y se guarda
-          un backup antes de escribir.
+          Biblioteca completa, ajustes, carpetas importadas, progreso y citas en un archivo por libro
+          más un sobre JSON. Se fusiona registro a registro y se guarda un backup antes de escribir.
         </p>
       </div>
 
@@ -114,72 +112,35 @@ export default function SyncSettings() {
         Activar sincronización automática
       </label>
 
-      <div className="grid gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-2">
+      <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
         <label className="block">
           <span className="text-muted-foreground mb-1 block text-xs font-medium">Proveedor</span>
           <select
-            value={settings.syncProvider ?? 'webdav'}
+            value={provider}
             onChange={(event) =>
-              void updateSettings({
-                syncProvider: event.target.value as 'webdav' | 'local-folder',
-              })
+              void updateSettings({ syncProvider: event.target.value as ProviderId })
             }
             className={INPUT_CLASS}
           >
-            <option value="webdav">WebDAV (Nextcloud, servidor propio)</option>
             <option value="local-folder" disabled={!folderSupported}>
               Carpeta local {folderSupported ? '' : '(no disponible)'}
             </option>
+            <option value="gdrive">Google Drive (preparado, aún no activo)</option>
           </select>
         </label>
 
-        {(settings.syncProvider ?? 'webdav') === 'webdav' ? (
-          <>
-            <label className="block">
-              <span className="text-muted-foreground mb-1 block text-xs font-medium">
-                URL de la carpeta LeetoSync/
-              </span>
-              <input
-                type="url"
-                value={settings.syncWebDavUrl ?? ''}
-                placeholder="https://dav.ejemplo.com/remote.php/dav/files/usuario/LeetoSync"
-                onChange={(event) => void updateSettings({ syncWebDavUrl: event.target.value })}
-                className={INPUT_CLASS}
-              />
-            </label>
-            <label className="block">
-              <span className="text-muted-foreground mb-1 block text-xs font-medium">Usuario</span>
-              <input
-                value={settings.syncWebDavUsername ?? ''}
-                autoComplete="username"
-                onChange={(event) =>
-                  void updateSettings({ syncWebDavUsername: event.target.value })
-                }
-                className={INPUT_CLASS}
-              />
-            </label>
-            <label className="block">
-              <span className="text-muted-foreground mb-1 block text-xs font-medium">
-                Contraseña (solo esta sesión)
-              </span>
-              <input
-                type="password"
-                value={password}
-                autoComplete="current-password"
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  saveWebDavPassword(event.target.value);
-                }}
-                className={INPUT_CLASS}
-              />
-            </label>
-            {insecureUrl && (
-              <p className="text-destructive flex items-start gap-2 text-xs">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                WebDAV con credenciales requiere HTTPS. Solo se permite HTTP en localhost.
+        {provider === 'gdrive' ? (
+          <div className="space-y-2">
+            <p className="text-muted-foreground text-xs">
+              Google Drive será el único proveedor en la nube. Necesita un Client ID de OAuth y una
+              pantalla de consentimiento; mientras tanto la opción permanece desactivada.
+            </p>
+            {!isGoogleDriveReady() && (
+              <p className="text-muted-foreground text-xs">
+                Usa la carpeta local o exporta/importa el JSON manualmente.
               </p>
             )}
-          </>
+          </div>
         ) : (
           <div className="space-y-2">
             <span className="text-muted-foreground block text-xs font-medium">Carpeta local</span>
@@ -190,18 +151,23 @@ export default function SyncSettings() {
                   {folderName ?? 'Elegir carpeta…'}
                 </button>
                 <p className="text-muted-foreground text-xs">
-                  Se guardarán <code>leeto_sync.json</code> y su backup en esa carpeta. Deberás
-                  volver a elegirla al recargar la página.
+                  Se guardarán <code>leeto_sync.json</code>, <code>leeto_book_*.json</code> y sus
+                  backups en esa carpeta. Deberás volver a elegirla al recargar la página.
                 </p>
               </>
             ) : (
               <p className="text-muted-foreground text-xs">
-                Este navegador no ofrece File System Access API. Usa WebDAV o exporta/importa el
-                JSON manualmente.
+                Este navegador no ofrece File System Access API. Puedes exportar e importar el JSON
+                manualmente.
               </p>
             )}
           </div>
         )}
+
+        <p className="text-muted-foreground border-t border-border/70 pt-2 text-xs">
+          Incluido: libros y sus archivos, tema y ajustes de lectura, carpetas importadas, progreso,
+          citas y notas. Nunca se sincronizan credenciales ni el identificador del dispositivo.
+        </p>
       </div>
 
       <div className="border-t border-border pt-4">
@@ -219,7 +185,11 @@ export default function SyncSettings() {
             )}
             Sincronizar ahora
           </button>
-          <button type="button" onClick={() => void exportJson()} className={`${BUTTON_CLASS} w-full justify-center`}>
+          <button
+            type="button"
+            onClick={() => void exportJson()}
+            className={`${BUTTON_CLASS} w-full justify-center`}
+          >
             <Download className="size-4" aria-hidden="true" />
             Exportar JSON
           </button>
@@ -231,7 +201,13 @@ export default function SyncSettings() {
             <Upload className="size-4" aria-hidden="true" />
             Importar JSON
           </button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(event) => void handleFile(event)} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(event) => void handleFile(event)}
+          />
           <button
             type="button"
             onClick={() => setConfirmAction('restore')}
@@ -241,18 +217,6 @@ export default function SyncSettings() {
             Restaurar backup
           </button>
         </div>
-        {password && (
-          <button
-            type="button"
-            onClick={() => {
-              clearWebDavPassword();
-              setPassword('');
-            }}
-            className="text-muted-foreground mt-2 w-full text-xs underline"
-          >
-            Olvidar contraseña
-          </button>
-        )}
       </div>
 
       {importError && (
@@ -277,16 +241,17 @@ export default function SyncSettings() {
             <CheckCircle2 className="size-4" aria-hidden="true" />
           )}
           {status.message}
-          {status.lastSyncedAt
-            ? ` · ${new Date(status.lastSyncedAt).toLocaleString()}`
-            : ''}
+          {status.lastSyncedAt ? ` · ${new Date(status.lastSyncedAt).toLocaleString()}` : ''}
         </p>
       )}
 
-      <Dialog.Root open={Boolean(confirmAction)} onOpenChange={(open) => !open && setConfirmAction(undefined)}>
+      <Dialog.Root
+        open={Boolean(confirmAction)}
+        onOpenChange={(open) => !open && setConfirmAction(undefined)}
+      >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-[leeto-fade-in_180ms_ease-out] data-[state=closed]:animate-[leeto-fade-out_140ms_ease-in]" />
-          <Dialog.Content className="bg-card text-card-foreground fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border p-5 shadow-xl data-[state=open]:animate-[leeto-scale-in_200ms_ease-out] data-[state=closed]:animate-[leeto-scale-out_150ms_ease-in]">
+          <Dialog.Content className="bg-card text-card-foreground fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <Dialog.Title className="text-lg font-medium">
@@ -306,7 +271,9 @@ export default function SyncSettings() {
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <Dialog.Close asChild>
-                <button type="button" className={BUTTON_CLASS}>Cancelar</button>
+                <button type="button" className={BUTTON_CLASS}>
+                  Cancelar
+                </button>
               </Dialog.Close>
               <button
                 type="button"

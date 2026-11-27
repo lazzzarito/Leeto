@@ -1,4 +1,5 @@
-import type { LeetoBook, ReadingProgress, SavedQuote, SyncEnvelope } from '@/types';
+import type { AppSettings, LeetoBook, ReadingProgress, SavedQuote, SyncEnvelope } from '@/types';
+import { pickSyncedSettings } from './settingsSync';
 
 /** Límites explícitos para no confiar en el tamaño de un archivo remoto o importado. */
 export const MAX_SYNC_TEXT_LENGTH = 10 * 1024 * 1024;
@@ -94,6 +95,48 @@ function hasOnlyValidRecords(
   return records === undefined || Object.values(records).every(isValid);
 }
 
+const ALLOWED_SYNC_SETTINGS_KEYS = new Set([
+  'readingTheme',
+  'themeMode',
+  'fontSize',
+  'lineHeight',
+  'wpm',
+  'playbackSpeed',
+  'kineticTextEnabled',
+  'focusDimIntensity',
+  'imageDurationMs',
+  'ttsEnabled',
+  'ttsVoiceURI',
+  'reducedMotion',
+  'scanRoots',
+]);
+
+function isValidSyncedRoot(value: unknown): boolean {
+  if (!isRecord(value) || 'handle' in value) return false;
+  return (
+    isText(value.id) &&
+    isText(value.name, MAX_FIELD_LENGTH) &&
+    isNumber(value.addedAt) &&
+    isOptionalNumber(value.bookCount) &&
+    isOptionalNumber(value.totalSize) &&
+    isOptionalNumber(value.syncedAt) &&
+    (value.origin === undefined ||
+      value.origin === 'picker' ||
+      value.origin === 'native' ||
+      value.origin === 'input')
+  );
+}
+
+function isValidSettingsPayload(value: unknown): boolean {
+  if (!isRecord(value) || !isNumber(value.updatedAt) || !isRecord(value.values)) return false;
+  if (!Object.keys(value.values).every((key) => ALLOWED_SYNC_SETTINGS_KEYS.has(key))) return false;
+  const roots = value.values.scanRoots;
+  return (
+    roots === undefined ||
+    (Array.isArray(roots) && roots.length <= MAX_RECORDS && roots.every(isValidSyncedRoot))
+  );
+}
+
 export function createEmptyEnvelope(deviceId: string, updatedAt = Date.now()): SyncEnvelope {
   return {
     schemaVersion: 1,
@@ -111,6 +154,7 @@ export interface BuildEnvelopeInput {
   progress: ReadingProgress[];
   quotes: SavedQuote[];
   books: LeetoBook[];
+  settings: AppSettings;
   updatedAt?: number;
 }
 
@@ -120,6 +164,7 @@ export function buildEnvelope({
   progress,
   quotes,
   books,
+  settings,
   updatedAt = Date.now(),
 }: BuildEnvelopeInput): SyncEnvelope {
   return {
@@ -140,6 +185,7 @@ export function buildEnvelope({
         },
       ]),
     ),
+    settings: { updatedAt, values: pickSyncedSettings(settings) },
   };
 }
 
@@ -172,7 +218,8 @@ export function parseEnvelope(text: string): SyncEnvelope {
     !hasOnlyValidRecords(parsed.quotes, isValidQuote) ||
     (parsed.libraryRefs !== undefined &&
       (!isBoundedRecord(parsed.libraryRefs) ||
-        !hasOnlyValidRecords(parsed.libraryRefs, isValidLibraryRef)))
+        !hasOnlyValidRecords(parsed.libraryRefs, isValidLibraryRef))) ||
+    (parsed.settings !== undefined && !isValidSettingsPayload(parsed.settings))
   ) {
     throw new Error('Sobre de sincronización inválido o de versión no soportada');
   }

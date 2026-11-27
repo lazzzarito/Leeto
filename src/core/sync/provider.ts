@@ -1,4 +1,5 @@
-export type SyncProviderId = 'webdav' | 'local-folder';
+/** Proveedores activos: WebDAV y OneDrive quedan fuera de esta versión. */
+export type SyncProviderId = 'local-folder' | 'gdrive';
 
 export interface SyncReadResult {
   text: string | null;
@@ -21,23 +22,9 @@ export interface SyncProvider {
   exists(name: string): Promise<boolean>;
   /** Copia el archivo remoto a un backup antes de sobrescribirlo (best-effort). */
   backupRemote?(name: string, backupName: string): Promise<void>;
+  /** Los proveedores con soporte binario sincronizan también los archivos de la biblioteca. */
+  readBlob?(name: string): Promise<Blob | null>;
+  writeBlob?(name: string, blob: Blob): Promise<void>;
   /** Nombre legible del destino, para mensajes de estado. */
   readonly label: string;
-}
-
-/** WebDAV con credenciales exige HTTPS salvo en localhost (desarrollo/NAS local). */
-export function isSecureSyncUrl(rawUrl: string): boolean {
-  try {
-    const url = new URL(rawUrl);
-    if (url.protocol === 'https:') return true;
-    if (url.protocol !== 'http:') return false;
-    return ['localhost', '127.0.0.1', '[::1]', '::1'].includes(url.hostname);
-  } catch {
-    return false;
-  }
-}
-
-export function resolveRemoteUrl(baseUrl: string, name: string): string {
-  const base = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-  return `${base}${name.replace(/^\/+/, '')}`;
 }

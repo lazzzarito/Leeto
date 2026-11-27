@@ -137,9 +137,25 @@ export interface AppSettings {
   reducedMotion?: 'system' | 'on' | 'off';
   scanRoots?: ScanRoot[];
   syncEnabled: boolean;
-  syncProvider?: 'webdav' | 'local-folder' | 'gdrive' | 'onedrive';
-  syncWebDavUrl?: string;
-  syncWebDavUsername?: string;
+  /** Solo carpeta local y Google Drive (preparado); WebDAV y OneDrive quedan fuera. */
+  syncProvider?: 'local-folder' | 'gdrive';
+}
+
+/** Preferencias que viajan en el sobre; nunca incluye identidad ni credenciales. */
+export interface SyncSettingsValues {
+  readingTheme: ReadingTheme;
+  themeMode?: 'system' | 'manual';
+  fontSize: number;
+  lineHeight: number;
+  wpm: number;
+  playbackSpeed: number;
+  kineticTextEnabled: boolean;
+  focusDimIntensity: number;
+  imageDurationMs: number;
+  ttsEnabled: boolean;
+  ttsVoiceURI?: string;
+  reducedMotion?: 'system' | 'on' | 'off';
+  scanRoots?: Array<Omit<ScanRoot, 'handle'>>;
 }
 
 export interface SyncEnvelope {
@@ -153,4 +169,5 @@ export interface SyncEnvelope {
     string,
     { id: string; fileName: string; fileSize: number; updatedAt: number }
   >;
+  settings?: { updatedAt: number; values: SyncSettingsValues };
 }

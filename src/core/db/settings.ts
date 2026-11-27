@@ -4,7 +4,11 @@ import type { AppSettings, ReadingTheme, ScanRoot } from '@/types';
 import { db } from './db';
 
 export function getInitialTheme(): ReadingTheme {
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  ) {
     return 'oled';
   }
   return 'paper';
@@ -21,8 +25,6 @@ function bounded(value: unknown, min: number, max: number, fallback: number): nu
 
 const bool = (value: unknown, fallback: boolean): boolean =>
   typeof value === 'boolean' ? value : fallback;
-const text = (value: unknown, fallback?: string): string | undefined =>
-  typeof value === 'string' ? value : fallback;
 
 /** Normaliza registros antiguos o parciales antes de usarlos en la UI. */
 export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
@@ -48,8 +50,6 @@ export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
         : undefined,
     ttsVoiceURI:
       typeof merged.ttsVoiceURI === 'string' ? merged.ttsVoiceURI : undefined,
-    syncWebDavUrl: text(merged.syncWebDavUrl, DEFAULT_SETTINGS.syncWebDavUrl),
-    syncWebDavUsername: text(merged.syncWebDavUsername, DEFAULT_SETTINGS.syncWebDavUsername),
     scanRoots: Array.isArray(merged.scanRoots)
       ? merged.scanRoots
       : (DEFAULT_SETTINGS.scanRoots ?? []),
@@ -57,10 +57,9 @@ export function normalizeSettings(stored?: Partial<AppSettings>): AppSettings {
       merged.reducedMotion === 'on' || merged.reducedMotion === 'off'
         ? merged.reducedMotion
         : 'system',
+    // Las instalaciones que venían de WebDAV pasan a la carpeta local sin perder ajustes.
     syncProvider:
-      merged.syncProvider === 'webdav' || merged.syncProvider === 'local-folder'
-        ? merged.syncProvider
-        : 'webdav',
+      merged.syncProvider === 'gdrive' ? 'gdrive' : 'local-folder',
   };
 }
 
@@ -79,9 +78,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ttsEnabled: false,
   reducedMotion: 'system',
   syncEnabled: false,
-  syncProvider: 'webdav',
-  syncWebDavUrl: '',
-  syncWebDavUsername: '',
+  syncProvider: 'local-folder',
 };
 
 /** Devuelve los ajustes persistidos o, si no existen, los valores por defecto. */
