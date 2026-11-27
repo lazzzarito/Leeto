@@ -24,7 +24,7 @@ export function BookCardSkeleton() {
 export function LibrarySkeleton() {
   return (
     <div role="status" aria-label="Cargando biblioteca" className="space-y-4">
-      <div className="bg-background/85 sticky top-[calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))] z-20 flex gap-3 px-1 pt-3 pb-2.5 backdrop-blur">
+      <div className="bg-background/85 sticky top-[env(safe-area-inset-top,0px)] z-20 flex gap-3 px-1 pt-3 pb-2.5 backdrop-blur">
         {[0, 1, 2, 3].map((index) => (
           <Skeleton key={index} className="h-6 w-16 rounded-full" />
         ))}

@@ -130,11 +130,11 @@ export default function AddMenu({
         <>
           <button
             type="button"
-            aria-label="Añadir"
             onClick={() => setOpen(true)}
-            className="border-border bg-card text-foreground hover:bg-muted inline-flex size-10 shrink-0 items-center justify-center rounded-lg border shadow-lg"
+            className="border-border bg-card text-foreground hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium shadow-lg"
           >
-            <Plus className="size-5" aria-hidden="true" />
+            <Plus className="size-4" aria-hidden="true" />
+            Añadir
           </button>
           <ResponsiveDialog
             open={open}

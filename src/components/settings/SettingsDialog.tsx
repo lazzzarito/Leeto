@@ -3,6 +3,7 @@ import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/cn';
 import AndroidAppSettings from './AndroidAppSettings';
+import ReadingSettingsSections, { SettingsSection } from './ReadingSettingsSections';
 import SyncSettings from './SyncSettings';
 
 interface SettingsDialogProps {
@@ -101,6 +102,13 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
         <AndroidAppSettings />
         <SyncSettings />
+
+        <SettingsSection
+          title="Ajustes de lectura"
+          description="Ritmo, texto, apariencia y voz, aquí mismo"
+        >
+          <ReadingSettingsSections />
+        </SettingsSection>
       </div>
     </ResponsiveDialog>
   );

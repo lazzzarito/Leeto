@@ -4,7 +4,6 @@ import { Link, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import ApkDownloadNotice from '@/components/download/ApkDownloadNotice';
 import ImportQueue from '@/components/library/ImportQueue';
 import NotificationHost from '@/components/notifications/NotificationHost';
-import { useNotifications } from '@/components/notifications/NotificationProvider';
 import PlayerNotch from '@/components/player/PlayerNotch';
 import { LibrarySkeleton, ReaderSkeleton } from '@/components/ui/Skeletons';
 import { PlayerProvider } from '@/core/player/PlayerProvider';
@@ -37,17 +36,12 @@ export default function AppShell() {
   const bookCount = useBookCount();
   const favoriteCount = useFavoriteCount();
   const statusCounts = countBooksByStatus(useBooks(), useProgressByBook());
-  const { notices } = useNotifications();
   const { jobs, importFiles } = useImport();
-  const hasNotice = notices.length > 0;
   const hasImport = jobs.length > 0;
-  const headerBusy = hasNotice || hasImport;
   const [chromeHidden, setChromeHidden] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(64);
   const [refreshing, setRefreshing] = useState(false);
   const [pullY, setPullY] = useState(0);
   const lastScrollY = useRef(0);
-  const headerRef = useRef<HTMLElement>(null);
   const pullStartY = useRef<number | null>(null);
   const pullRef = useRef(0);
   const refreshTimer = useRef<number | undefined>(undefined);
@@ -88,31 +82,6 @@ export default function AppShell() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, [reading]);
-
-  useEffect(() => {
-    if (reading) return;
-    if (headerBusy) setChromeHidden(false);
-  }, [reading, headerBusy]);
-
-  useEffect(() => {
-    if (reading) return;
-    const element = headerRef.current;
-    if (!element) return;
-    const update = () => {
-      const height = Math.round(element.getBoundingClientRect().height);
-      if (height > 0) {
-        setHeaderHeight(height);
-        document.documentElement.style.setProperty('--header-h', `${height}px`);
-      }
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => {
-      observer.disconnect();
-      document.documentElement.style.removeProperty('--header-h');
-    };
-  }, [reading, hasNotice, hasImport]);
 
   useEffect(() => {
     if (!reading) return;
@@ -202,7 +171,6 @@ export default function AppShell() {
         <div
           className="relative flex min-h-dvh text-foreground"
           data-chrome-hidden={chromeHidden ? 'true' : 'false'}
-          style={{ ['--header-h' as string]: `${headerHeight}px` }}
           onTouchStartCapture={handlePullStart}
           onTouchMoveCapture={handlePullMove}
           onTouchEndCapture={handlePullEnd}
@@ -279,54 +247,20 @@ export default function AppShell() {
         </aside>
 
         <div className="relative z-10 flex min-w-0 flex-1 flex-col">
-          <header
-            ref={headerRef}
-            className={cn(
-              'pt-safe bg-background/35 sticky top-0 z-30 backdrop-blur-md transition-transform duration-300 supports-[backdrop-filter]:bg-background/20 lg:hidden',
-              chromeHidden && !headerBusy && '-translate-y-full',
-            )}
-          >
-            {headerBusy ? (
-              <div className="border-border bg-background/95 max-h-[40dvh] overflow-y-auto border-b">
-                {hasImport && (
-                  <div className="px-4 py-2 sm:px-6">
-                    <ImportQueue jobs={jobs} compact />
-                  </div>
-                )}
-                {hasNotice && <NotificationHost mobile />}
-              </div>
-            ) : (
-              <div className="relative flex h-16 items-center justify-between px-4 sm:px-6">
-                <Link to="/" className="flex items-center gap-2 rounded-md focus-visible:ring-2">
-                  <span aria-hidden="true" className="theme-icon text-primary size-5 shrink-0 rounded-md" />
-                  <span className="flex flex-col leading-tight">
-                    <span className="font-semibold tracking-tight">Leeto</span>
-                    <span className="text-muted-foreground text-[11px]">{APP_LABEL}</span>
-                  </span>
-                </Link>
-
-                <PlayerNotch className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                <button
-                  type="button"
-                  onClick={() => setSettingsOpen(true)}
-                  aria-haspopup="dialog"
-                  aria-expanded={settingsOpen}
-                  className="text-muted-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                >
-                  <Settings2 className="size-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">Ajustes</span>
-                  <span className="sr-only sm:hidden">Ajustes</span>
-                </button>
-              </div>
-            )}
-          </header>
-
           <main className="w-full flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:px-6 lg:pt-2 lg:pb-8">
             {!reading && hasImport && <div className="mb-3 hidden lg:block"><ImportQueue jobs={jobs} /></div>}
             {!reading && <div className="hidden lg:block"><NotificationHost mobile={false} /></div>}
             <Suspense fallback={<LibrarySkeleton />}>
               <div key={location.pathname} className="leeto-page-enter">
-                <Outlet context={{ chromeHidden, importFiles, refreshing }} />
+                <Outlet
+                  context={{
+                    chromeHidden,
+                    importFiles,
+                    refreshing,
+                    settingsOpen,
+                    onOpenSettings: () => setSettingsOpen(true),
+                  }}
+                />
               </div>
             </Suspense>
           </main>

@@ -1,15 +1,18 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { UploadCloud } from 'lucide-react';
+import { Settings2, UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import AddMenu from '@/components/library/AddMenu';
 import Dropzone from '@/components/library/Dropzone';
+import ImportQueue from '@/components/library/ImportQueue';
 import LibraryTabs from '@/components/library/LibraryTabs';
 import MetadataDialog from '@/components/library/MetadataDialog';
 import ScanDialog from '@/components/library/ScanDialog';
 import SearchBar from '@/components/library/SearchBar';
+import { useImport } from '@/components/import/ImportProvider';
+import NotificationHost from '@/components/notifications/NotificationHost';
 import { useNotifications } from '@/components/notifications/NotificationProvider';
 import ResponsiveDialog from '@/components/ui/ResponsiveDialog';
 import { LibrarySkeleton } from '@/components/ui/Skeletons';
@@ -60,12 +63,23 @@ export default function LibraryPage() {
   const dragDepth = useRef(0);
   const initialTabDone = useRef(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const { push } = useNotifications();
-  const { chromeHidden, importFiles, refreshing } = useOutletContext<{
+  const { notices, push } = useNotifications();
+  const { jobs } = useImport();
+  const { chromeHidden, importFiles, refreshing, settingsOpen, onOpenSettings } = useOutletContext<{
     chromeHidden: boolean;
     importFiles: (files: File[]) => Promise<void>;
     refreshing?: boolean;
-  }>() ?? { chromeHidden: false, importFiles: async () => undefined, refreshing: false };
+    settingsOpen: boolean;
+    onOpenSettings: () => void;
+  }>() ?? {
+    chromeHidden: false,
+    importFiles: async () => undefined,
+    refreshing: false,
+    settingsOpen: false,
+    onOpenSettings: () => undefined,
+  };
+  const hasImport = jobs.length > 0;
+  const hasNotice = notices.length > 0;
 
   useEffect(() => {
     setActionSlot(
@@ -300,21 +314,44 @@ export default function LibraryPage() {
         className={cn(
           'pb-safe pointer-events-none fixed inset-x-4 bottom-4 z-30 justify-center transition-transform duration-300 sm:inset-x-6 md:bottom-6 lg:left-[calc(16rem+1.5rem)] lg:right-6',
           isDesktop ? 'hidden' : 'flex',
-          chromeHidden && 'translate-y-[calc(100%+2rem)]',
+          chromeHidden && !(hasImport || hasNotice) && 'translate-y-[calc(100%+2rem)]',
         )}
       >
-        <div className="pointer-events-auto flex w-full items-center justify-center gap-2">
-          {!isDesktop && (
-            <SearchBar
-              value={query}
-              onChange={(value) => setParam('q', value)}
-              className={cn(
-                'transition-[width] duration-200',
-                query ? 'w-full flex-1' : 'w-[6.5rem] flex-none',
+        <div className="pointer-events-auto w-full">
+          {(hasImport || hasNotice) && (
+            <div className="border-border bg-background/95 mb-2 max-h-[40dvh] overflow-y-auto rounded-xl border shadow-lg">
+              {hasImport && (
+                <div className="px-3 py-2">
+                  <ImportQueue jobs={jobs} compact />
+                </div>
               )}
-            />
+              {hasNotice && <NotificationHost mobile />}
+            </div>
           )}
-          <div id="library-floating-actions" className={cn('shrink-0', !isDesktop && query && 'hidden')} />
+          <div className="flex w-full items-center justify-center gap-2">
+            {!isDesktop && (
+              <SearchBar
+                compact
+                value={query}
+                onChange={(value) => setParam('q', value)}
+                className={cn(
+                  'transition-[width] duration-200',
+                  query ? 'w-full flex-1' : 'w-auto flex-none',
+                )}
+              />
+            )}
+            <div id="library-floating-actions" className="shrink-0" />
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+              className="border-border bg-card text-foreground hover:bg-muted inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium shadow-lg"
+            >
+              <Settings2 className="size-4" aria-hidden="true" />
+              Ajustes
+            </button>
+          </div>
         </div>
       </div>
     </div>

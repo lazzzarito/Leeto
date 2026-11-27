@@ -1,7 +1,9 @@
 import * as Tabs from '@radix-ui/react-tabs';
-import { useEffect, useRef, type CSSProperties } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import PlayerNotch from '@/components/player/PlayerNotch';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { APP_LABEL } from '@/lib/buildInfo';
 import {
   countBooksByStatus,
   filterBooks,
@@ -72,7 +74,6 @@ export default function LibraryTabs({
   const visibleFavorites = filterBooksByFavorite(visibleBooks);
   const visibleQuotes = filterQuotes(quotes, query);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const { chromeHidden } = useOutletContext<{ chromeHidden: boolean }>() ?? { chromeHidden: false };
   const tabsListRef = useRef<HTMLDivElement>(null);
   const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
   const suppressClickRef = useRef(false);
@@ -97,7 +98,7 @@ export default function LibraryTabs({
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     if (isDesktop) return;
     const target = event.target as HTMLElement;
-    if (target.closest('input,select,textarea,[role="dialog"]')) {
+    if (target.closest('input,select,textarea,[role="dialog"],[data-no-tab-gesture]')) {
       touchStartRef.current = undefined;
       return;
     }
@@ -113,7 +114,7 @@ export default function LibraryTabs({
     touchStartRef.current = undefined;
     if (!start || !touch) return;
     const target = event.target as HTMLElement;
-    if (target.closest('input,select,textarea,[role="dialog"]')) return;
+    if (target.closest('input,select,textarea,[role="dialog"],[data-no-tab-gesture]')) return;
 
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
@@ -150,40 +151,47 @@ export default function LibraryTabs({
       onClickCapture={handleClickCapture}
     >
       <div
-        className="sticky z-20 -mx-4 sm:-mx-6 lg:hidden"
-        style={{
-          top: chromeHidden
-            ? 'env(safe-area-inset-top,0px)'
-            : 'calc(env(safe-area-inset-top,0px)+var(--header-h,4rem))',
-        } as CSSProperties}
+        data-no-tab-gesture="true"
+        className="bg-background sticky top-[env(safe-area-inset-top,0px)] z-20 -mx-4 sm:-mx-6 lg:hidden"
       >
-        <Tabs.List
-          ref={tabsListRef}
-          aria-label="Vistas de la biblioteca"
-          className="library-pills-scrollbar bg-background flex gap-1.5 overflow-x-auto border-b border-border/50 px-4 pt-3 pb-2.5 sm:px-6"
-        >
-          <Tabs.Trigger value="reading" className={TRIGGER_CLASS}>
-            Leyendo ({statusCounts.reading})
-          </Tabs.Trigger>
-          <Tabs.Trigger value="finished" className={TRIGGER_CLASS}>
-            Leídos ({statusCounts.finished})
-          </Tabs.Trigger>
-          <Tabs.Trigger value="favorites" className={TRIGGER_CLASS}>
-            Favoritos ({visibleFavorites.length})
-          </Tabs.Trigger>
-          <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
-            Todos ({books.length})
-          </Tabs.Trigger>
-          <Tabs.Trigger value="authors" className={TRIGGER_CLASS}>
-            Autores
-          </Tabs.Trigger>
-          <Tabs.Trigger value="sagas" className={TRIGGER_CLASS}>
-            Sagas
-          </Tabs.Trigger>
-          <Tabs.Trigger value="quotes" className={TRIGGER_CLASS}>
-            Citas ({visibleQuotes.length})
-          </Tabs.Trigger>
-        </Tabs.List>
+        <div className="flex items-center gap-2 border-b border-border/50 px-4 pt-3 pb-2.5 sm:px-6">
+          <Link to="/" className="flex shrink-0 items-center gap-1.5 rounded-md focus-visible:ring-2">
+            <span aria-hidden="true" className="theme-icon text-primary size-4 shrink-0 rounded-sm" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-xs font-semibold tracking-tight">Leeto</span>
+              <span className="text-muted-foreground text-[9px]">{APP_LABEL}</span>
+            </span>
+          </Link>
+          <span aria-hidden="true" className="text-border shrink-0">|</span>
+          <Tabs.List
+            ref={tabsListRef}
+            aria-label="Vistas de la biblioteca"
+            className="library-pills-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto"
+          >
+            <Tabs.Trigger value="reading" className={TRIGGER_CLASS}>
+              Leyendo ({statusCounts.reading})
+            </Tabs.Trigger>
+            <Tabs.Trigger value="finished" className={TRIGGER_CLASS}>
+              Leídos ({statusCounts.finished})
+            </Tabs.Trigger>
+            <Tabs.Trigger value="favorites" className={TRIGGER_CLASS}>
+              Favoritos ({visibleFavorites.length})
+            </Tabs.Trigger>
+            <Tabs.Trigger value="all" className={TRIGGER_CLASS}>
+              Todos ({books.length})
+            </Tabs.Trigger>
+            <Tabs.Trigger value="authors" className={TRIGGER_CLASS}>
+              Autores
+            </Tabs.Trigger>
+            <Tabs.Trigger value="sagas" className={TRIGGER_CLASS}>
+              Sagas
+            </Tabs.Trigger>
+            <Tabs.Trigger value="quotes" className={TRIGGER_CLASS}>
+              Citas ({visibleQuotes.length})
+            </Tabs.Trigger>
+          </Tabs.List>
+          <PlayerNotch className="max-w-[7.5rem] shrink-0" />
+        </div>
       </div>
 
       <div className="min-h-[45svh] w-full min-w-0 overflow-x-clip">

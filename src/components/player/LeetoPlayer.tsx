@@ -547,7 +547,6 @@ export default function LeetoPlayer({ book }: { book: LeetoBook }) {
           <PlayerSettingsDialog
             open
             onOpenChange={setSettingsOpen}
-            settings={settings}
             book={book}
             voices={tts.voices}
           />
